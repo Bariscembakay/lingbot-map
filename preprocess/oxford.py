@@ -106,7 +106,7 @@ PROCESS_SCENE = [
     "2024-03-13-observatory-quarter-02",
     "2024-03-18-christ-church-02",
     "2024-03-18-christ-church-03",
-    "2024-03-18-christ-church-05",
+    "2024-03-20-christ-church-05",
     "2024-05-20-bodleian-library-02",
 ]
 
