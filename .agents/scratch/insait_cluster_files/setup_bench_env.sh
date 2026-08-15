@@ -15,15 +15,14 @@ ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/bench"
 
 if [ -d "$ENV_PREFIX" ]; then
     echo "[setup_bench_env] bench env already exists at $ENV_PREFIX, skipping."
-    exit 0
+else
+    echo "[setup_bench_env] Building bench env on $(hostname) ..."
+
+    micromamba create -n bench python=3.11 -y
+
+    micromamba run -n bench pip install \
+        numpy opencv-python-headless open3d evo matplotlib pyyaml tqdm scipy \
+        imageio trimesh plyfile OpenEXR Imath Pillow onnxruntime-gpu==1.23.2
+
+    echo "[setup_bench_env] Done."
 fi
-
-echo "[setup_bench_env] Building bench env on $(hostname) ..."
-
-micromamba create -n bench python=3.11 -y
-
-micromamba run -n bench pip install \
-    numpy opencv-python-headless open3d evo matplotlib pyyaml tqdm scipy \
-    imageio trimesh plyfile OpenEXR Imath Pillow onnxruntime-gpu==1.23.2
-
-echo "[setup_bench_env] Done."
