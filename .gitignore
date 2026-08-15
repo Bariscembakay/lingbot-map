@@ -13,6 +13,7 @@ CLAUDE.md
 skyseg.onnx
 .claude-remote
 weights/
+ckpt/
 .DS_Store
 **/.DS_Store
 docs/

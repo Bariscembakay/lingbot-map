@@ -1,6 +1,6 @@
 model: lingbot_map
-env: lingbot-map
-_checkpoint: /path/to/lingbot-map.pt
+env: lingbot_map
+_checkpoint: /home/baris_bakay/lingbot-map/ckpt/lingbot-map.pt
 _device: cuda
 _mode: streaming
 _use_amp: true
