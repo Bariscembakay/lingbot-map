@@ -1,6 +1,6 @@
 # Neural RGB-D — lingbot_map point-cloud evaluation.
 # Indoor sequences with GT depth + mesh for surface reconstruction.
-workspace: /path/to/workspace/neural_rgbd
+workspace: /group/compact-3dmem/campaigns/lingbot_map/neural_rgbd/default
 
 datasets:
   - neural_rgbd

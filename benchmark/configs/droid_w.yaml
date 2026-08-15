@@ -1,5 +1,5 @@
 # DROID-W — lingbot_map trajectory evaluation.
-workspace: /path/to/workspace/droid_w
+workspace: /group/compact-3dmem/campaigns/lingbot_map/droid_w/default
 
 datasets:
   - droid_w

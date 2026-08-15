@@ -1,6 +1,6 @@
 # 7Scenes — lingbot_map trajectory + AUC + point-cloud evaluation.
 # Stride-5 sampling; see configs/datasets/seven_scenes.yaml.
-workspace: /path/to/workspace/seven_scenes
+workspace: /group/compact-3dmem/campaigns/lingbot_map/seven_scenes/default
 
 datasets:
   - seven_scenes

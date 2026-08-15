@@ -1,5 +1,5 @@
 dataset: tnt
-raw_data_root: /path/to/TAT
+raw_data_root: /group/compact-3dmem/datasets/TAT
 _load_img_size: 518
 evaluation:
   depth:

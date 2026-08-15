@@ -1,5 +1,5 @@
 # VBR (Vision Benchmark in Rome) — lingbot_map trajectory evaluation.
-workspace: /path/to/workspace/vbr
+workspace: /group/compact-3dmem/campaigns/lingbot_map/vbr/default
 
 datasets:
   - vbr

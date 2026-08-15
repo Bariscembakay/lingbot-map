@@ -49,4 +49,22 @@ else
     micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-nvcc=12.8 -y
 fi
 
+# cuda-nvcc pulls in cuda-cudart-dev but NOT cuda-driver-dev (cuda.h, the
+# driver API header) -- extensions that #include <cuda.h> directly (not
+# just cuda_runtime.h) need this installed separately.
+if [ -f "$ENV_PREFIX/targets/x86_64-linux/include/cuda.h" ]; then
+    echo "[setup_lingbot_map_env] cuda-driver-dev already present, skipping."
+else
+    echo "[setup_lingbot_map_env] Installing cuda-driver-dev (for cuda.h) ..."
+    micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-driver-dev=12.8 -y
+fi
+
+# Both cuda-cudart-dev (cuda_runtime.h) and cuda-driver-dev (cuda.h) install
+# their headers under targets/x86_64-linux/include/, NOT the top-level
+# include/ the compiler actually searches by default -- add it via CPATH
+# (picked up automatically by gcc/nvcc, inherited by any subprocess this
+# script's caller launches afterwards) rather than symlinking headers in
+# one at a time as each missing one surfaces.
+export CPATH="$ENV_PREFIX/targets/x86_64-linux/include${CPATH:+:$CPATH}"
+
 echo "[setup_lingbot_map_env] Done."
