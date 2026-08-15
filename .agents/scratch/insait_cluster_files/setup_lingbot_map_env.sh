@@ -9,6 +9,13 @@
 # Usage: source this at the top of any job before `micromamba run -n lingbot_map ...`.
 set -euo pipefail
 
+# ~/bin holds the `conda` -> micromamba subprocess shim (needed because
+# benchmark/run.py spawns `conda run -n ENV ...` as a real subprocess, not
+# through a shell -- the `.bashrc` shell function doesn't exist there).
+# ~/bin is NOT on PATH by default in non-interactive job shells even
+# though it's synced to every zone -- confirmed via a real srun test.
+export PATH="$HOME/bin:$PATH"
+
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/lingbot_map"
 
 # Repo root is three levels up from this script (.agents/scratch/insait_cluster_files/).

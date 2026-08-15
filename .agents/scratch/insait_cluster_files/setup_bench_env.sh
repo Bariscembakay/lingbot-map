@@ -7,6 +7,10 @@
 # run.py/evaluate.py, alongside setup_lingbot_map_env.sh.
 set -euo pipefail
 
+# See setup_lingbot_map_env.sh -- ~/bin (the `conda` subprocess shim
+# run.py needs) is not on PATH by default in non-interactive job shells.
+export PATH="$HOME/bin:$PATH"
+
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/bench"
 
 if [ -d "$ENV_PREFIX" ]; then
