@@ -44,6 +44,15 @@ else
     echo "[setup_lingbot_map_env] Base install done."
 fi
 
+# FlashInfer's own JIT-compiled kernels link with -L$CUDA_HOME/lib64
+# -L$CUDA_HOME/lib64/stubs (the standard full-CUDA-toolkit layout, e.g.
+# /usr/local/cuda/lib64) -- but conda's cuda-* packages use a different
+# layout (targets/x86_64-linux/lib/[stubs/]), so lib64 doesn't exist and
+# `-lcuda`/`-lcudart` fail to link. Symlink it into place.
+if [ ! -e "$ENV_PREFIX/lib64" ]; then
+    ln -s "$ENV_PREFIX/targets/x86_64-linux/lib" "$ENV_PREFIX/lib64"
+fi
+
 # Separate idempotent step: nvcc (CUDA compiler), needed to JIT-build
 # preprocess/oxford.py's CUDA visibility extension. Not part of the base
 # torch install (pip wheels ship only the CUDA runtime, not the compiler),
