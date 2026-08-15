@@ -1,5 +1,5 @@
 # Oxford Spires — lingbot_map trajectory evaluation.
-workspace: /path/to/workspace/oxford
+workspace: /group/compact-3dmem/campaigns/lingbot_map/oxford_spires/sparse_s12
 
 datasets:
   - oxford
