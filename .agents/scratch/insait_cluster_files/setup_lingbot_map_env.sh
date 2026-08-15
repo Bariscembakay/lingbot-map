@@ -32,7 +32,7 @@ else
         kaolin -f https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.8.0_cu128.html
 
     micromamba run -n lingbot_map pip install \
-        numpy opencv-python Pillow matplotlib open3d plyfile tqdm scipy evo pyyaml OpenEXR Imath
+        numpy opencv-python Pillow matplotlib open3d plyfile tqdm scipy evo pyyaml OpenEXR Imath pye57
 
     echo "[setup_lingbot_map_env] Base install done."
 fi

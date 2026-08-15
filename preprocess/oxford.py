@@ -139,7 +139,9 @@ def get_tls_pcd_path(gt_map_dir: Path, scene_kw: str) -> Path | None:
         return None
     candidates = [
         scene_dir / "merged-cloud-1cm.pcd",
-        scene_dir / "merged-cloud-5cm.pcd",   # observatory-quarter uses 5 cm
+        scene_dir / "merged-clouds-1cm-no-colour.pcd",  # observatory-quarter naming
+        scene_dir / "merged-cloud-5cm.pcd",
+        scene_dir / "merged-clouds-5cm.pcd",  # observatory-quarter naming (plural)
     ]
     for p in candidates:
         if p.exists():
