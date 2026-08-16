@@ -1,20 +1,10 @@
-"""Download the full TUM RGB-D benchmark (excluding calibration-only
-captures, which aren't trajectory sequences and don't match
-benchmark/datasets/tum.py's expected rgb/+groundtruth.txt layout) for
-lingbot-map's benchmark/datasets/tum.py adapter.
+"""Download the full TUM RGB-D benchmark (all non-calibration sequences --
+no canonical subset is documented anywhere for this repo, and the paper
+doesn't evaluate on TUM at all) for benchmark/datasets/tum.py.
 
-Source: https://cvg.cit.tum.de/data/datasets/rgbd-dataset/download
-Each .tgz extracts directly to a top-level `rgbd_dataset_{freiburg}_{name}/`
-directory -- exactly what the adapter auto-discovers via
-`raw_data_root.iterdir()` (no reorg needed, unlike VBR).
-
-No canonical "which sequences" list exists for this repo (the paper
-doesn't even evaluate on TUM; benchmark/README.md's "9 sequences" number
-is undocumented) -- user chose to grab everything rather than guess.
-
-Zone note: same as the other dataset_download scripts -- run this on sof1
-(fast public internet), then register via `dataset create tum
-/group/compact-3dmem/datasets/TUM-RGBD` so msp3 uses `dataset pull`.
+Source: https://cvg.cit.tum.de/data/datasets/rgbd-dataset/download. Each
+.tgz extracts directly to the layout the adapter auto-discovers, no reorg
+needed. Run on sof1, then register as a cluster dataset for msp3 to pull.
 """
 
 import subprocess

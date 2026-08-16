@@ -1,29 +1,10 @@
-"""Download Tanks and Temples (TAT) training-set GT data + images for
-lingbot-map's benchmark/datasets/tnt.py adapter.
+"""Download TAT training-set GT data (log/trans/json per scene, from
+Google Drive) for benchmark/datasets/tnt.py. Images come separately from
+tnt_toolbox/download_t2_dataset.py.
 
-Expected layout (see benchmark/datasets/tnt.py docstring):
-  {raw_data_root}/{scene}/
-    {NNNNNN}.jpg              # from download_t2_dataset.py's image sets
-    {scene}_COLMAP_SfM.log    # "Camera Poses" below
-    {scene}.ply               # "Reconstruction" below
-    {scene}.json              # "Cropfiles" below
-    {scene}_trans.txt         # "Alignment" below
-
-GT files (reconstruction/camera-poses/alignment/cropfiles) are only
-available as individual Google Drive links on tanksandtemples.org/download
-(no direct-HTTP or HF mirror found). The combined "all training scenes"
-bundle AND Barn's individual reconstruction .ply both hit Google Drive's
-per-file view-quota wall via gdown ("too many users have viewed or
-downloaded this file recently") -- confirmed this is PER FILE, not
-per-account/IP: Meetingroom's camera-poses file downloaded fine via the
-exact same method. So: try every file individually, skip/log whatever's
-still rate-limited, retry the rest later.
-
-Images come from isl-org/TanksAndTemples's own downloader script
-(tnt_toolbox/download_t2_dataset.py, fetched separately) via
-`--group training --modality image` -- run that first, then this script
-for the GT files, or vice versa (order doesn't matter, they write
-different files into the same per-scene directory).
+Google Drive rate-limits some files ("too many users..."), per-file not
+per-account -- try each individually, skip/log whatever's still
+rate-limited (see fixes.md for the full story if this needs retrying).
 """
 
 import subprocess

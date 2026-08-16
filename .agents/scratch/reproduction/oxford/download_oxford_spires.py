@@ -1,23 +1,8 @@
-"""One-off script: download the Oxford Spires raw data needed to reproduce
-paper Table 2 (sparse setting, benchmark/configs/oxford.yaml).
-
-Fetches only what benchmark/../preprocess/oxford.py actually reads:
-  - sequences/<seq>/raw/images.zip
-  - sequences/<seq>/processed/trajectory/*
-  - ground_truth_map/<site>/*         (TLS point clouds)
-  - calibration/*
-for the 10 scenes in preprocess/oxford.py's PROCESS_SCENE list.
-
-Does NOT fetch rosbags/ros2bag, colmap, lidar-clouds.zip, vilens-slam,
-lidar-depths, lidar-undistortion — nothing in this repo reads them.
-
-Zone note: LOCAL_DIR below is sof1's /group (the system-of-record zone).
-Once downloaded, the data is registered as the `oxford_spires` cluster
-dataset (`dataset create oxford_spires /group/compact-3dmem/datasets/oxford_spires`),
-so msp3 should get it via `dataset pull oxford_spires` — NOT by re-running
-this script there. msp3's public-internet inbound is ~1 MB/s, so a fresh
-HuggingFace download of this size there would be extremely slow; this
-script only belongs on sof1 (or wherever a dataset isn't registered yet).
+"""Download the Oxford Spires raw data needed by preprocess/oxford.py, for
+the 10 scenes in its PROCESS_SCENE list. Only fetches images/trajectory/
+GT-map/calibration -- not the rosbags/COLMAP/lidar-clouds nothing here
+reads. Run on sof1 (fast public internet), then register as a cluster
+dataset for msp3 to pull instead of re-running this there.
 """
 
 from huggingface_hub import snapshot_download

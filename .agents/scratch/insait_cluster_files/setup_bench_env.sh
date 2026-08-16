@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
-# Idempotent per-node bootstrap for the `bench` micromamba env
-# (framework side: prepare.py, evaluate.py, report.py, and run.py, which
-# itself dispatches to the `lingbot_map` env via `conda run`).
-#
-# Usage: source this at the top of any job before running prepare.py/
-# run.py/evaluate.py, alongside setup_lingbot_map_env.sh.
+# Idempotent per-node bootstrap for the `bench` micromamba env (framework
+# side: prepare.py, evaluate.py, report.py, run.py). Source alongside
+# setup_lingbot_map_env.sh at the top of any job.
 set -euo pipefail
 
-# See setup_lingbot_map_env.sh -- ~/bin (the `conda` subprocess shim
-# run.py needs) is not on PATH by default in non-interactive job shells.
-export PATH="$HOME/bin:$PATH"
+export PATH="$HOME/bin:$PATH"  # see setup_lingbot_map_env.sh
 
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/bench"
 

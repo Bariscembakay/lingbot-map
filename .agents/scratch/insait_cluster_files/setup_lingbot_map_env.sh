@@ -1,28 +1,19 @@
 #!/usr/bin/env bash
 # Idempotent per-node bootstrap for the `lingbot_map` micromamba env.
-#
-# /scratch (and $MAMBA_ROOT_PREFIX under it) is per-node local disk, so any
-# job that lands on a node other than the one we built the env on by hand
-# (sof1-h200-0) needs to recreate it. Fast no-op if the env already exists
+# /scratch is per-node local disk, so source this at the top of any job
+# before `micromamba run -n lingbot_map ...` -- fast no-op if already built
 # on this node.
-#
-# Usage: source this at the top of any job before `micromamba run -n lingbot_map ...`.
 set -euo pipefail
 
-# ~/bin holds the `conda` -> micromamba subprocess shim (needed because
-# benchmark/run.py spawns `conda run -n ENV ...` as a real subprocess, not
-# through a shell -- the `.bashrc` shell function doesn't exist there).
-# ~/bin is NOT on PATH by default in non-interactive job shells even
-# though it's synced to every zone -- confirmed via a real srun test.
+# ~/bin holds the `conda`->micromamba shim run.py's subprocess dispatch
+# needs, but isn't on PATH by default in job shells.
 export PATH="$HOME/bin:$PATH"
 
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/lingbot_map"
-
-# Repo root is three levels up from this script (.agents/scratch/insait_cluster_files/).
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 
 if [ -d "$ENV_PREFIX" ]; then
-    echo "[setup_lingbot_map_env] lingbot_map env already exists at $ENV_PREFIX, skipping base install."
+    echo "[setup_lingbot_map_env] lingbot_map env already exists, skipping base install."
 else
     echo "[setup_lingbot_map_env] Building lingbot_map env on $(hostname) ..."
 
@@ -44,43 +35,31 @@ else
     echo "[setup_lingbot_map_env] Base install done."
 fi
 
-# FlashInfer's own JIT-compiled kernels link with -L$CUDA_HOME/lib64
-# -L$CUDA_HOME/lib64/stubs (the standard full-CUDA-toolkit layout, e.g.
-# /usr/local/cuda/lib64) -- but conda's cuda-* packages use a different
-# layout (targets/x86_64-linux/lib/[stubs/]), so lib64 doesn't exist and
-# `-lcuda`/`-lcudart` fail to link. Symlink it into place.
+# conda's cuda-* packages use targets/x86_64-linux/{include,lib}/[stubs/]
+# instead of the standard toolkit layout (lib64/, top-level include/) that
+# FlashInfer's JIT build and gcc/nvcc expect -- symlink lib64 and add the
+# include dir to CPATH rather than patching every consumer.
 if [ ! -e "$ENV_PREFIX/lib64" ]; then
     ln -s "$ENV_PREFIX/targets/x86_64-linux/lib" "$ENV_PREFIX/lib64"
 fi
 
-# Separate idempotent step: nvcc (CUDA compiler), needed to JIT-build
-# preprocess/oxford.py's CUDA visibility extension. Not part of the base
-# torch install (pip wheels ship only the CUDA runtime, not the compiler),
-# and older envs built before this fix won't have it either -- so this
-# checks/installs regardless of whether the base env above was just built.
+# nvcc: not part of the base install above (pip torch wheels ship only the
+# CUDA runtime, not the compiler); needed to JIT-build
+# preprocess/oxford.py's CUDA visibility extension.
 if [ -x "$ENV_PREFIX/bin/nvcc" ]; then
     echo "[setup_lingbot_map_env] nvcc already present, skipping."
 else
-    echo "[setup_lingbot_map_env] Installing cuda-nvcc (12.8, matching the torch cu128 build) ..."
     micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-nvcc=12.8 -y
 fi
 
-# cuda-nvcc pulls in cuda-cudart-dev but NOT cuda-driver-dev (cuda.h, the
-# driver API header) -- extensions that #include <cuda.h> directly (not
-# just cuda_runtime.h) need this installed separately.
+# cuda-driver-dev: separate package from cuda-nvcc/cuda-cudart-dev, needed
+# for cuda.h (extensions that #include it directly, not just cuda_runtime.h).
 if [ -f "$ENV_PREFIX/targets/x86_64-linux/include/cuda.h" ]; then
     echo "[setup_lingbot_map_env] cuda-driver-dev already present, skipping."
 else
-    echo "[setup_lingbot_map_env] Installing cuda-driver-dev (for cuda.h) ..."
     micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-driver-dev=12.8 -y
 fi
 
-# Both cuda-cudart-dev (cuda_runtime.h) and cuda-driver-dev (cuda.h) install
-# their headers under targets/x86_64-linux/include/, NOT the top-level
-# include/ the compiler actually searches by default -- add it via CPATH
-# (picked up automatically by gcc/nvcc, inherited by any subprocess this
-# script's caller launches afterwards) rather than symlinking headers in
-# one at a time as each missing one surfaces.
 export CPATH="$ENV_PREFIX/targets/x86_64-linux/include${CPATH:+:$CPATH}"
 
 echo "[setup_lingbot_map_env] Done."

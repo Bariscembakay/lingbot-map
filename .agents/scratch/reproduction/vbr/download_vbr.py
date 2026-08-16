@@ -1,25 +1,10 @@
-"""Download + reorganize the VBR (Vision Benchmark in Rome) dataset for
-lingbot-map's benchmark/datasets/vbr.py adapter.
+"""Download + reorganize VBR for lingbot-map's benchmark/datasets/vbr.py.
 
-Source: the LoGeR project's pre-processed/aligned release on HuggingFace
-(Junyi42/vbr_processed) — see benchmark/README.md's "VBR" data-prep note
-and https://github.com/Junyi42/LoGeR (eval/eval.md, "VBR" section, Option A).
-
-The HF release already has the right FILE CONTENT (3x3 K intrinsics.txt,
-TUM-format camera_pose.txt with integer frame-index timestamps — verified
-by hand against benchmark/datasets/vbr.py's docstring), just the wrong
-DIRECTORY LAYOUT:
-    HF:          {scene}/{rgb/, camera_pose.txt, intrinsics.txt, camera_pose/, {scene}_gt.txt}
-    lingbot-map: {scene}_processed_aligned/{rgb/, camera_pose.txt, intrinsics.txt}
-                 processed_gt/{scene}_gt.txt   (sibling dir, not nested)
-
-So this script downloads each scene's tarball, extracts it, and just
-renames/moves things into place — no real preprocessing.
-
-Zone note: same as download_oxford_spires.py — this belongs on sof1 (fast
-public internet). Once done, register it as a cluster dataset
-(`dataset create vbr /group/compact-3dmem/datasets/vbr`) so msp3 gets it
-via `dataset pull vbr`, not by re-running this script there.
+Source: LoGeR's pre-processed HF release (Junyi42/vbr_processed) -- file
+content already matches, just wrong directory layout (HF: {scene}/... ;
+lingbot-map wants {scene}_processed_aligned/ + sibling processed_gt/).
+Run on sof1 (fast public internet); register as a cluster dataset after so
+msp3 uses `dataset pull` instead of re-running this there.
 """
 
 import shutil

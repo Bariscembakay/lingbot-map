@@ -1,18 +1,8 @@
-"""Retry-loop downloader for TAT training-set image zips, working around
-Google Drive's per-file view-quota wall ("too many users have viewed or
-downloaded this file recently... may take up to 24 hours").
-
-These are legacy (~2018) Drive file IDs needing a `resourcekey` query
-param to resolve (Google's 2021 security change for old shared links) --
-gdown (any version up to 6.1.0, and 4.7.1's --fuzzy) doesn't handle this
-correctly, so this implements the browser's own confirm-token flow by
-hand: GET the "virus scan warning" interstitial, extract the `uuid` from
-its confirm form, then GET the real file from
-drive.usercontent.google.com with confirm=t&uuid=<uuid>. If Google's
-quota message appears instead, back off and retry later.
-
-Usage: run once, it loops (with a long sleep between passes) until every
-scene succeeds or `--max-hours` elapses.
+"""Retry-loop downloader for TAT image zips, working around Google
+Drive's per-file quota wall. gdown can't handle these (legacy IDs need a
+`resourcekey` it doesn't support -- see fixes.md), so this replicates the
+browser's confirm-token flow by hand. Loops with a sleep between passes
+until every scene succeeds or --max-hours elapses.
 """
 
 import argparse
