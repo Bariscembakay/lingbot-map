@@ -1,5 +1,5 @@
 dataset: eth3d
-raw_data_root: /path/to/eth3d
+raw_data_root: /group/compact-3dmem/datasets/eth3d
 _load_img_size: 518
 evaluation:
   depth:

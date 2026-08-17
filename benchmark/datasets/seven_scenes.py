@@ -65,8 +65,11 @@ class SevenScenesDataset(BaseDataset):
                 scene_dir = self.raw_data_root / scene_name
                 split_file = scene_dir / f"{self.split.capitalize()}Split.txt"
 
+                # raw_data_root can be shared with unrelated projects (e.g. a
+                # stray eval_gt/ dir) -- skip anything that isn't a real scene
+                # rather than crashing the whole run.
                 if not split_file.exists():
-                    raise FileNotFoundError(f"{split_file} not found for scene {scene_name}")
+                    continue
 
                 # Read split file
                 with open(split_file, 'r') as f:
@@ -120,7 +123,7 @@ class SevenScenesDataset(BaseDataset):
 
         # File paths
         color_file = seq_dir / f"frame-{frame_id:06d}.color.png"
-        depth_file = seq_dir / f"frame-{frame_id:06d}.depth.proj.png"
+        depth_file = seq_dir / f"frame-{frame_id:06d}.depth.png"
         pose_file = seq_dir / f"frame-{frame_id:06d}.pose.txt"
 
         # Check if files exist

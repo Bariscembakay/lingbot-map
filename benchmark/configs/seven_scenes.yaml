@@ -7,7 +7,6 @@ datasets:
 
 methods:
   - lingbot_map
-  - lingbot_map_v1
 
 evaluation:
   traj:

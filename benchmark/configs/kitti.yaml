@@ -1,7 +1,7 @@
 # KITTI base config — evaluates lingbot_map on the two KITTI variants:
 #   - kitti_504x280  : downsampled KITTI sequences used in our ablations
 #   - kitti          : full-resolution KITTI sequences
-workspace: /path/to/workspace/kitti
+workspace: /group/compact-3dmem/campaigns/lingbot_map/kitti/default
 
 datasets:
   - kitti_504x280

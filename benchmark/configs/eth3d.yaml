@@ -1,6 +1,6 @@
 # ETH3D — lingbot_map trajectory + point-cloud evaluation.
 # DA3 (DepthAnything3) split; see configs/datasets/eth3d.yaml.
-workspace: /path/to/workspace/eth3d
+workspace: /group/compact-3dmem/campaigns/lingbot_map/eth3d/default
 
 datasets:
   - eth3d

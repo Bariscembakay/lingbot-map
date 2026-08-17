@@ -8,6 +8,12 @@ export PATH="$HOME/bin:$PATH"  # see setup_lingbot_map_env.sh
 
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/bench"
 
+# See setup_lingbot_map_env.sh: multiple jobs can share this node's /scratch.
+MAMBA_ROOT="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}"
+mkdir -p "$MAMBA_ROOT"
+exec 201>"$MAMBA_ROOT/.setup_bench_env.lock"
+flock 201
+
 if [ -d "$ENV_PREFIX" ]; then
     echo "[setup_bench_env] bench env already exists at $ENV_PREFIX, skipping."
 else

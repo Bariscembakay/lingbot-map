@@ -124,6 +124,9 @@ class TumDataset(BaseDataset):
         return sorted(
             p.name for p in self.raw_data_root.iterdir()
             if p.is_dir() and p.name.startswith('rgbd_dataset_freiburg')
+            # TUM's "_secret" sequences ship without groundtruth.txt by
+            # design (held out for their online eval server) -- unusable here.
+            and (p / 'groundtruth.txt').exists()
         )
 
     def get_frame_list(self, scene: str) -> List[int]:

@@ -9,8 +9,7 @@ build/
 demo_render/
 CLAUDE.md
 .claude/
-.agents/*
-!.agents/scratch/
+.agents/logs/
 skyseg.onnx
 .claude-remote
 weights/

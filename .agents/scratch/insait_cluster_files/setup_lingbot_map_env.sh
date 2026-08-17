@@ -12,6 +12,14 @@ export PATH="$HOME/bin:$PATH"
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/lingbot_map"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 
+# Multiple jobs can land on the same node (Slurm packs several 1-GPU jobs
+# onto one 8-GPU node) and race on this shared per-node env -- serialize
+# with a lock so the second job waits instead of colliding mid-install.
+MAMBA_ROOT="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}"
+mkdir -p "$MAMBA_ROOT"
+exec 200>"$MAMBA_ROOT/.setup_lingbot_map_env.lock"
+flock 200
+
 if [ -d "$ENV_PREFIX" ]; then
     echo "[setup_lingbot_map_env] lingbot_map env already exists, skipping base install."
 else
