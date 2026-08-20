@@ -1,6 +1,10 @@
 # ETH3D — lingbot_map trajectory + point-cloud evaluation.
 # DA3 (DepthAnything3) split; see configs/datasets/eth3d.yaml.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/eth3d/default
+# Layout moved 2026-08-20 to campaigns/<campaign>/<arm>/<benchmark>, and the
+# duplicated dataset level was flattened away, so the ARM dir is now the
+# workspace root and `datasets:` below selects the subdir under it. One root
+# therefore serves every dataset sharing that arm.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/default
 
 datasets:
   - eth3d

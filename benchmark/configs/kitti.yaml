@@ -1,7 +1,11 @@
 # KITTI base config — evaluates lingbot_map on the two KITTI variants:
 #   - kitti_504x280  : downsampled KITTI sequences used in our ablations
 #   - kitti          : full-resolution KITTI sequences
-workspace: /group/compact-3dmem/campaigns/lingbot_map/kitti/default
+# Layout moved 2026-08-20 to campaigns/<campaign>/<arm>/<benchmark>, and the
+# duplicated dataset level was flattened away, so the ARM dir is now the
+# workspace root and `datasets:` below selects the subdir under it. One root
+# therefore serves every dataset sharing that arm.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/default
 
 datasets:
   - kitti_504x280
