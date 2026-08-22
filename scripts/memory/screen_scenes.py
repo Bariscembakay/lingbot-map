@@ -35,9 +35,10 @@ def score_scene(root: str, scene: str, stride: int, clip_len: int,
     if L < 128:
         return None
     ids = [i * stride for i in range(L)]
-    depth = gt.read_iphone_depth(iphone / "depth.bin", ids)
+    shape = gt.detect_depth_shape(iphone / "depth.bin")
+    depth = gt.read_iphone_depth(iphone / "depth.bin", ids, shape)
     c2w, intr = gt.read_iphone_meta(jp, ids)
-    intr_s = gt.scale_intrinsics(intr, (1440, 1920), (gt.DEPTH_H, gt.DEPTH_W))
+    intr_s = gt.scale_intrinsics(intr, (1440, 1920), shape)
     c2w_rel = gt.relative_to_first(c2w @ gt.CONVENTIONS["opengl"])
     rv = gt.revisit_score(depth, intr_s, c2w_rel, window=window)
     return {
@@ -47,6 +48,7 @@ def score_scene(root: str, scene: str, stride: int, clip_len: int,
         "frac_over_10": float((rv > 0.10).mean()),
         "frac_over_25": float((rv > 0.25).mean()),
         "invalid": float((depth <= 0).mean()),
+        "depth_shape": list(shape),
     }
 
 

@@ -24,7 +24,12 @@ import cv2
 import lz4.block
 import numpy as np
 
-DEPTH_H, DEPTH_W = 192, 256
+# Most ScanNet++ iphone captures are 256x192, but not all -- a third of the
+# scenes we screened failed LZ4 decompression at that size. The raw blocks carry
+# no length, so the shape has to be detected by trying candidates.
+DEPTH_SHAPE_CANDIDATES = ((192, 256), (256, 192), (240, 320), (320, 240),
+                          (144, 192), (192, 144), (480, 640), (384, 512))
+DEPTH_H, DEPTH_W = DEPTH_SHAPE_CANDIDATES[0]
 MM_PER_M = 1000.0
 
 # c2w_opencv = c2w_source @ FLIP. ARKit/OpenGL is +Y up, -Z forward; OpenCV is
@@ -37,12 +42,29 @@ CONVENTIONS: Dict[str, np.ndarray] = {
 }
 
 
-def read_iphone_depth(path: Path | str, frame_ids: Sequence[int]) -> np.ndarray:
-    """[L, 192, 256] float32 metres. 0 marks invalid."""
+def detect_depth_shape(path: Path | str) -> Tuple[int, int]:
+    """Infer (h, w) from the first frame by trying the known candidates."""
+    with open(path, "rb") as f:
+        n = struct.unpack("<I", f.read(4))[0]
+        buf = f.read(n)
+    for h, w in DEPTH_SHAPE_CANDIDATES:
+        try:
+            if len(lz4.block.decompress(buf, uncompressed_size=h * w * 2)) == h * w * 2:
+                return h, w
+        except lz4.block.LZ4BlockError:
+            continue
+    raise RuntimeError(f"{path}: no candidate depth shape decompresses "
+                       f"(tried {DEPTH_SHAPE_CANDIDATES})")
+
+
+def read_iphone_depth(path: Path | str, frame_ids: Sequence[int],
+                      shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
+    """[L, h, w] float32 metres. 0 marks invalid. Shape is detected if not given."""
+    h, w = shape or detect_depth_shape(path)
     want = set(frame_ids)
     order = {f: k for k, f in enumerate(frame_ids)}
-    out = np.zeros((len(frame_ids), DEPTH_H, DEPTH_W), np.float32)
-    nbytes = DEPTH_H * DEPTH_W * 2
+    out = np.zeros((len(frame_ids), h, w), np.float32)
+    nbytes = h * w * 2
     found = 0
     with open(path, "rb") as f:
         idx = 0
@@ -54,7 +76,7 @@ def read_iphone_depth(path: Path | str, frame_ids: Sequence[int]) -> np.ndarray:
             if idx in want:
                 raw = lz4.block.decompress(f.read(n), uncompressed_size=nbytes)
                 out[order[idx]] = (
-                    np.frombuffer(raw, np.uint16).reshape(DEPTH_H, DEPTH_W).astype(np.float32)
+                    np.frombuffer(raw, np.uint16).reshape(h, w).astype(np.float32)
                     / MM_PER_M
                 )
                 found += 1
@@ -207,7 +229,8 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
             convention: str = "auto") -> dict:
     """Everything Loss 1 needs, in the model's canonical units."""
     iphone = Path(scannetpp_root) / "data" / scene / "iphone"
-    depth_small = read_iphone_depth(iphone / "depth.bin", frame_ids)
+    depth_shape = detect_depth_shape(iphone / "depth.bin")
+    depth_small = read_iphone_depth(iphone / "depth.bin", frame_ids, depth_shape)
     c2w_raw, intr_full = read_iphone_meta(iphone / "pose_intrinsic_imu.json", frame_ids)
 
     scores = None
@@ -218,7 +241,7 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
     c2w = c2w_raw @ CONVENTIONS[convention]
     c2w_rel = relative_to_first(c2w)
 
-    intr_small = scale_intrinsics(intr_full, (1440, 1920), (DEPTH_H, DEPTH_W))
+    intr_small = scale_intrinsics(intr_full, (1440, 1920), depth_shape)
     s = canonical_scale(depth_small, intr_small, c2w_rel, anchor_frames)
 
     revisit = revisit_score(depth_small, intr_small, c2w_rel, window)
@@ -235,5 +258,6 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
         "convention": convention,
         "convention_scores_deg": scores,
         "revisit": revisit,
+        "depth_shape": list(depth_shape),
         "invalid_fraction": float((depth <= 0).mean()),
     }
