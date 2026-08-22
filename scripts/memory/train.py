@@ -64,6 +64,9 @@ def build_args():
     # objective
     ap.add_argument("--with-camera", action="store_true",
                     help="add abs/rel pose terms via the teacher camera bridge")
+    ap.add_argument("--force-untrusted-pose", action="store_true",
+                    help="train pose terms even when the cache marks its GT poses "
+                         "untrusted. Only for deliberate experiments")
     ap.add_argument("--no-depth-loss", action="store_true",
                     help="pose-only. Implied when tap 23 is the only refined tap, "
                          "since d(depth)/d(tap23) == 0 in the published head")
@@ -120,6 +123,16 @@ def main() -> None:
           f"refine_taps {refine_taps}  depth_loss {use_depth}  camera {args.with_camera}")
     if not use_depth and not args.with_camera:
         raise SystemExit("nothing to optimise: depth loss disabled and --with-camera not set")
+    if args.with_camera and not args.force_untrusted_pose:
+        bad = [c.name for c in clips
+               if not ClipReader(c).meta.gt_pose_trusted]
+        if bad:
+            raise SystemExit(
+                f"{len(bad)}/{len(clips)} clips mark their GT poses untrusted "
+                f"(residual above {1.5} deg against the model's own trajectory, "
+                f"vs the 0.58-0.92 deg it achieves on 7-Scenes/TUM). A pose loss "
+                f"on that target pushes toward the wrong answer. Fix the transform "
+                f"or pass --force-untrusted-pose deliberately. e.g. {bad[:3]}")
 
     weights = L.LossWeights(depth=args.w_depth, abs_pose=args.w_abs,
                             rel_pose=args.w_rel, alpha=args.alpha)

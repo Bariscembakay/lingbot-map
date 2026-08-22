@@ -272,6 +272,8 @@ def main() -> None:
         model_sha256=hashlib.sha256(Path(args.ckpt).read_bytes()).hexdigest(),
         git_sha=git_sha, git_dirty=dirty,
         gt_scale=g["scale"], gt_convention=g["convention"],
+        gt_pose_trusted=g["pose_trusted"],
+        gt_pose_residual_deg=g["pose_residual_deg"],
         stats={
             "tap_absmax": written["absmax"],
             "origin_norm_pct": {
@@ -288,6 +290,8 @@ def main() -> None:
             },
             "gt_invalid_fraction": g["invalid_fraction"],
             "gt_convention_scores_deg": g["convention_scores_deg"],
+            "gt_pose_residual_deg": g["pose_residual_deg"],
+            "gt_pose_trusted": g["pose_trusted"],
             "revisit_pct": {
                 str(p): float(np.percentile(g["revisit"], p))
                 for p in (10, 25, 50, 75, 90, 100)

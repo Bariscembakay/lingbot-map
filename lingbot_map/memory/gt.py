@@ -15,6 +15,7 @@ error a loss curve hides.
 """
 from __future__ import annotations
 
+import itertools
 import json
 import struct
 from pathlib import Path
@@ -32,14 +33,32 @@ DEPTH_SHAPE_CANDIDATES = ((192, 256), (256, 192), (240, 320), (320, 240),
 DEPTH_H, DEPTH_W = DEPTH_SHAPE_CANDIDATES[0]
 MM_PER_M = 1000.0
 
-# c2w_opencv = c2w_source @ FLIP. ARKit/OpenGL is +Y up, -Z forward; OpenCV is
-# +Y down, +Z forward, so the usual fix is diag(1,-1,-1,1).
-CONVENTIONS: Dict[str, np.ndarray] = {
-    "opencv": np.diag([1.0, 1.0, 1.0, 1.0]),
-    "opengl": np.diag([1.0, -1.0, -1.0, 1.0]),
-    "flip_x": np.diag([-1.0, 1.0, -1.0, 1.0]),
-    "flip_xy": np.diag([-1.0, -1.0, 1.0, 1.0]),
-}
+def _axis_rotations() -> Dict[str, np.ndarray]:
+    """The 24 proper rotations that permute and sign-flip axes.
+
+    Sign flips alone are not enough: searching only `diag(+-1)` left a residual of
+    11.4 deg against the model's own trajectory, while allowing axis
+    *permutations* found 2.3 deg. ScanNet++ iphone poses need a permutation.
+    """
+    out = {}
+    for perm in itertools.permutations(range(3)):
+        for sg in itertools.product([1, -1], repeat=3):
+            M = np.zeros((3, 3))
+            for i, p in enumerate(perm):
+                M[i, p] = sg[i]
+            if abs(np.linalg.det(M) - 1.0) < 1e-9:
+                R = np.eye(4)
+                R[:3, :3] = M
+                out[f"p{''.join(map(str, perm))}s{''.join('+' if v > 0 else '-' for v in sg)}"] = R
+    return out
+
+
+AXIS_ROTATIONS = _axis_rotations()
+# The model's own RPE-rot is 0.58 deg on 7-Scenes and 0.92 deg on TUM (campaign
+# numbers reproducing the paper's Table 4). A GT transform that cannot get the
+# residual near that is not a convention we have identified, and a pose loss built
+# on it would push the model toward the wrong answer.
+POSE_TRUST_THRESHOLD_DEG = 1.5
 
 
 def detect_depth_shape(path: Path | str) -> Tuple[int, int]:
@@ -153,7 +172,8 @@ def canonical_scale(depth: np.ndarray, intr: np.ndarray, c2w_rel: np.ndarray,
     return float(np.linalg.norm(pts, axis=-1).mean())
 
 
-def detect_convention(c2w_raw: np.ndarray, pred_c2w: np.ndarray) -> Tuple[str, Dict[str, float]]:
+def detect_convention(c2w_raw: np.ndarray, pred_c2w: np.ndarray
+                      ) -> Tuple[str, bool, float, Dict[str, float]]:
     """Pick the camera convention that best matches the model's own trajectory.
 
     Compares *relative* rotations, which are invariant to the world frame and to
@@ -177,12 +197,30 @@ def detect_convention(c2w_raw: np.ndarray, pred_c2w: np.ndarray) -> Tuple[str, D
         cos = np.clip((np.trace(m, axis1=1, axis2=2) - 1.0) / 2.0, -1.0, 1.0)
         return np.degrees(np.arccos(cos))
 
-    target = rel_rots(pred_c2w)
+    def consecutive(c2w):
+        a, b = c2w[:-1, :3, :3], c2w[1:, :3, :3]
+        return np.einsum("nij,njk->nik", np.transpose(a, (0, 2, 1)), b)
+
+    target_long, target_short = rel_rots(pred_c2w), consecutive(pred_c2w)
     scores = {}
-    for name, flip in CONVENTIONS.items():
-        scores[name] = float(geodesic_deg(rel_rots(c2w_raw @ flip), target).mean())
+    for invert in (False, True):
+        base = np.linalg.inv(c2w_raw) if invert else c2w_raw
+        for name, R in AXIS_ROTATIONS.items():
+            cand = base @ R[None]
+            cand = np.linalg.inv(cand[0])[None] @ cand
+            # Scored on consecutive frames: that is the regime a per-frame pose
+            # loss actually sees, and it is what the campaign's RPE-rot measures.
+            scores[f"{'inv' if invert else 'asis'}:{name}"] = float(
+                geodesic_deg(consecutive(cand), target_short).mean())
     best = min(scores, key=scores.get)
-    return best, scores
+    residual = scores[best]
+    return best, residual <= POSE_TRUST_THRESHOLD_DEG, residual, scores
+
+
+def apply_convention(c2w_raw: np.ndarray, name: str) -> np.ndarray:
+    tag, rot = name.split(":", 1)
+    base = np.linalg.inv(c2w_raw) if tag == "inv" else c2w_raw
+    return base @ AXIS_ROTATIONS[rot][None]
 
 
 def revisit_score(depth: np.ndarray, intr: np.ndarray, c2w_rel: np.ndarray,
@@ -233,13 +271,12 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
     depth_small = read_iphone_depth(iphone / "depth.bin", frame_ids, depth_shape)
     c2w_raw, intr_full = read_iphone_meta(iphone / "pose_intrinsic_imu.json", frame_ids)
 
-    scores = None
+    scores, trusted, residual = None, False, float("nan")
     if convention == "auto":
         if pred_c2w is None:
             raise ValueError("convention='auto' needs pred_c2w to compare against")
-        convention, scores = detect_convention(c2w_raw, pred_c2w)
-    c2w = c2w_raw @ CONVENTIONS[convention]
-    c2w_rel = relative_to_first(c2w)
+        convention, trusted, residual, scores = detect_convention(c2w_raw, pred_c2w)
+    c2w_rel = relative_to_first(apply_convention(c2w_raw, convention))
 
     intr_small = scale_intrinsics(intr_full, (1440, 1920), depth_shape)
     s = canonical_scale(depth_small, intr_small, c2w_rel, anchor_frames)
@@ -256,7 +293,10 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
         "gt_intrinsics": scale_intrinsics(intr_full, (1440, 1920), (height, width)).astype(np.float32),
         "scale": s,
         "convention": convention,
-        "convention_scores_deg": scores,
+        "pose_residual_deg": residual,
+        "pose_trusted": bool(trusted),
+        "convention_scores_deg": None if scores is None else dict(
+            sorted(scores.items(), key=lambda kv: kv[1])[:5]),
         "revisit": revisit,
         "depth_shape": list(depth_shape),
         "invalid_fraction": float((depth <= 0).mean()),

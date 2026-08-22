@@ -22,7 +22,7 @@ GT_C2W = "gt_c2w.npy"
 REVISIT = "revisit.npy"
 META = "meta.json"
 
-FORMAT_VERSION = 2
+FORMAT_VERSION = 3
 
 # fp16 carries 10 mantissa bits against bfloat16's 8, so storing a bf16
 # aggregator output as fp16 is lossless -- but only inside fp16's much smaller
@@ -56,6 +56,8 @@ class ClipMeta:
     git_dirty: bool
     gt_scale: float
     gt_convention: str
+    gt_pose_trusted: bool
+    gt_pose_residual_deg: float
     stats: Dict[str, Any]
 
     @property
