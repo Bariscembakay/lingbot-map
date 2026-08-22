@@ -16,7 +16,8 @@ import math
 import torch
 from torch import nn, Tensor
 
-from .attention import Attention, CausalAttention, FlashInferAttention, SDPAAttention
+from .attention import (Attention, CausalAttention, FlashInferAttention, SDPAAttention,
+                        DEFAULT_MEMORY_TOKENS)
 from functools import lru_cache, partial
 from torch.nn.attention.flex_attention import BlockMask, create_mask
 from .drop_path import DropPath
@@ -177,6 +178,7 @@ class FlashInferBlock(nn.Module):
         kv_cache_cross_frame_special: bool = True,
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
+        kv_cache_memory_tokens: str = DEFAULT_MEMORY_TOKENS,
     ) -> None:
         super().__init__()
 
@@ -195,6 +197,7 @@ class FlashInferBlock(nn.Module):
             kv_cache_cross_frame_special=kv_cache_cross_frame_special,
             kv_cache_include_scale_frames=kv_cache_include_scale_frames,
             kv_cache_camera_only=kv_cache_camera_only,
+            kv_cache_memory_tokens=kv_cache_memory_tokens,
         )
 
         self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
@@ -486,6 +489,7 @@ class SDPABlock(nn.Module):
         kv_cache_cross_frame_special: bool = True,
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
+        kv_cache_memory_tokens: str = DEFAULT_MEMORY_TOKENS,
     ) -> None:
         super().__init__()
         self.norm1 = norm_layer(dim)
@@ -497,6 +501,7 @@ class SDPABlock(nn.Module):
             kv_cache_cross_frame_special=kv_cache_cross_frame_special,
             kv_cache_include_scale_frames=kv_cache_include_scale_frames,
             kv_cache_camera_only=kv_cache_camera_only,
+            kv_cache_memory_tokens=kv_cache_memory_tokens,
         )
         self.ls1 = LayerScale(dim, init_values=init_values) if init_values else nn.Identity()
         self.drop_path1 = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()

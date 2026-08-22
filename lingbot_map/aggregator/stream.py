@@ -14,6 +14,8 @@ import torch.nn as nn
 from typing import Optional, Tuple, List
 
 from lingbot_map.layers.block import Block, FlashInferBlock, SDPABlock
+from lingbot_map.layers.attention import (MEMORY_TOKEN_KINDS, DEFAULT_MEMORY_TOKENS,
+                                          parse_memory_tokens)
 from lingbot_map.layers.rope import WanRotaryPosEmbed
 from lingbot_map.aggregator.base import AggregatorBase, slice_expand_and_flatten
 
@@ -47,6 +49,7 @@ class AggregatorStream(AggregatorBase):
         kv_cache_cross_frame_special: bool = True,
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
+        kv_cache_memory_tokens: str = DEFAULT_MEMORY_TOKENS,
         # Base class parameters via **kwargs
         **kwargs
     ):
@@ -66,6 +69,10 @@ class AggregatorStream(AggregatorBase):
             kv_cache_cross_frame_special: Keep special tokens from evicted frames
             kv_cache_include_scale_frames: Include scale frames in KV cache
             kv_cache_camera_only: Only keep camera tokens from evicted frames
+            kv_cache_memory_tokens: Which of the 6 context tokens survive eviction
+                into the trajectory memory, as a comma-separated subset of
+                "camera,register,scale".  Anchor and window frames are unaffected.
+                SDPA backend only.
             **kwargs: Base class parameters
         """
         self.sliding_window_size = sliding_window_size
@@ -81,6 +88,7 @@ class AggregatorStream(AggregatorBase):
         self.kv_cache_cross_frame_special = kv_cache_cross_frame_special
         self.kv_cache_include_scale_frames = kv_cache_include_scale_frames
         self.kv_cache_camera_only = kv_cache_camera_only
+        self.kv_cache_memory_tokens = kv_cache_memory_tokens
 
         # Pop kwargs that are passed but not needed by base class
         kwargs.pop('enable_stream_inference', None)
@@ -91,6 +99,24 @@ class AggregatorStream(AggregatorBase):
         # Backend selection: SDPA (no extra deps) or FlashInfer (paged KV cache)
         self.use_sdpa = use_sdpa
         self.use_flashinfer = not use_sdpa  # FlashInfer is default unless SDPA requested
+
+        # FlashInferKVCacheManager.evict_frames takes all four of these and then
+        # ignores every one, so a FlashInfer run would quietly return baseline
+        # numbers instead of the requested ablation.  Refuse rather than mislead.
+        if not use_sdpa:
+            ignored = [n for n, v, default in (
+                ("kv_cache_cross_frame_special", kv_cache_cross_frame_special, True),
+                ("kv_cache_include_scale_frames", kv_cache_include_scale_frames, True),
+                ("kv_cache_camera_only", kv_cache_camera_only, False),
+                ("kv_cache_memory_tokens", parse_memory_tokens(kv_cache_memory_tokens),
+                 MEMORY_TOKEN_KINDS),
+            ) if v != default]
+            if ignored:
+                raise ValueError(
+                    f"{', '.join(ignored)} take effect on the SDPA backend only -- "
+                    f"FlashInfer's cache manager accepts and ignores them. "
+                    f"Pass use_sdpa=True."
+                )
 
         # Call parent __init__
         super().__init__(**kwargs)
@@ -144,6 +170,7 @@ class AggregatorStream(AggregatorBase):
                 kv_cache_cross_frame_special=self.kv_cache_cross_frame_special,
                 kv_cache_include_scale_frames=self.kv_cache_include_scale_frames,
                 kv_cache_camera_only=self.kv_cache_camera_only,
+                kv_cache_memory_tokens=self.kv_cache_memory_tokens,
             )
             for _ in range(depth)
         ])

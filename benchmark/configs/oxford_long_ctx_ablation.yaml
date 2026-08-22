@@ -1,0 +1,40 @@
+# Long-span test for the trajectory-memory context-token ablation.
+#
+# The short-sequence arms showed the 4 register tokens carry the memory, and the
+# window-shrink blocks showed that holds when the memory is 28.6% of context. What
+# neither tests is temporal REACH: there the memory spanned ~314 frames of history,
+# not 3,768. This runs the real thing — stride 1, 3,840 frames, keyframe_interval 1
+# — so the memory covers the whole sequence.
+#
+# Minimal arm set, just enough to confirm or break the finding:
+#   long_traj6     camera+register+scale   6   control
+#   long_regonly   register                4   are the registers SUFFICIENT?
+#   long_noreg     camera+scale            2   are the registers NECESSARY?
+#
+# AUC is off deliberately: it is pairwise over frames, so 3,840 frames means ~7.4M
+# pairs per scene. ATE + RPE answer the question at a fraction of the cost.
+#
+# Caveat to carry into the reading: the paper trained on <=320 views and direct
+# mode is documented stable to ~3,000 frames, so 3,840 keyframes is just past that.
+# The control absorbs it (all arms share the length), but check the control's own
+# absolute quality per scene before trusting any delta.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+
+datasets:
+  - oxford_long
+
+methods:
+  - lingbot_map_long_traj6
+  - lingbot_map_long_regonly
+  - lingbot_map_long_noreg
+
+evaluation:
+  traj:
+    enable: true
+    vis: false
+  auc:
+    enable: false
+  depth:
+    enable: false
+  points:
+    enable: false

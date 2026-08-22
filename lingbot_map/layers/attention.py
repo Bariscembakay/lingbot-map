@@ -33,6 +33,52 @@ from typing_extensions import List
 from typing import Optional, Tuple
 
 
+MEMORY_TOKEN_KINDS = ("camera", "register", "scale")
+DEFAULT_MEMORY_TOKENS = ",".join(MEMORY_TOKEN_KINDS)
+
+
+def parse_memory_tokens(spec, camera_only: bool = False) -> Tuple[str, ...]:
+    """Normalise a trajectory-memory token spec into an ordered tuple of kinds.
+
+    ``spec`` names which of the 6 per-frame context tokens survive eviction, as a
+    comma-separated subset of ``camera,register,scale`` (the paper's camera token,
+    4 register tokens and anchor token).  Governs the trajectory memory ONLY --
+    anchor and sliding-window frames always keep all of their tokens.
+    """
+    if camera_only:
+        # Pre-existing upstream flag; means the same thing as spec="camera".
+        return ("camera",)
+    kinds = ([k.strip() for k in spec.split(",")] if isinstance(spec, str)
+             else [str(k).strip() for k in spec])
+    kinds = [k for k in kinds if k]
+    unknown = [k for k in kinds if k not in MEMORY_TOKEN_KINDS]
+    if unknown:
+        raise ValueError(
+            f"unknown trajectory-memory token kind(s) {unknown}; "
+            f"expected a subset of {list(MEMORY_TOKEN_KINDS)}"
+        )
+    if not kinds:
+        raise ValueError(
+            "trajectory-memory token spec is empty; to drop the trajectory memory "
+            "entirely pass kv_cache_cross_frame_special=False instead"
+        )
+    # Canonical in-frame order, so gathered keys keep their original layout.
+    return tuple(k for k in MEMORY_TOKEN_KINDS if k in kinds)
+
+
+def memory_keep_indices(kinds, camera_token_idx: int, num_register_tokens: int,
+                        scale_token_idx: int) -> List[int]:
+    """In-frame token indices to retain, for a spec from :func:`parse_memory_tokens`."""
+    idx: List[int] = []
+    if "camera" in kinds:
+        idx.append(camera_token_idx)
+    if "register" in kinds:
+        idx.extend(range(camera_token_idx + 1, camera_token_idx + 1 + num_register_tokens))
+    if "scale" in kinds:
+        idx.append(scale_token_idx)
+    return idx
+
+
 class Attention(nn.Module):
     def __init__(
         self,
@@ -375,6 +421,7 @@ class FlashInferAttention(Attention):
         kv_cache_cross_frame_special: bool = True,
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
+        kv_cache_memory_tokens: str = DEFAULT_MEMORY_TOKENS,
     ) -> None:
         if not FLASHINFER_AVAILABLE:
             raise RuntimeError("FlashInfer is not available. Please install flashinfer.")
@@ -398,6 +445,8 @@ class FlashInferAttention(Attention):
         self.kv_cache_cross_frame_special = kv_cache_cross_frame_special
         self.kv_cache_include_scale_frames = kv_cache_include_scale_frames
         self.kv_cache_camera_only = kv_cache_camera_only
+        self.kv_cache_memory_tokens = parse_memory_tokens(
+            kv_cache_memory_tokens, camera_only=kv_cache_camera_only)
 
     def prepare_qkv(self, x: Tensor, pos=None, enable_3d_rope: bool = False) -> tuple:
         """Fused pre-attention ops for single-frame streaming (Phase 2).
@@ -580,6 +629,7 @@ class SDPAAttention(Attention):
         kv_cache_cross_frame_special: bool = True,
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
+        kv_cache_memory_tokens: str = DEFAULT_MEMORY_TOKENS,
     ) -> None:
         super().__init__(
             dim=dim, num_heads=num_heads, qkv_bias=qkv_bias, proj_bias=proj_bias,
@@ -591,6 +641,8 @@ class SDPAAttention(Attention):
         self.kv_cache_cross_frame_special = kv_cache_cross_frame_special
         self.kv_cache_include_scale_frames = kv_cache_include_scale_frames
         self.kv_cache_camera_only = kv_cache_camera_only
+        self.kv_cache_memory_tokens = parse_memory_tokens(
+            kv_cache_memory_tokens, camera_only=kv_cache_camera_only)
 
     def forward(self, x: Tensor, pos=None,
                 num_patches=None, num_special=None, num_frames=None, enable_3d_rope=False,
@@ -699,12 +751,15 @@ class SDPAAttention(Attention):
                     evicted_v = kv_cache[f"v_{global_idx}"][:, :, evict_start:evict_end, :, :]
 
                     if self.kv_cache_cross_frame_special:
-                        if self.kv_cache_camera_only:
-                            new_special_k = evicted_k[:, :, :, camera_token_idx:camera_token_idx+1, :].clone()
-                            new_special_v = evicted_v[:, :, :, camera_token_idx:camera_token_idx+1, :].clone()
-                        else:
-                            new_special_k = evicted_k[:, :, :, camera_token_idx:scale_token_idx+1, :].clone()
-                            new_special_v = evicted_v[:, :, :, camera_token_idx:scale_token_idx+1, :].clone()
+                        # Gather, not slice: the kept kinds need not be contiguous
+                        # (dropping only camera, or only scale, leaves a hole).  For
+                        # the default all-three spec this reproduces the previous
+                        # [camera_token_idx : scale_token_idx+1] slice exactly.
+                        keep = memory_keep_indices(
+                            self.kv_cache_memory_tokens,
+                            camera_token_idx, num_register_tokens, scale_token_idx)
+                        new_special_k = evicted_k[:, :, :, keep, :].clone()
+                        new_special_v = evicted_v[:, :, :, keep, :].clone()
 
                         if f"k_{global_idx}_special" not in kv_cache or kv_cache[f"k_{global_idx}_special"] is None:
                             kv_cache[f"k_{global_idx}_special"] = new_special_k

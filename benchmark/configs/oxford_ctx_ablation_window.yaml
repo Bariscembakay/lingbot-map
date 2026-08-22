@@ -1,0 +1,37 @@
+# Trajectory-memory stress test — same Oxford sparse data, smaller resident store.
+#
+# At the default anchor 8 / window 64 the memory is only 2.6% of visible context,
+# so a null result there would be uninformative about the mechanism. Shrinking the
+# resident store raises that share without the cost of a 3,840-frame run:
+#
+#   anchor 8 window 64  ->   2.6%   (the arms above)
+#   anchor 8 window  8  ->  12.7%
+#   anchor 2 window  4  ->  28.6%   == oxford_long @ 3840 frames, keyframe_interval 1
+#
+# NOTE: _w8 and _w4 rows are a DIFFERENT PROTOCOL from the unsuffixed rows and
+# from each other. Compare only within a suffix group, never across.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+
+datasets:
+  - oxford
+
+methods:
+  - lingbot_map_traj6_w8
+  - lingbot_map_traj_noreg_w8
+  - lingbot_map_traj_regonly_w8
+  - lingbot_map_traj6_w4
+  - lingbot_map_traj_noreg_w4
+  - lingbot_map_traj_regonly_w4
+
+evaluation:
+  traj:
+    enable: true
+    vis: false
+  auc:
+    enable: true
+    vis: false
+    aggregation: both
+  depth:
+    enable: false
+  points:
+    enable: false

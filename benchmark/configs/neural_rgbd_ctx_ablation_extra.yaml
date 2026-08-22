@@ -1,0 +1,28 @@
+# Follow-up arms for the context-token ablation, written into the SAME workspace so
+# they land in the same eval/*.json as the first five.
+#
+# Kept separate from neural_rgbd_ctx_ablation.yaml on purpose: evaluate.py scores every
+# method a config lists, and re-scoring the original five would cost hours of ICP
+# for numbers that already exist.
+#
+#   lingbot_map_traj_regonly  register only    4 of 6
+#   lingbot_map_traj_camonly  camera only      1 of 6
+workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+
+datasets:
+  - neural_rgbd
+
+methods:
+  - lingbot_map_traj_regonly
+  - lingbot_map_traj_camonly
+evaluation:
+  traj:
+    enable: false
+  auc:
+    enable: false
+  depth:
+    enable: false
+  points:
+    enable: true
+    vis: true          # keep the clouds: writes gt/pred colored PLYs + PR curves
+    icp_threshold: 0.1

@@ -143,6 +143,7 @@ class GCTStream(GCTBase):
         kv_cache_cross_frame_special: bool = True,
         kv_cache_include_scale_frames: bool = True,
         kv_cache_camera_only: bool = False,
+        kv_cache_memory_tokens: str = "camera,register,scale",
         # Backend selection
         use_sdpa: bool = False,  # If True, use SDPA (no flashinfer needed); default: FlashInfer
         # Gradient checkpointing
@@ -176,6 +177,10 @@ class GCTStream(GCTBase):
             kv_cache_cross_frame_special: Keep special tokens from evicted frames
             kv_cache_include_scale_frames: Include scale frames in KV cache
             kv_cache_camera_only: Only keep camera tokens from evicted frames
+            kv_cache_memory_tokens: Which of the 6 context tokens survive eviction
+                into the trajectory memory, as a comma-separated subset of
+                "camera,register,scale".  Anchor and window frames are unaffected.
+                SDPA backend only.
         """
         # Store stream-specific parameters before calling super().__init__()
         self.pretrained_path = pretrained_path
@@ -196,6 +201,7 @@ class GCTStream(GCTBase):
         self.kv_cache_cross_frame_special = kv_cache_cross_frame_special
         self.kv_cache_include_scale_frames = kv_cache_include_scale_frames
         self.kv_cache_camera_only = kv_cache_camera_only
+        self.kv_cache_memory_tokens = kv_cache_memory_tokens
         self.use_sdpa = use_sdpa
         self.camera_num_iterations = camera_num_iterations
 
@@ -247,6 +253,7 @@ class GCTStream(GCTBase):
             kv_cache_cross_frame_special=self.kv_cache_cross_frame_special,
             kv_cache_include_scale_frames=self.kv_cache_include_scale_frames,
             kv_cache_camera_only=self.kv_cache_camera_only,
+            kv_cache_memory_tokens=self.kv_cache_memory_tokens,
             use_gradient_checkpoint=self.use_gradient_checkpoint,
         )
 

@@ -1,0 +1,38 @@
+# Trajectory-memory context-token ablation.
+#
+# The paper (§3.2) retains "the camera, anchor, and register tokens (i.e. 6
+# context tokens per frame)" for every frame evicted from the anchor set and the
+# sliding window. These arms vary WHICH of those 6 survive; anchor and window
+# frames always keep all 783 of their tokens.
+#
+#   lingbot_map               FlashInfer, 6 tokens   cross-backend reference
+#   lingbot_map_traj6         SDPA,       6 tokens   control for the ablations
+#   lingbot_map_traj_noreg    SDPA,       camera + scale      (registers dropped)
+#   lingbot_map_traj_nocam    SDPA,       register + scale    (camera dropped)
+#   lingbot_map_traj_noscale  SDPA,       camera + register   (anchor dropped)
+#
+# All five are siblings under one arm so they land in the same eval/*.json.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+
+methods:
+  - lingbot_map
+  - lingbot_map_traj6
+  - lingbot_map_traj_noreg
+  - lingbot_map_traj_nocam
+  - lingbot_map_traj_noscale
+
+datasets:
+  - oxford
+
+evaluation:
+  traj:
+    enable: true
+    vis: true
+  auc:
+    enable: true
+    vis: true
+    aggregation: both
+  depth:
+    enable: false
+  points:
+    enable: false
