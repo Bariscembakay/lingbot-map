@@ -203,6 +203,37 @@ Control sanity: `traj6` at 63.66 / 6.14 reproduces the `sparse_s12` run
 - The 6-token spec reproduces the original contiguous slice byte for byte, so
   the control arm is unchanged from upstream.
 
+### The floor: no trajectory memory at all (2026-08-22)
+
+`kv_cache_cross_frame_special: false` — an evicted frame retains 0 of its 6 tokens.
+Added because the NRGBD nulls were indistinguishable from a failed ablation without
+it, and because nothing else puts an absolute scale on the per-token deltas.
+
+| benchmark | with memory | memory OFF | mechanism worth |
+|---|---|---|---|
+| Oxford sparse (AUC@15) | 63.66 | 60.58 | **3.08** |
+| Neural RGB-D (F1) | 65.108 | 65.161 | **~0** |
+
+**Oxford: the registers are 93% of the whole mechanism** (2.85 of 3.08). Arms form
+two clusters, not a gradient — registers present (6/5/5/4 tokens) 63.66-63.81
+spread 0.15; registers absent (2/1/0) 60.58-60.81 spread 0.23. Inside the
+register-less cluster the metric ordering contradicts itself (AUC says fewer is
+worse, ATE says fewer is better), which is the signature of noise: once the
+registers are gone, what else you keep is irrelevant. `none` worse on 9/10 scenes.
+
+**NRGBD: the mechanism is inert.** All 8 arms within 0.113 F1 and memory-off is the
+highest. Confirmed independently of the eval protocol by trajectory deviation:
+Oxford `none` mean 1.073 vs NRGBD `none` mean 0.0094 — **114x**. The ablation is
+still correctly graded on NRGBD (`none` diverges 2.5x more than `noreg`); every step
+is just tiny. So every NRGBD null in this work is a property of revisiting indoor
+trajectories, not a failed ablation.
+
+Verification that the NRGBD arms really were ablated (the doubt that prompted this):
+every arm logs its own composition at load, and divergence starts at exactly frame
+72 on 8/9 scenes — the 9th being `whiteroom`, which has 336 frames, crosses the 320
+threshold so `auto` gives interval 2, putting the 72nd *keyframe* at frame
+8 + (72-8)*2 = **136**. Observed 136. The mechanism is behaving exactly as designed.
+
 ### Memory-share stress test (does the finding survive when the memory matters?)
 
 At the default anchor 8 / window 64 the memory is only 2.6% of visible context.
@@ -308,8 +339,11 @@ globally.
 - [x] VBR — pipeline validated, no paper baseline
 - [x] TUM — full artifacts kept for viewing, no paper baseline
 - [x] KITTI (Odometry) — full artifacts kept for viewing, no paper baseline
-- [x] Trajectory-memory context-token ablation — Oxford pose done; the 4
-      register tokens carry the memory, camera/anchor contribute nothing
+- [x] Trajectory-memory context-token ablation — the 4 register tokens are 93%
+      of the whole mechanism (2.85 of 3.08 AUC@15); camera/anchor contribute
+      nothing measurable
+- [x] Floor arm (memory disabled entirely) — confirms NRGBD nulls are a real
+      property, not a failed ablation: mechanism worth ~0 there, 3.08 on Oxford
 - [x] Same ablation on NRGBD reconstruction — no effect on any arm; the
       predicted poses barely move (7.9e-03 vs Oxford's 3.06)
 - [x] Memory-share stress test — finding holds at 2.6%, 12.7% and 28.6% of

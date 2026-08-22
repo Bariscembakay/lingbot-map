@@ -1,0 +1,23 @@
+# Final row of the context-token ablation: trajectory memory removed entirely.
+# Same workspace as the other arms so it lands in the same eval/*.json. Kept in its
+# own config because evaluate.py scores every method a config lists, and re-scoring
+# the finished arms would cost hours of ICP for numbers that already exist.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+
+datasets:
+  - oxford
+
+methods:
+  - lingbot_map_traj_none
+evaluation:
+  traj:
+    enable: true
+    vis: true
+  auc:
+    enable: true
+    vis: true
+    aggregation: both
+  depth:
+    enable: false
+  points:
+    enable: false

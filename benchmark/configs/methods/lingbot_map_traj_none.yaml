@@ -1,0 +1,26 @@
+model: lingbot_map
+env: lingbot_map
+_checkpoint: /home/baris_bakay/lingbot-map/ckpt/lingbot-map.pt
+_device: cuda
+_mode: streaming
+_use_amp: true
+_use_sdpa: true   # SDPA only: FlashInfer ignores the cache-composition knobs
+_image_size: 518
+_patch_size: 14
+_enable_3d_rope: true
+_num_scale_frames: 8
+_max_frame_num: 1024
+_kv_cache_sliding_window: 64
+_kv_cache_scale_frames: 8
+_keyframe_interval: auto         # auto = 1 if frames<=threshold else ceil(N/threshold); or a fixed int
+_auto_keyframe_threshold: 320    # frame-count threshold driving the 'auto' keyframe_interval (streaming mode)
+_area_budget: 255000
+_align: 14
+
+# NO trajectory memory at all: an evicted frame retains 0 of its 6 context tokens
+# and contributes nothing to later attention. The floor of the composition series
+# (6 -> 5 -> 4 -> 2 -> 1 -> 0), and the decisive test of whether the mechanism does
+# anything on a given benchmark: if removing it entirely changes nothing, then the
+# per-token results there are null because the memory is inert, not because the
+# ablation failed to apply.
+_kv_cache_cross_frame_special: false

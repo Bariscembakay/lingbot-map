@@ -61,6 +61,7 @@ class LingbotMapMethod(BaseMethod):
         kv_cache_scale_frames: int = 8,
         kv_cache_camera_only: bool = False,
         kv_cache_memory_tokens: str = "camera,register,scale",
+        kv_cache_cross_frame_special: bool = True,
         window_size: int = 64,
         overlap_size: Optional[int] = None,
         keyframe_interval: Any = "auto",
@@ -92,6 +93,7 @@ class LingbotMapMethod(BaseMethod):
         self.kv_cache_scale_frames = kv_cache_scale_frames
         self.kv_cache_camera_only = kv_cache_camera_only
         self.kv_cache_memory_tokens = kv_cache_memory_tokens
+        self.kv_cache_cross_frame_special = kv_cache_cross_frame_special
         self.window_size = window_size
         self.overlap_size = overlap_size
         self.keyframe_interval = keyframe_interval
@@ -124,7 +126,7 @@ class LingbotMapMethod(BaseMethod):
             max_frame_num=self.max_frame_num,
             kv_cache_sliding_window=self.kv_cache_sliding_window,
             kv_cache_scale_frames=self.kv_cache_scale_frames,
-            kv_cache_cross_frame_special=True,
+            kv_cache_cross_frame_special=self.kv_cache_cross_frame_special,
             kv_cache_include_scale_frames=True,
             kv_cache_camera_only=self.kv_cache_camera_only,
             kv_cache_memory_tokens=self.kv_cache_memory_tokens,
@@ -146,13 +148,17 @@ class LingbotMapMethod(BaseMethod):
 
         # Arms differ only in this number, so log it: an unchanged metric otherwise
         # cannot be told apart from a flag that never reached the model.
-        from lingbot_map.layers.attention import memory_keep_indices, parse_memory_tokens
-        kinds = parse_memory_tokens(self.kv_cache_memory_tokens,
-                                    camera_only=self.kv_cache_camera_only)
-        n_kept = len(memory_keep_indices(kinds, 0, 4, 5))
-        print(f"  → Trajectory memory keeps {'+'.join(kinds)} = {n_kept} of 6 context "
-              f"tokens per evicted frame "
-              f"(backend: {'SDPA' if self.use_sdpa else 'FlashInfer'})")
+        backend = 'SDPA' if self.use_sdpa else 'FlashInfer'
+        if not self.kv_cache_cross_frame_special:
+            print(f"  → Trajectory memory DISABLED: evicted frames retain 0 of 6 context "
+                  f"tokens (backend: {backend})")
+        else:
+            from lingbot_map.layers.attention import memory_keep_indices, parse_memory_tokens
+            kinds = parse_memory_tokens(self.kv_cache_memory_tokens,
+                                        camera_only=self.kv_cache_camera_only)
+            n_kept = len(memory_keep_indices(kinds, 0, 4, 5))
+            print(f"  → Trajectory memory keeps {'+'.join(kinds)} = {n_kept} of 6 context "
+                  f"tokens per evicted frame (backend: {backend})")
 
     def _prepare_images(self, rgb_list):
         """Convert list of HxWx3 uint8 numpy arrays to [S, 3, H, W] tensor in [0, 1]."""
