@@ -298,7 +298,13 @@ penalty is near-identical across a 12x change in memory span:
 | sparse s12 | 320 | 248 frames | +0.719 on 6.143 = **+11.7%** |
 | long s1 | 3,840 | 3,768 frames | +2.814 on 29.063 = **+9.7%** |
 
-Frame-72 property holds on all 10 long scenes too.
+Frame-72 property holds on 6 of 10 long scenes. The other four
+(keble-college-04/05, observatory-quarter-01/02) diverge at frame **0** because
+they ran on H200 while everything else ran on A100 — cross-hardware float
+nondeterminism, not ablation leakage. Measured on identical inputs it is ~1% of
+the ablation signal at frame 3839 (7.4e-03 vs 7.8e-01), and the subgroup means
+agree (+2.745 A100 vs +2.917 H200), so the result stands. Details and the
+platform-pair comparison are in the campaign's `RESULTS.md`.
 
 **Read this with the caveat that the control is itself broken here** (ATE 29 m on
 ~100 m paths — see the Table 3 decisive-test result above for why interval 1
