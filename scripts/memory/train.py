@@ -168,7 +168,11 @@ def main() -> None:
 
             if i % args.head_every == 0 and j is not None:
                 parts = {}
-                head_in = reader.head_inputs(i, refined)
+                # Reading all four taps costs 16.5 MB/frame and this loop is
+                # I/O bound; the camera head only needs tap 23, so a pose-only arm
+                # reads a quarter as much.
+                head_in = (reader.head_inputs(i, refined) if use_depth
+                           else [reader.rebuild_tap(i, 3, refined[3]).unsqueeze(1)])
                 if use_depth:
                     d, c = depth_head(head_in,
                                       images=torch.zeros(1, 1, 3, H, W, device=device),

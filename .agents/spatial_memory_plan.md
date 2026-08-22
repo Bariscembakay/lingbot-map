@@ -276,6 +276,46 @@ I/O bound, which sets `/scratch` layout and worker count.
   N sweep.
 - Then Loss 2, then `a` vs `c` (position_mode).
 
+## Phase 7 — evaluation on Oxford Spires and Neural RGB-D
+
+Held-out, different-domain, and neither is in the training set: Oxford Spires is
+large-scale outdoor with TLS ground truth, Neural RGB-D is small indoor with a GT
+mesh. Configs already exist (`benchmark/configs/oxford.yaml`,
+`oxford_long.yaml`, `neural_rgbd.yaml`) and both datasets are registered
+(`oxford_spires` 156 GB, `NRGBD` 7.3 GB, local zone).
+
+**This needs a piece that does not exist yet.** Training runs on cached taps with
+the memory outside the model; evaluation has to run the memory *inside* the
+streaming loop. So Phase 7 is a new benchmark method wrapper:
+
+`benchmark/methods/lingbot_map_memory.py`
+- subclass/wrap the existing `lingbot_map` method so all preprocessing, resize
+  and metric code is shared and comparable;
+- hold a `SummaryMemory` plus its trained checkpoint;
+- hook `model.aggregator` to intercept its output, run
+  `memory.step(state, tokens, write_tokens)` on the schedule, and substitute the
+  refined taps before the heads -- the same substitution `data.head_inputs` does,
+  but live;
+- reset the state at each sequence start.
+
+Two evaluation regimes, and the difference matters:
+
+| regime | camera cache holds | measures |
+|---|---|---|
+| bridged | teacher values for frames < i | per-frame pose improvement, matching how the arms were trained |
+| **free-running** | refined tokens, as deployed | **trajectory** improvement (ATE/RPE) -- the only regime where drift can compound |
+| | | |
+
+The arms are trained bridged and must be evaluated free-running, which is a
+train/eval gap. If it costs accuracy, the fix is scheduled sampling: feed refined
+poses into the cache for a growing fraction of steps during training.
+
+Report, per arm and per dataset:
+- depth and pose metrics **bucketed by revisit score**, never averaged;
+- each arm against its own `frozen_state` control, not against frozen
+  lingbot-map -- a residual adapter beats the latter without using the state;
+- `val_median` alongside `val_top`, since the training split is curated.
+
 ## Open items, in priority order
 
 1. **Validate the pose pipeline on a benchmark dataset with trusted GT.** Run the
