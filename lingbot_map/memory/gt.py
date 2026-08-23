@@ -15,7 +15,6 @@ error a loss curve hides.
 """
 from __future__ import annotations
 
-import itertools
 import json
 import struct
 from pathlib import Path
@@ -33,27 +32,21 @@ DEPTH_SHAPE_CANDIDATES = ((192, 256), (256, 192), (240, 320), (320, 240),
 DEPTH_H, DEPTH_W = DEPTH_SHAPE_CANDIDATES[0]
 MM_PER_M = 1000.0
 
-def _axis_rotations() -> Dict[str, np.ndarray]:
-    """The 24 proper rotations that permute and sign-flip axes.
-
-    Sign flips alone are not enough: searching only `diag(+-1)` left a residual of
-    11.4 deg against the model's own trajectory, while allowing axis
-    *permutations* found 2.3 deg. ScanNet++ iphone poses need a permutation.
-    """
-    out = {}
-    for perm in itertools.permutations(range(3)):
-        for sg in itertools.product([1, -1], repeat=3):
-            M = np.zeros((3, 3))
-            for i, p in enumerate(perm):
-                M[i, p] = sg[i]
-            if abs(np.linalg.det(M) - 1.0) < 1e-9:
-                R = np.eye(4)
-                R[:3, :3] = M
-                out[f"p{''.join(map(str, perm))}s{''.join('+' if v > 0 else '-' for v in sg)}"] = R
-    return out
-
-
-AXIS_ROTATIONS = _axis_rotations()
+# `aligned_pose` is camera-to-world in the **OpenCV** convention, used as-is.
+#
+# Established against ScanNet++'s own documented poses rather than inferred:
+# `iphone/nerfstudio/transforms.json` is c2w in the nerfstudio/OpenGL convention,
+# and `aligned_pose @ diag(1,-1,-1,1)` reproduces it to **0.14 deg median** over
+# 919 matched frames. The OpenGL<->OpenCV flip is exactly that matrix, so
+# `aligned_pose` is already OpenCV c2w.
+#
+# An earlier revision searched 48 candidate conventions by matching against the
+# model's own trajectory. That estimator was underdetermined -- it returned seven
+# different "conventions" across twenty clips of one dataset -- because the thing
+# it was really fitting was an 11.4 deg error introduced by a spurious inversion
+# in `losses.pose_enc_to_c2w`. Do not reintroduce a search; the convention is
+# documented, and what remains is a check.
+OPENGL_TO_OPENCV = np.diag([1.0, -1.0, -1.0, 1.0])
 # The model's own RPE-rot is 0.58 deg on 7-Scenes and 0.92 deg on TUM (campaign
 # numbers reproducing the paper's Table 4). A GT transform that cannot get the
 # residual near that is not a convention we have identified, and a pose loss built
@@ -172,25 +165,14 @@ def canonical_scale(depth: np.ndarray, intr: np.ndarray, c2w_rel: np.ndarray,
     return float(np.linalg.norm(pts, axis=-1).mean())
 
 
-def detect_convention(c2w_raw: np.ndarray, pred_c2w: np.ndarray
-                      ) -> Tuple[str, bool, float, Dict[str, float]]:
-    """Pick the camera convention that best matches the model's own trajectory.
+def verify_pose_target(gt_c2w: np.ndarray, pred_c2w: np.ndarray
+                       ) -> Tuple[bool, float]:
+    """Check the GT poses against the model's own trajectory. Returns (trusted, deg).
 
-    Compares *relative* rotations, which are invariant to the world frame and to
-    scale, so this tests only the axis convention.
-
-    Pairs are taken across **long baselines**, not consecutive frames: a slow room
-    scan has near-identity inter-frame rotations, and flipping axes of a
-    near-identity rotation barely changes it, so the consecutive-frame version
-    separated the four candidates by only ~5 degrees -- comparable to the
-    teacher's own error. Long baselines give large rotations and a wide margin.
+    A check, not a fit: consecutive relative rotations are invariant to the world
+    frame and to scale, so a mismatch here means a real disagreement rather than a
+    frame convention.
     """
-    def rel_rots(c2w):
-        n = len(c2w)
-        i = np.arange(n)
-        j = (i + n // 2) % n
-        a, b = c2w[i, :3, :3], c2w[j, :3, :3]
-        return np.einsum("nij,njk->nik", np.transpose(a, (0, 2, 1)), b)
 
     def geodesic_deg(ra, rb):
         m = np.einsum("nij,njk->nik", np.transpose(ra, (0, 2, 1)), rb)
@@ -201,26 +183,8 @@ def detect_convention(c2w_raw: np.ndarray, pred_c2w: np.ndarray
         a, b = c2w[:-1, :3, :3], c2w[1:, :3, :3]
         return np.einsum("nij,njk->nik", np.transpose(a, (0, 2, 1)), b)
 
-    target_long, target_short = rel_rots(pred_c2w), consecutive(pred_c2w)
-    scores = {}
-    for invert in (False, True):
-        base = np.linalg.inv(c2w_raw) if invert else c2w_raw
-        for name, R in AXIS_ROTATIONS.items():
-            cand = base @ R[None]
-            cand = np.linalg.inv(cand[0])[None] @ cand
-            # Scored on consecutive frames: that is the regime a per-frame pose
-            # loss actually sees, and it is what the campaign's RPE-rot measures.
-            scores[f"{'inv' if invert else 'asis'}:{name}"] = float(
-                geodesic_deg(consecutive(cand), target_short).mean())
-    best = min(scores, key=scores.get)
-    residual = scores[best]
-    return best, residual <= POSE_TRUST_THRESHOLD_DEG, residual, scores
-
-
-def apply_convention(c2w_raw: np.ndarray, name: str) -> np.ndarray:
-    tag, rot = name.split(":", 1)
-    base = np.linalg.inv(c2w_raw) if tag == "inv" else c2w_raw
-    return base @ AXIS_ROTATIONS[rot][None]
+    resid = float(geodesic_deg(consecutive(gt_c2w), consecutive(pred_c2w)).mean())
+    return resid <= POSE_TRUST_THRESHOLD_DEG, resid
 
 
 def revisit_score(depth: np.ndarray, intr: np.ndarray, c2w_rel: np.ndarray,
@@ -271,12 +235,11 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
     depth_small = read_iphone_depth(iphone / "depth.bin", frame_ids, depth_shape)
     c2w_raw, intr_full = read_iphone_meta(iphone / "pose_intrinsic_imu.json", frame_ids)
 
-    scores, trusted, residual = None, False, float("nan")
-    if convention == "auto":
-        if pred_c2w is None:
-            raise ValueError("convention='auto' needs pred_c2w to compare against")
-        convention, trusted, residual, scores = detect_convention(c2w_raw, pred_c2w)
-    c2w_rel = relative_to_first(apply_convention(c2w_raw, convention))
+    c2w_rel = relative_to_first(c2w_raw)
+    trusted, residual = False, float("nan")
+    if pred_c2w is not None:
+        trusted, residual = verify_pose_target(c2w_rel, relative_to_first(pred_c2w))
+    convention = "opencv_c2w"
 
     intr_small = scale_intrinsics(intr_full, (1440, 1920), depth_shape)
     s = canonical_scale(depth_small, intr_small, c2w_rel, anchor_frames)
@@ -295,8 +258,7 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
         "convention": convention,
         "pose_residual_deg": residual,
         "pose_trusted": bool(trusted),
-        "convention_scores_deg": None if scores is None else dict(
-            sorted(scores.items(), key=lambda kv: kv[1])[:5]),
+        "convention_scores_deg": None,
         "revisit": revisit,
         "depth_shape": list(depth_shape),
         "invalid_fraction": float((depth <= 0).mean()),

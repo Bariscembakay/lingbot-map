@@ -93,8 +93,14 @@ def depth_loss(
 def pose_enc_to_c2w(pose_enc: torch.Tensor, image_size_hw) -> torch.Tensor:
     """[..., 9] pose encoding -> [..., 4, 4] camera-to-world.
 
-    `pose_encoding_to_extri_intri` returns **world-to-camera** extrinsics, which is
-    why this inversion exists: the paper supervises c2w.
+    `pose_encoding_to_extri_intri` builds `cat([R, T])` from `absT_quaR_FoV`, where
+    `absT` is the camera's **absolute** translation -- its position in world. That
+    is already camera-to-world, which is also what the paper says it supervises.
+
+    An earlier version of this function inverted it, on the assumption that
+    "extrinsics" meant world-to-camera. Measured cost of that assumption: relative
+    rotations disagreed with ScanNet++ GT by 11.43 deg, against 0.41 deg without
+    the inversion -- and it sent us looking for a nonexistent axis convention.
     """
     lead = pose_enc.shape[:-1]
     extri, _ = pose_encoding_to_extri_intri(
@@ -104,7 +110,7 @@ def pose_enc_to_c2w(pose_enc: torch.Tensor, image_size_hw) -> torch.Tensor:
     m = torch.zeros(n, 4, 4, dtype=extri.dtype, device=extri.device)
     m[:, :3, :] = extri[0]
     m[:, 3, 3] = 1.0
-    return closed_form_inverse_se3(m).reshape(*lead, 4, 4)
+    return m.reshape(*lead, 4, 4)
 
 
 def _c2w_to_qt(c2w: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
