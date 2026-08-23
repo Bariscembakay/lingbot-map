@@ -45,8 +45,8 @@ def main() -> None:
                             f"{os.path.getsize(p)} != {sz}"))
         rows.append((os.path.basename(dd), d))
 
-    def uni(key, fn=lambda d: d[key]):
-        return sorted(set(fn(d) for _, d in rows))
+    def uni(key):
+        return sorted(set(d[key] for _, d in rows))
 
     print(f"clips                {len(rows)}" +
           (f" / {a.expect}" if a.expect else ""))
