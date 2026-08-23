@@ -19,7 +19,9 @@ MEM="${CACHE_MEM:-64G}"
 STRIDE="${CACHE_STRIDE:-20}"
 CONCURRENT="${CACHE_CONCURRENT:-8}"
 ROOT="${SCANNETPP_ROOT:-/data/ScanNetpp}"
-LOG_DIR="${CACHE_LOG_DIR:-$REPO_DIR/.agents/scratch/memory_logs}"
+# Job logs belong in the campaign record, not /home -- /home is
+# repositories and scripts only, and campaigns/_joblogs already exists.
+LOG_DIR="${CACHE_LOG_DIR:-/group/compact-3dmem/campaigns/_joblogs}"
 
 case "$OUT_ROOT" in
     /scratch/*) echo "refusing: /scratch is per-node, the cache must be zone-shared" >&2; exit 1 ;;

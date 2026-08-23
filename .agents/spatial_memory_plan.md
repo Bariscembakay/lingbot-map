@@ -332,6 +332,31 @@ Report, per arm and per dataset:
 4. Re-measure the revisit score and the depth-ratio trend on a 320-frame clip and
    across scenes; the current numbers are one 128-frame clip.
 
+## Cluster-convention compliance
+
+Checked 2026-08-23. Three deviations found, two fixed:
+
+| | rule | state |
+|---|---|---|
+| job logs | `campaigns/_joblogs/` already existed in this repo; `/home` is repositories and scripts only | **fixed** -- submitters now default there |
+| smoke caches | deleted, not filed | **fixed** -- `_smoke2` (2.2 GB) removed |
+| the teacher cache | "stage everything a job needs into `/scratch` before the job starts" | **outstanding** -- read directly off `/group` CephFS and not registered with `dataset create` |
+
+The cache deviation is deliberate but temporary. `/scratch` is `/dev/md40`, a
+per-node local disk, so a cache written by a build job on one node is invisible
+to a training job on another -- which is why it lives on `/group` for now. The
+correct end state is the one the convention describes: keep the canonical copy in
+the `dataset` registry and have each training job `dataset pull` it to local
+`/scratch` at start.
+
+Two reasons that is not merely cosmetic:
+- measured `read_bytes` is currently **0** because the 89 GB train split fits
+  entirely in the node's 1.9 TB page cache. That stops being true as the scene
+  count grows, and then CephFS becomes the bottleneck.
+- `dataset create` must wait until no job is reading the path; two arms are
+  reading it now, and finding out the hard way whether it moves or replicates is
+  not worth breaking hour-long runs for.
+
 ## Cluster notes
 
 **Everything on msp3.** One-time `dataset pull ScanNetpp` + `dataset pin`

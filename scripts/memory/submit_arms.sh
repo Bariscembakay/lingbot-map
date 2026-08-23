@@ -19,7 +19,9 @@ TIME="${ARM_TIME:-12:00:00}"
 CPUS="${ARM_CPUS:-16}"
 MEM="${ARM_MEM:-96G}"
 HEADS="${ARM_HEADS:-/group/compact-3dmem/checkpoints/lingbot-map/frozen_heads.pt}"
-LOG_DIR="${ARM_LOG_DIR:-$REPO_DIR/.agents/scratch/memory_logs}"
+# Job logs belong in the campaign record, not /home -- /home is
+# repositories and scripts only, and campaigns/_joblogs already exists.
+LOG_DIR="${ARM_LOG_DIR:-/group/compact-3dmem/campaigns/_joblogs}"
 EXTRA="${ARM_EXTRA:-}"
 
 DEP_ARG=()
