@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
@@ -32,7 +33,13 @@ from lingbot_map.memory.cache_format import (  # noqa: E402
 TAP_LAYERS = [4, 11, 17, 23]
 
 
-def probe_video(path: Path) -> tuple[int, int, int]:
+def probe_video(path: Path) -> tuple[int, int, Optional[int]]:
+    """(width, height, nb_frames or None).
+
+    `nb_frames` is absent for some ScanNet++ mkv files -- it killed 9 of 20 array
+    tasks -- so callers must not depend on it. The authoritative frame count is
+    the pose json, which we need for every frame we use anyway.
+    """
     out = subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0",
          "-show_entries", "stream=width,height,nb_frames",
@@ -40,7 +47,13 @@ def probe_video(path: Path) -> tuple[int, int, int]:
         capture_output=True, text=True, check=True,
     ).stdout
     s = json.loads(out)["streams"][0]
-    return int(s["width"]), int(s["height"]), int(s["nb_frames"])
+    nb = s.get("nb_frames")
+    return int(s["width"]), int(s["height"]), (int(nb) if nb not in (None, "N/A") else None)
+
+
+def pose_frame_count(scannetpp_root: Path | str, scene: str) -> int:
+    jp = Path(scannetpp_root) / "data" / scene / "iphone" / "pose_intrinsic_imu.json"
+    return len(json.loads(jp.read_text()))
 
 
 def benchmark_resize(w: int, h: int, target_w: int, align: int,
@@ -147,7 +160,9 @@ def main() -> None:
     if not video.exists():
         raise SystemExit(f"missing {video}")
 
-    vw, vh, nframes = probe_video(video)
+    vw, vh, nb_probe = probe_video(video)
+    n_pose = pose_frame_count(args.scannetpp_root, args.scene)
+    nframes = n_pose if nb_probe is None else min(nb_probe, n_pose)
     W, H = benchmark_resize(vw, vh, args.target_width, args.align, args.area_budget)
     patch_h, patch_w = H // args.patch_size, W // args.patch_size
 
@@ -159,7 +174,8 @@ def main() -> None:
             f"but the video has {nframes}"
         )
 
-    print(f"{args.scene} clip {args.clip_index}: {vw}x{vh}x{nframes} -> {W}x{H}, "
+    print(f"{args.scene} clip {args.clip_index}: {vw}x{vh}x{nframes} "
+          f"(probe {nb_probe}, pose json {n_pose}) -> {W}x{H}, "
           f"{patch_w}x{patch_h}={patch_w * patch_h} patches, "
           f"frames {frame_ids[0]}..{frame_ids[-1]} stride {args.stride}")
 
