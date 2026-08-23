@@ -7,6 +7,9 @@ export TQDM_MININTERVAL=30
 # wandb writes run data and artifacts; /home is repos and scripts only.
 export WANDB_DIR="${WANDB_DIR:-/scratch/$USER/wandb}"
 mkdir -p "$WANDB_DIR"
+# Credentials are per zone and deliberately unsynced, so ~/.netrc may not exist
+# here. Offline still records everything; `wandb sync` uploads it later.
+[ -f "$HOME/.netrc" ] || export WANDB_MODE="${WANDB_MODE:-offline}"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 
 # Small kernels plus heavy cache I/O read as idle to the GPU reaper; 0.05 rather

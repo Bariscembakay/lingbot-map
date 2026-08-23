@@ -152,10 +152,16 @@ def main() -> None:
 
     run = None
     if not args.no_wandb:
-        import wandb
-        run = wandb.init(project=args.wandb_project, name=args.arm,
-                         id=f"{args.arm}-{args.seed}", resume="allow",
-                         config=vars(args), dir=os.environ.get("WANDB_DIR", "."))
+        # Never let logging kill a training job. A missing wandb, or a login this
+        # zone does not have, is a reason to lose curves -- not 12 GPU-hours.
+        try:
+            import wandb
+            run = wandb.init(project=args.wandb_project, name=args.arm,
+                             id=f"{args.arm}-{args.seed}", resume="allow",
+                             config=vars(args), dir=os.environ.get("WANDB_DIR", "."))
+        except Exception as e:
+            print(f"wandb unavailable ({type(e).__name__}: {e}); continuing without it",
+                  flush=True)
 
     t_start = time.time()
     while step < args.max_updates:
