@@ -31,6 +31,20 @@ the env on its local `/scratch` (msp3-1 or msp3-3) -- login nodes do not.
 Resume works (V11), so the A arms can be continued by resubmitting the same
 `--out`; they will pick up from `last.pt`.
 
+**While these four are alive, new jobs may hang in env setup.** They were
+submitted before the `micromamba run` fix (commit 7c358be) and each holds the
+`~/.cache/mamba/proc` lock on CephFS for its whole lifetime;
+`setup_lingbot_map_env.sh` calls micromamba internally, so a job sourcing it can
+block indefinitely with an empty log. Three timing jobs died this way (30, 45, 30
+minutes of walltime, no output). Jobs submitted from the current tree use the
+interpreter path and are unaffected *after* setup, but the setup call itself is
+shared infrastructure and was left alone. If a job hangs with an empty log, this
+is why -- check `squeue` for a long-running arm before debugging anything else.
+
+Throughput was measured from the arms themselves via `arm_status.py`, not from
+`time_clip.py`; the latter never got past setup. It remains useful once the arms
+are done and the lock is free.
+
 ## The immediate next action
 
 **Build the arm-comparison evaluation.** The four arms produce a comparison that
