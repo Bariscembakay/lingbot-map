@@ -12,6 +12,11 @@ mkdir -p "$WANDB_DIR"
 [ -f "$HOME/.netrc" ] || export WANDB_MODE="${WANDB_MODE:-offline}"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 
+# /scratch is per-node and the env is rebuilt per node, so installing wandb on a
+# login node does not make it available here. Idempotent, and train.py survives
+# without it either way.
+micromamba run -n lingbot_map python -c "import wandb" 2>/dev/null   || micromamba run -n lingbot_map pip install -q wandb
+
 # Small kernels plus heavy cache I/O read as idle to the GPU reaper; 0.05 rather
 # than the 0.4 default because the job needs its own VRAM.
 micromamba run -n lingbot_map python \
