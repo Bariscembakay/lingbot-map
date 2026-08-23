@@ -12,14 +12,22 @@ mkdir -p "$OUT"
 export TQDM_MININTERVAL=30   # a per-frame progress bar makes the log unreadable
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 
+# Use the interpreter directly, never `micromamba run`. `micromamba run` takes a
+# lock under ~/.cache/mamba/proc, which lives on /home == CephFS, where locking is
+# unreliable; a long-running job holds it for its whole lifetime and every later
+# invocation blocks. Two timing jobs died at their walltime waiting on the lock
+# held by two training arms.
+PY_ENV="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/lingbot_map/bin/python"
+
+
 if [ "${GPU_KEEP_ALIVE:-1}" != "0" ]; then
-    micromamba run -n lingbot_map python \
+    "$PY_ENV" \
         .agents/scratch/insait_cluster_files/gpu_keep_alive.py \
         "${GPU_KEEP_ALIVE_FRACTION:-0.05}" &
     trap 'kill $! 2>/dev/null' EXIT
 fi
 
-micromamba run -n lingbot_map python scripts/memory/build_cache.py \
+"$PY_ENV" scripts/memory/build_cache.py \
     --scannetpp-root "$SCANNETPP_ROOT" \
     --scene "$SCENE" \
     --clip-index "$CLIP" \
