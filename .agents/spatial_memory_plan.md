@@ -1,5 +1,82 @@
 # Persistent summary memory — implementation plan
 
+> **HANDOFF, 2026-08-23 ~13:30.** Session continued elsewhere. Read this section
+> first; the phase detail below is still current.
+
+## Live state
+
+Four arms training on msp3, all `RUNNING`, all past 1000 updates with
+checkpoints on disk at
+`/group/compact-3dmem/campaigns/summary-memory/dev_v1/<arm>/last.pt`:
+
+| job | arm | step | s/update | proj. 20k | fate at the 12 h wall |
+|---|---|---|---|---|---|
+| 738577 | `A_full` | 1000 | **6.83** | 37.9 h | cut off ~6,300 |
+| 738578 | `A_frozenstate` | 2000 | 3.40 | 18.9 h | cut off ~12,700 |
+| 738579 | `B_pose` | 3000 | **1.77** | 9.9 h | finishes |
+| 738580 | `B_frozenstate` | 3000 | 1.77 | 9.9 h | finishes |
+
+`scripts/memory/arm_status.py` reproduces this table. Run it from a node that has
+the env on its local `/scratch` (msp3-1 or msp3-3) -- login nodes do not.
+
+**Two consequences to act on:**
+
+1. **The A arms will be cut off at unequal update counts**, so any comparison must
+   be at **equal step**, never equal wall time. `A_full` at 6,300 vs
+   `A_frozenstate` at 12,700 would flatter the control.
+2. **The write path costs ~3.4 s/update** -- `A_full` (6.83) minus
+   `A_frozenstate` (3.40), since the frozen-state arm skips the write. That is
+   half of `A_full`'s cost and the first thing to profile.
+
+Resume works (V11), so the A arms can be continued by resubmitting the same
+`--out`; they will pick up from `last.pt`.
+
+## The immediate next action
+
+**Build the arm-comparison evaluation.** The four arms produce a comparison that
+nothing currently computes, and they are the go/no-go.
+
+To be precise about what does and does not exist, because an earlier note in this
+file overstated it: the repo has a **complete** benchmark
+(`benchmark/benchmark/evaluation/{trajectory,depth,points,auc}.py`, evo-based
+Sim(3) ATE/RPE, loaders for ETH3D/TUM/7-Scenes/TnT/KITTI/Oxford/NRGBD) and it
+reproduces the paper exactly. Nothing there is missing. What is missing is two
+specific things:
+
+| | what | effort |
+|---|---|---|
+| **(a) arm comparison** *(critical path)* | load each arm's checkpoint, iterate `val_top` and `val_median` **from the cached taps**, decode with the frozen head, and report depth/pose error **bucketed by revisit score**, each arm against **its own** frozen-state control at equal step. The benchmark cannot do this: it has no notion of revisit score, no arm-vs-control comparison, and it would re-run the aggregator on video at ~7 TFLOPs/frame when the taps are already cached. | ~hours |
+| (b) `benchmark/methods/lingbot_map_memory.py` | register the memory-augmented model as a benchmark *method* so the existing metrics apply unchanged. Needed for Phase 7 (Oxford Spires, NRGBD), not for the go/no-go. | ~day |
+
+Also: wandb ran **offline** (msp3 has no `~/.netrc`). Runs are on the compute
+nodes' local `/scratch/$USER/wandb`, per node -- collect them with `wandb sync`
+before those nodes are wiped.
+
+## Findings that were expensive to reach -- do not re-derive
+
+- **`pose_encoding_to_extri_intri` returns camera-to-world, not world-to-camera.**
+  `absT` is the camera's absolute position. Inverting it cost 11.43 deg of
+  relative-rotation error against GT (0.41 deg without) and sent us searching 48
+  axis conventions that did not exist. Read a documented convention before
+  writing an estimator for it.
+- **The published depth head's tap-23 branch is inert.** `layer4_rn`'s output is
+  100% negative and `ReLU(inplace=True)` annihilates it through the residual, so
+  `d(depth)/d(tap23) == 0` exactly. V13 guards this.
+- **Never `micromamba run` in a job.** It locks on `~/.cache/mamba/proc` on
+  CephFS; a long job holds it for its lifetime and later invocations block. Two
+  timing jobs burned 30 and 45 minutes of walltime waiting. Use
+  `"$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"`.
+- **`/scratch` is per-node** (`/dev/md40`). The env, and anything staged, exists
+  only on the node that built it -- including on login nodes.
+- **ffprobe `nb_frames` is absent for some ScanNet++ mkv files.** Nine of twenty
+  array tasks died on it; the pose json is authoritative.
+- **24 of 300 ScanNet++ scenes have unreadable `depth.bin`** at any candidate
+  shape. Detected and skipped with a count.
+- **Depth has no long-horizon headroom.** pred/GT ratio is flat (+1.5% over a
+  clip), scale-corrected error 1.8% and falling. Depth is a consistency metric;
+  **pose is the claim**, because ATE accumulates and small per-frame gains compound.
+
+
 Architecture is in `spatial_memory_design.md`. This is the build order.
 
 Rule for the whole plan: **nothing runs on a dev set until the validation suite
