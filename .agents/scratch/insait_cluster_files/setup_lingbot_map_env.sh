@@ -17,57 +17,78 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 # with a lock so the second job waits instead of colliding mid-install.
 MAMBA_ROOT="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}"
 mkdir -p "$MAMBA_ROOT"
-exec 200>"$MAMBA_ROOT/.setup_lingbot_map_env.lock"
-flock 200
 
-if [ -d "$ENV_PREFIX" ]; then
-    echo "[setup_lingbot_map_env] lingbot_map env already exists, skipping base install."
-else
-    echo "[setup_lingbot_map_env] Building lingbot_map env on $(hostname) ..."
+# Scoped to a subshell: the lock must be released once setup finishes, not
+# held for the rest of the sourcing shell's life. `exec 200>...; flock 200`
+# at top level (the original form of this fix) never unlocks, so fd 200
+# stays open through everything that runs after sourcing -- including a
+# long-running job's own child processes, which inherit it. That turned one
+# job into a de facto mutex over every other job on the same node for its
+# entire runtime, not just its setup phase (found 2026-08-17: a multi-hour
+# oxford_long run wedged five unrelated 1-GPU jobs packed onto the same node
+# for its whole duration, even though their own setup was a no-op).
+(
+    exec 200>"$MAMBA_ROOT/.setup_lingbot_map_env.lock"
+    flock 200
 
-    micromamba create -n lingbot_map python=3.10 -y
+    if [ -d "$ENV_PREFIX" ]; then
+        echo "[setup_lingbot_map_env] lingbot_map env already exists, skipping base install."
+    else
+        echo "[setup_lingbot_map_env] Building lingbot_map env on $(hostname) ..."
 
-    micromamba run -n lingbot_map pip install torch==2.8.0 torchvision==0.23.0 \
-        --index-url https://download.pytorch.org/whl/cu128
+        micromamba create -n lingbot_map python=3.10 -y
 
-    micromamba run -n lingbot_map pip install -e "${REPO_DIR}[vis]"
+        micromamba run -n lingbot_map pip install torch==2.8.0 torchvision==0.23.0 \
+            --index-url https://download.pytorch.org/whl/cu128
 
-    micromamba run -n lingbot_map pip install --index-url https://pypi.org/simple flashinfer-python
+        micromamba run -n lingbot_map pip install -e "${REPO_DIR}[vis]"
 
-    micromamba run -n lingbot_map pip install --index-url https://pypi.org/simple \
-        kaolin -f https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.8.0_cu128.html
+        micromamba run -n lingbot_map pip install --index-url https://pypi.org/simple flashinfer-python
 
-    micromamba run -n lingbot_map pip install \
-        numpy opencv-python Pillow matplotlib open3d plyfile tqdm scipy evo pyyaml OpenEXR Imath pye57
+        micromamba run -n lingbot_map pip install --index-url https://pypi.org/simple \
+            kaolin -f https://nvidia-kaolin.s3.us-east-2.amazonaws.com/torch-2.8.0_cu128.html
 
-    echo "[setup_lingbot_map_env] Base install done."
-fi
+        micromamba run -n lingbot_map pip install \
+            numpy opencv-python Pillow matplotlib open3d plyfile tqdm scipy evo pyyaml OpenEXR Imath pye57
 
-# conda's cuda-* packages use targets/x86_64-linux/{include,lib}/[stubs/]
-# instead of the standard toolkit layout (lib64/, top-level include/) that
-# FlashInfer's JIT build and gcc/nvcc expect -- symlink lib64 and add the
-# include dir to CPATH rather than patching every consumer.
-if [ ! -e "$ENV_PREFIX/lib64" ]; then
-    ln -s "$ENV_PREFIX/targets/x86_64-linux/lib" "$ENV_PREFIX/lib64"
-fi
+        echo "[setup_lingbot_map_env] Base install done."
+    fi
 
-# nvcc: not part of the base install above (pip torch wheels ship only the
-# CUDA runtime, not the compiler); needed to JIT-build
-# preprocess/oxford.py's CUDA visibility extension.
-if [ -x "$ENV_PREFIX/bin/nvcc" ]; then
-    echo "[setup_lingbot_map_env] nvcc already present, skipping."
-else
-    micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-nvcc=12.8 -y
-fi
+    # conda's cuda-* packages use targets/x86_64-linux/{include,lib}/[stubs/]
+    # instead of the standard toolkit layout (lib64/, top-level include/) that
+    # FlashInfer's JIT build and gcc/nvcc expect -- symlink lib64 and add the
+    # include dir to CPATH rather than patching every consumer.
+    if [ ! -e "$ENV_PREFIX/lib64" ]; then
+        ln -s "$ENV_PREFIX/targets/x86_64-linux/lib" "$ENV_PREFIX/lib64"
+    fi
 
-# cuda-driver-dev: separate package from cuda-nvcc/cuda-cudart-dev, needed
-# for cuda.h (extensions that #include it directly, not just cuda_runtime.h).
-if [ -f "$ENV_PREFIX/targets/x86_64-linux/include/cuda.h" ]; then
-    echo "[setup_lingbot_map_env] cuda-driver-dev already present, skipping."
-else
-    micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-driver-dev=12.8 -y
-fi
+    # nvcc: not part of the base install above (pip torch wheels ship only the
+    # CUDA runtime, not the compiler); needed to JIT-build
+    # preprocess/oxford.py's CUDA visibility extension.
+    if [ -x "$ENV_PREFIX/bin/nvcc" ]; then
+        echo "[setup_lingbot_map_env] nvcc already present, skipping."
+    else
+        micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-nvcc=12.8 -y
+    fi
+
+    # cuda-driver-dev: separate package from cuda-nvcc/cuda-cudart-dev, needed
+    # for cuda.h (extensions that #include it directly, not just cuda_runtime.h).
+    if [ -f "$ENV_PREFIX/targets/x86_64-linux/include/cuda.h" ]; then
+        echo "[setup_lingbot_map_env] cuda-driver-dev already present, skipping."
+    else
+        micromamba install -n lingbot_map -c nvidia -c conda-forge cuda-driver-dev=12.8 -y
+    fi
+)
 
 export CPATH="$ENV_PREFIX/targets/x86_64-linux/include${CPATH:+:$CPATH}"
+
+# FlashInfer JIT-compiles its kernels and locates the toolchain by looking for
+# nvcc on PATH, falling back to /usr/local/cuda (absent on these nodes). Calling
+# the env's interpreter directly -- which we must, since `micromamba run` holds a
+# CephFS lock for the job's lifetime -- skips the env activation that used to put
+# $ENV_PREFIX/bin on PATH, so export it here or every FlashInfer arm dies with
+# "Could not find nvcc".
+export CUDA_HOME="$ENV_PREFIX"
+export PATH="$ENV_PREFIX/bin${PATH:+:$PATH}"
 
 echo "[setup_lingbot_map_env] Done."

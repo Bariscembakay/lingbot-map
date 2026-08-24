@@ -12,9 +12,10 @@
 set -euo pipefail
 
 CONFIG="$1"; DATASET="$2"; METHOD="$3"; SCENE="${4:-}"
+: "${MAMBA_ROOT_PREFIX:=/scratch/$USER/micromamba}"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$REPO_DIR/benchmark"
 
-micromamba run -n lingbot_map python run_worker.py \
+"$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python" run_worker.py \
     --config "$CONFIG" --dataset "$DATASET" --method "$METHOD" \
     ${SCENE:+--scene "$SCENE"}

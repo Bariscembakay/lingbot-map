@@ -55,7 +55,7 @@ def score_scene(root: str, scene: str, stride: int, clip_len: int,
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default="/data/ScanNetpp")
-    ap.add_argument("--out", default=".agents/scratch/scene_revisit.json")
+    ap.add_argument("--out", default=".agents/scratch/spatial_memory/scene_revisit.json")
     ap.add_argument("--limit", type=int, default=40)
     ap.add_argument("--stride", type=int, default=20)
     ap.add_argument("--clip-len", type=int, default=320)

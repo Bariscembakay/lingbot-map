@@ -1,0 +1,26 @@
+# Does Oxford's 2.78% aspect squash cost accuracy?
+#
+# 504x378 is exactly 4:3 at essentially the shipped patch count (972 vs 999), so
+# it isolates the aspect fix from any resolution change. 1008x756 is the same
+# aspect at 4x the pixels.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/oxford_aspect
+
+datasets:
+  - oxford_ar504
+  - oxford_ar1008
+
+methods:
+  - lingbot_map_sdpa
+
+evaluation:
+  traj:
+    enable: true
+    vis: false
+  auc:
+    enable: true
+    vis: false
+    aggregation: both
+  depth:
+    enable: false
+  points:
+    enable: false

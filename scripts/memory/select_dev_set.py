@@ -14,7 +14,7 @@ from pathlib import Path
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--screening", default=".agents/scratch/scene_revisit_300.json")
+    ap.add_argument("--screening", default=".agents/scratch/spatial_memory/scene_revisit_300.json")
     ap.add_argument("--out", required=True)
     ap.add_argument("--train", type=int, default=16)
     ap.add_argument("--val-top", type=int, default=2)

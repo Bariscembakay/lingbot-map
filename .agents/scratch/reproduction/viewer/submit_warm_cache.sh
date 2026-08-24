@@ -52,7 +52,7 @@ set -euo pipefail
 source ${REPO}/.agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 cd ${REPO}/benchmark
 micromamba run -n lingbot_map python \
-  ../.agents/scratch/reproduction/precompute_viewer_cache.py \
+  ../.agents/scratch/reproduction/viewer/precompute_viewer_cache.py \
   ${WORKSPACE} --workers ${WORKERS} ${DS_ARG}
 EOS
 

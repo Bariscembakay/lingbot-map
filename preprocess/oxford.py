@@ -40,6 +40,7 @@ Usage:
   python process_final.py --dataset_dir /path/to/dataset --output_dir /path/to/out
 """
 
+import os
 import argparse
 import re
 import zipfile
@@ -117,6 +118,20 @@ PROCESS_SCENE = [
 #     "2024-03-14-blenheim-palace-02",
 #     "2024-03-14-blenheim-palace-05",
 # ]
+
+# Opt-in for the four scenes above. Issue #38 gives the reason they were dropped
+# from the paper: "the poses and point clouds in 4 of those scenes were not
+# properly aligned" -- and the comment right above narrows that to the TLS
+# clouds, not the trajectories. configs/oxford.yaml scores trajectory only
+# (points.enable: false), so these four are usable there, and upstream's own
+# README row may well include them. Requires --images_only.
+if os.environ.get("OXFORD_INCLUDE_EXCLUDED_4") == "1":
+    PROCESS_SCENE = PROCESS_SCENE + [
+        "2024-03-18-christ-church-01",
+        "2024-03-14-blenheim-palace-01",
+        "2024-03-14-blenheim-palace-02",
+        "2024-03-14-blenheim-palace-05",
+    ]
 
 # Other scens has no gt traj.
 

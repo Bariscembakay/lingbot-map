@@ -1,10 +1,13 @@
 # TUM RGB-D — lingbot_map trajectory evaluation.
-# Freiburg1 sequences; RGB frames associated with the nearest GT pose.
+# The nine Freiburg1 sequences (whitelisted in configs/datasets/tum.yaml), which
+# is upstream's published scope; RGB frames associated with the nearest GT pose.
+# Own arm rather than `default`, because default/tum holds the earlier 66-sequence
+# run whose predictions these nine are scored from.
 # Layout moved 2026-08-20 to campaigns/<campaign>/<arm>/<benchmark>, and the
 # duplicated dataset level was flattened away, so the ARM dir is now the
 # workspace root and `datasets:` below selects the subdir under it. One root
 # therefore serves every dataset sharing that arm.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/default
+workspace: /group/compact-3dmem/campaigns/lingbot_map/tum_fr1
 
 datasets:
   - tum

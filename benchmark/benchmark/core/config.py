@@ -59,7 +59,10 @@ class ConfigManager:
             config_path: Path to base YAML configuration file.
         """
         self.config_path = Path(config_path)
-        self._base_dir = self.config_path.parent
+        # datasets/ and methods/ live at the configs root, which is not always the
+        # base config's own directory -- base configs may sit in a campaign
+        # subdirectory. Walk up to the nearest ancestor that actually has them.
+        self._base_dir = self._find_configs_root(self.config_path.parent)
 
         # Raw config data
         self._base: Dict[str, Any] = {}
@@ -72,6 +75,14 @@ class ConfigManager:
     # Loading
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _find_configs_root(start: Path) -> Path:
+        """Nearest ancestor of *start* (inclusive) holding datasets/ or methods/."""
+        for d in (start, *start.parents):
+            if (d / 'datasets').is_dir() or (d / 'methods').is_dir():
+                return d
+        return start
+
     def _load_yaml(self, path: Path) -> dict:
         with open(path, 'r') as f:
             data = yaml.safe_load(f)
@@ -83,19 +94,33 @@ class ConfigManager:
 
         self._base = self._load_yaml(self.config_path)
 
-        # Auto-discover configs/datasets/*.yaml (flat — filename stem is the config name)
-        datasets_dir = self._base_dir / 'datasets'
-        if datasets_dir.is_dir():
-            for path in sorted(datasets_dir.glob('*.yaml')):
-                data = self._load_yaml(path)
-                self._datasets[path.stem] = data
+        # Auto-discover configs/datasets/**/*.yaml and configs/methods/**/*.yaml.
+        # The filename stem is the config name regardless of depth, so campaign
+        # subdirectories group configs without renaming them -- which matters
+        # because the BSS workspace keys method output directories by that same
+        # stem, so a rename would orphan results already on disk.
+        self._discover(self._base_dir / 'datasets', self._datasets, 'dataset')
+        self._discover(self._base_dir / 'methods', self._methods, 'method')
 
-        # Auto-discover configs/methods/*.yaml (flat — filename stem is the config name)
-        methods_dir = self._base_dir / 'methods'
-        if methods_dir.is_dir():
-            for path in sorted(methods_dir.glob('*.yaml')):
-                data = self._load_yaml(path)
-                self._methods[path.stem] = data
+    def _discover(self, root: Path, into: Dict[str, Any], kind: str) -> None:
+        """Load every *.yaml under *root*, keyed by filename stem.
+
+        Stems must be unique across subdirectories: they are the names used in a
+        base config's `datasets:` / `methods:` list, so a duplicate would make
+        which file wins depend on directory order.
+        """
+        if not root.is_dir():
+            return
+        seen: Dict[str, Path] = {}
+        for path in sorted(root.rglob('*.yaml')):
+            if path.stem in seen:
+                raise ValueError(
+                    f"Duplicate {kind} config name '{path.stem}': "
+                    f"{seen[path.stem]} and {path}. Config names are filename "
+                    f"stems and must be unique across subdirectories."
+                )
+            seen[path.stem] = path
+            into[path.stem] = self._load_yaml(path)
 
     # ------------------------------------------------------------------
     # Public API — selection lists

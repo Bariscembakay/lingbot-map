@@ -22,6 +22,14 @@ from typing import List, Dict, Any, Optional
 from benchmark.core.loader import BSSLoader
 from benchmark.dataset.base import BaseDataset
 
+# Estimated Kinect calibration, from zinsmatt/7-Scenes-Calibration (intrinsics
+# from vanishing points, depth->RGB extrinsics from point correspondences; the
+# two cameras are assumed to share orientation, so the extrinsic is a pure
+# translation).  Microsoft ship no official parameters -- "the RGB and depth
+# camera have not been calibrated and we can't provide calibration parameters".
+DEPTH_INTRINSICS_7SCENES = {'fx': 598.84, 'fy': 587.62, 'cx': 320.0, 'cy': 240.0}
+DEPTH_TO_COLOR_T = np.array([0.023449, 0.006177, 0.010525], dtype=np.float64)
+
 # 7Scenes fixed intrinsics
 INTRINSICS_7SCENES = {
     'fx': 525.0,
@@ -37,16 +45,25 @@ class SevenScenesDataset(BaseDataset):
     """7Scenes dataset loader."""
 
     def __init__(self, raw_data_root: str, split: str = 'test',
-                 logger=None):
+                 register_depth: bool = False, logger=None):
         """Initialize 7Scenes dataset loader.
 
         Args:
             raw_data_root: Dataset root directory
             split: 'train' or 'test' (default: 'test')
+            register_depth: Warp raw depth into the colour camera frame before
+                use. The raw `.depth.png` is in the DEPTH camera frame, but the
+                whole pipeline unprojects it with the colour intrinsics -- a
+                radial error (0 at the principal point, ~15 cm at the corners
+                at 2 m) that a global Umeyama+ICP cannot absorb. Upstream reads
+                `.depth.proj.png` instead, i.e. already-registered depth that
+                the Pi3 data prep is supposed to emit and that the raw
+                Microsoft distribution does not ship.
             logger: Optional logger instance
         """
         super().__init__(raw_data_root, logger=logger)
         self.split = split
+        self.register_depth = register_depth
 
     def get_scenes(self) -> List[str]:
         """Get all sequence names (per sequence, not per scene).
@@ -133,6 +150,8 @@ class SevenScenesDataset(BaseDataset):
         # Load data
         rgb = self._load_rgb(color_file)
         depth = self._load_depth(depth_file)
+        if self.register_depth:
+            depth = self._register_depth_to_color(depth)
         c2w = self._load_pose(pose_file)
 
         return {
@@ -206,6 +225,45 @@ class SevenScenesDataset(BaseDataset):
         depthmap[depthmap < 1e-3] = 0    # Too near (<1mm)
 
         return depthmap
+
+    @staticmethod
+    def _register_depth_to_color(depth: np.ndarray) -> np.ndarray:
+        """Forward-warp depth from the depth camera into the colour camera frame.
+
+        Unproject with the DEPTH intrinsics, translate into the colour frame,
+        reproject with the COLOUR intrinsics. Occlusions are resolved by writing
+        far points first so nearer ones overwrite them.
+
+        The translation sign was fixed empirically, not guessed: see
+        `.agents/scratch/reproduction/check_depth_registration.py`, which scores
+        RGB gradient magnitude at depth discontinuities. Negating the published
+        translation improved that score on every sequence tested; the opposite
+        sign was indistinguishable from doing nothing.
+        """
+        H, W = depth.shape
+        v, u = np.nonzero(depth > 0)
+        if v.size == 0:
+            return np.zeros_like(depth)
+        d = depth[v, u].astype(np.float64)
+
+        x = (u - DEPTH_INTRINSICS_7SCENES['cx']) / DEPTH_INTRINSICS_7SCENES['fx'] * d
+        y = (v - DEPTH_INTRINSICS_7SCENES['cy']) / DEPTH_INTRINSICS_7SCENES['fy'] * d
+        x, y, z = (x - DEPTH_TO_COLOR_T[0],
+                   y - DEPTH_TO_COLOR_T[1],
+                   d - DEPTH_TO_COLOR_T[2])
+
+        ok = z > 1e-6
+        x, y, z = x[ok], y[ok], z[ok]
+        uc = np.rint(INTRINSICS_7SCENES['fx'] * x / z + INTRINSICS_7SCENES['cx']).astype(np.int32)
+        vc = np.rint(INTRINSICS_7SCENES['fy'] * y / z + INTRINSICS_7SCENES['cy']).astype(np.int32)
+
+        inb = (uc >= 0) & (uc < W) & (vc >= 0) & (vc < H)
+        uc, vc, z = uc[inb], vc[inb], z[inb]
+
+        order = np.argsort(-z)
+        out = np.zeros((H, W), dtype=np.float32)
+        out[vc[order], uc[order]] = z[order].astype(np.float32)
+        return out
     
     @staticmethod
     def _load_pose(pose_file: Path) -> np.ndarray:

@@ -11,7 +11,7 @@
 # and a GPU-less job is also not a target for the idle-GPU reaper.
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 cd "$REPO_DIR"
 LOG_DIR="$REPO_DIR/.agents/logs/ctx_ablation"
 mkdir -p "$LOG_DIR"
@@ -24,8 +24,8 @@ METHODS=(lingbot_map lingbot_map_traj6 lingbot_map_traj_noreg
          lingbot_map_traj_nocam lingbot_map_traj_noscale)
 
 # dataset-key : config
-declare -A CFG=( [oxford]=configs/oxford_ctx_ablation.yaml
-                 [neural_rgbd]=configs/neural_rgbd_ctx_ablation.yaml )
+declare -A CFG=( [oxford]=configs/ctx_ablation/oxford_ctx_ablation.yaml
+                 [neural_rgbd]=configs/ctx_ablation/neural_rgbd_ctx_ablation.yaml )
 declare -A EVAL_TIME=( [oxford]=2:00:00 [neural_rgbd]=8:00:00 )
 
 # ── stage 0: prepare ───────────────────────────────────────────────────────────

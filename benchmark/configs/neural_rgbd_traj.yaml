@@ -1,0 +1,25 @@
+# Neural RGB-D trajectory + AUC.
+# The shipped neural_rgbd.yaml sets traj.enable/auc.enable false, so this
+# benchmark has no pose numbers even though upstream's README publishes them.
+# Same workspace and same predictions as neural_rgbd.yaml -- evaluation only,
+# no re-inference; points stay off so points.json is not touched.
+workspace: /group/compact-3dmem/campaigns/lingbot_map/default
+
+datasets:
+  - neural_rgbd
+
+methods:
+  - lingbot_map
+
+evaluation:
+  traj:
+    enable: true
+    vis: false
+  auc:
+    enable: true
+    vis: false
+    aggregation: both
+  depth:
+    enable: false
+  points:
+    enable: false

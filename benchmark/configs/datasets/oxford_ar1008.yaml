@@ -1,0 +1,20 @@
+# Oxford at load_img_size=1008: exactly 4:3, so no aspect distortion.
+#
+# The shipped 518 gives 518x378 = 1.3704 against the source's 1440x1080 = 1.3333,
+# a 2.78% anisotropic squash (datasets/oxford_spires.py floors the height to a
+# multiple of 14 after fixing the width). Intrinsics are scaled per axis so the
+# GT stays self-consistent, but the model predicts fx~=fy, i.e. square pixels,
+# so it cannot represent the squashed camera at all.
+dataset: oxford_spires
+raw_data_root: /group/compact-3dmem/datasets/oxford_spires_processed
+_load_img_size: 1008
+sampling:
+  strategy: sequence
+  stride: 12
+evaluation:
+  depth:
+    gt_clip:
+      min: 0.0
+      max: 200.0
+  points:
+    icp_threshold: 0.5

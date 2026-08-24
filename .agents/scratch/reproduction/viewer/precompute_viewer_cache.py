@@ -17,7 +17,7 @@ client.
 
 Usage (from benchmark/, in the lingbot_map env):
     micromamba run -n lingbot_map python \
-        ../.agents/scratch/reproduction/precompute_viewer_cache.py \
+        ../.agents/scratch/reproduction/viewer/precompute_viewer_cache.py \
         <workspace_dir> [--dataset NAME] [--workers N]
 """
 import argparse

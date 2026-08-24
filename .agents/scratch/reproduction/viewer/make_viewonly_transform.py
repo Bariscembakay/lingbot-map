@@ -26,7 +26,7 @@ Same estimator the trajectory evaluator uses: Umeyama with scale, on the
 translations of temporally corresponding poses.
 
 Usage (from benchmark/, in the lingbot_map env):
-    python ../.agents/scratch/reproduction/make_viewonly_transform.py \
+    python ../.agents/scratch/reproduction/viewer/make_viewonly_transform.py \
         <workspace> --dataset neural_rgbd [--method lingbot_map] [--dry-run]
 """
 import argparse

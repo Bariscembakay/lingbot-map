@@ -1,362 +1,390 @@
 # Reproduction results — lingbot-map
 
-Paper vs. our runs. Local-only. Run outputs:
-`/group/compact-3dmem/campaigns/lingbot_map/<dataset>/default/`.
+Three-way: paper vs. upstream's own `benchmark/README.md` vs. our runs. Ours are
+read from `eval/*.json` aggregates on disk under
+`/group/compact-3dmem/campaigns/lingbot_map/<arm>/<benchmark>/`, not transcribed.
+Scene counts in parentheses. `—` = not reported by that source.
 
-## Table 2 — Oxford Spires (sparse, stride 12)
+`benchmark/README.md` is what upstream gets from the released `lingbot-map.pt`
+on the shipped configs, i.e. the same thing we run; the paper is a third,
+separate set of numbers. Causes for individual rows are in `paper_vs_repo.md`.
 
-| Metric | Paper | Ours |
-| --- | --- | --- |
-| AUC@15 | 61.64 | 63.50 |
-| AUC@30 | 75.16 | 76.50 |
-| ATE | 6.42 | 6.19 |
-| RPE-trans | 1.01 | 0.765 — **not reproduced exactly**, ~24% lower than paper |
-| RPE-Rot | 3.70 | 4.29 — **not reproduced exactly**, ~16% higher than paper |
+Arrows mark the better direction: ATE / RPE / accuracy / completeness / chamfer
+are **lower-is-better** (↓); AUC / precision / recall / F1 are **higher-is-better**
+(↑). RPE-rot is in degrees.
 
-## Table 3 — Oxford Spires sparse vs. dense ATE
+## Where it stands (2026-08-23)
 
-| Setting | Paper | Ours |
-| --- | --- | --- |
-| ATE sparse (320 f) | 6.42 | 6.19 |
-| ATE dense (3,840 f) | 7.11 | 5.16 |
-| ΔATE | +0.69 | −1.03 |
+Twelve of the fifteen published rows reproduce. What is left, and why:
 
-**Not reproduced.** The paper's own point is that ATE *degrades slightly*
-sparse→dense (+0.69) while competing methods degrade sharply — ours moved
-the opposite direction (ATE dropped 1.03 going dense). That's not the same
-trend "more pronounced," it's a different result. RPE-trans 0.57, RPE-rot
-2.17 (dense) not compared against a paper value (paper doesn't report
-Table 3 RPE). FPS not measured — pipeline doesn't track inference
-throughput.
-
-### Leading hypothesis (2026-08-19): the two rows aren't a controlled comparison
-
-`_keyframe_interval: auto` resolves to `ceil(N/320)`, so it lands on
-**different values either side of the 320 threshold** — and the two rows we
-compare sit either side of it:
-
-| row | frames | `auto` → interval | keyframes cached |
+| # | mismatch | status | what would close it |
 | --- | --- | --- | --- |
-| sparse (`oxford.yaml`, stride 12) | 320 | **1** | 320 — every frame |
-| dense (`oxford_long.yaml`, stride 1) | 3,840 | **12** | 8 + 320 = **328** |
+| 1 | `bodleian-library-02` — 4.16 vs the paper's 9.59 | **open, actionable** | inspect in viser; the only Oxford scene whose gap run variance does not explain |
+| 2 | Oxford paper row (6.42) | **unreproducible by construction** | nothing — Table 2 used an unreleased 160-epoch checkpoint (#62) |
+| 3 | Oxford README row (5.374) | **closed 2026-08-23 — not the shipped config** | nothing further here; a 10-configuration sweep shows the shipped default is the 6th-closest of ten configs to their own row. See the Oxford sweep section |
+| 4 | Table 3 sparse vs dense | **unreproducible from the release** | flow-based keyframing, absent from the streaming path (`paper_vs_repo.md` §1.2; investigation in `trajectory_memory_ablation.md`) |
+| 5 | 7-Scenes points, registered GT | **closed, not identical** | their `.depth.proj.png`; ours is a reconstruction of it, so we sit 0.7% *better* than their row rather than on it |
+| 6 | RPE-rot on NRGBD (+13.6%) and KITTI (+26.3%) | **closed — metric, not pipeline** | nothing; RMSE over all pairs is outlier-dominated and moves ±65% between identical runs |
+| 7 | ETH3D, all 17 metrics 0.08–0.79% low | **closed — run numerics** | nothing; deficit is monotone in threshold |
 
-Same `raw_data_root`, so both end up caching ~320 frames at ~12-frame
-spacing over the same physical trajectory. **The dense run's KV cache is
-essentially the sparse run's cache.** The only real difference is that the
-dense run additionally emits predictions for the 11-in-12 non-keyframes,
-which attend to that same memory and are then scored against GT.
+Only #1 is worth more compute. #2 needs upstream. #3–#7 are explained and
+stable. A new item, the Oxford aspect squash, is a correctness bug in upstream's
+adapter with negligible accuracy impact — see the sweep section.
 
-If that's right, we didn't measure "does the method degrade over 3,840
-frames" — we measured "does denser output sampling help at fixed memory,"
-and ATE improving is the expected answer (12x more poses, smoothly sampled,
-one global Sim(3) alignment). Which would explain −1.03 where the paper got
-+0.69.
+## Trajectory — ATE ↓ / RPE-trans ↓ / RPE-rot ↓ (°)
 
-See `fixes.md` for why `auto` keeps the keyframe count *constant* in N, and
-for the paper↔code gap: the paper's dense protocol uses **flow-based**
-keyframe selection, which is not implemented in the streaming path at all
-(only in the windowed/VO model).
+| Dataset | Paper | upstream README | Ours | vs README |
+| --- | --- | --- | --- | --- |
+| ETH3D | 0.43 / — / — | 0.439 / 0.493 / 3.339 (11) | 0.4424 / 0.4965 / 3.3486 (11) | 🟢 |
+| 7-Scenes | 0.08 / — / — | 0.079 / 0.020 / 0.579 (18) | 0.0789 / 0.0205 / 0.5788 (18) | 🟢 |
+| Tanks & Temples | 0.20 / — / — | 0.210 / 0.087 / 0.572 (6) | 0.2095 / 0.0867 / 0.5704 (6) | 🟢 |
+| Oxford Spires, sparse s12 | 6.42 / 1.01 / 3.70 | 5.374 / 0.930 / 3.694 (10) | 6.1887 / 0.7650 / 4.2903 (10) | 🔴 |
+| Oxford Spires, dense s1, kf auto | 7.11 / — / — | — | 5.1620 / 0.5726 / 2.1700 (10) | — |
+| Oxford Spires, dense s1, kf 1 | — | — | 29.063 / 0.3748 / 2.7690 (10) | — |
+| Neural RGB-D | — | 0.056 / 0.019 / 0.257 (9) | 0.0554 / 0.0189 / 0.2920 (9) | 🟡 |
+| TUM RGB-D, freiburg1 nine | — | 0.045 / 0.013 / 0.513 (9) | 0.0451 / 0.0132 / 0.5124 (9) | 🟢 |
+| KITTI Odometry | — | 24.046 / 2.861 / 0.696 (11) | 24.0772 / 2.8623 / 0.8790 (11) | 🟡 |
+| VBR | — | 31.204 / 2.717 / 4.564 (7) | 31.119 / 2.7156 / 4.3654 (7) | 🟢 |
+| DROID-W | — | 0.909 / 0.184 / 6.115 (7) | 0.9084 / 0.1837 / 6.1151 (7) | 🟢 |
 
-**Decisive test** — rerun `oxford_long` with:
+The TUM row is an exact aggregate over upstream's own scope, the nine Freiburg1
+sequences (see the TUM section); it is not a subset of a larger run. Upstream's
+single Oxford row is unlabelled — the README does not say which config produced
+it. NRGBD trajectory needs `configs/neural_rgbd_traj.yaml` and the TUM nine need
+a `_scenes` whitelist in `configs/datasets/tum.yaml`; the shipped `neural_rgbd.yaml`
+sets `traj.enable: false` and the shipped `tum.yaml` discovers all 66 sequences,
+so neither README row is producible from the shipped configs as they stand.
 
-```yaml
-_keyframe_interval: 1
-_max_frame_num: 4096      # required, or it dies at keyframe 1024 (see fixes.md)
-```
+## Pose AUC ↑ — degrees
 
-3,840 real keyframes, genuine long-sequence cache, ~9.5 GB preallocation
-(fine on an H200; patch pages stay bounded by the 64-frame window).
-Prediction: ΔATE flips positive, near the paper's +0.69. If it stays
-negative, the cause is elsewhere (eval protocol or scene selection) and
-Table 3 needs a different investigation.
+| Dataset | Paper | README macro | Ours macro | README micro | Ours micro | vs README |
+| --- | --- | --- | --- | --- | --- | --- |
+| ETH3D @3 / @30 | 37.22 / 81.09 | 37.22 / 81.10 | 36.9779 / 81.0060 | 40.34 / 87.97 | 40.0408 / 87.8965 | 🟢 |
+| 7-Scenes @3 / @30 | 12.63 / 78.59 | 12.35 / 78.09 | 12.3331 / 78.0686 | 13.20 / 79.06 | 13.1831 / 79.0485 | 🟢 |
+| Tanks & Temples @3 / @30 | 45.80 / 92.80 | — | 47.9918 / 93.1738 | — | 44.8669 / 92.3314 | — |
+| Oxford Spires @15 / @30 | 61.64 / 75.16 | — | 63.5028 / 76.5027 | — | 63.5075 / 76.5025 | — |
+| Neural RGB-D @3 / @30 | — | — | 42.3558 / 92.3945 | — | 40.4690 / 92.2634 | — |
 
-#### Decisive test RESULT (2026-08-21) — hypothesis confirmed, but it overshoots
+## Point clouds — Acc ↓ / Comp ↓ / F1 ↑
 
-Ran exactly as specified above (`_keyframe_interval: 1`, `_max_frame_num: 4096`),
-10 scenes x 3,840 real keyframes, as the control arm of the context-token
-ablation. Same scenes, same `raw_data_root`, only the interval differs:
+| Dataset | Paper | upstream README | Ours | vs README |
+| --- | --- | --- | --- | --- |
+| ETH3D | 0.16 / 0.08 / 86.79 | 0.168 / 0.089 / 86.80 | 0.1683 / 0.0897 / 86.7172 | 🟢 |
+| 7-Scenes, raw GT depth | 0.02 / 0.07 / 80.39 | 0.036 / 0.044 / 82.38 | 0.0411 / 0.0469 / 79.0556 | 🔴 |
+| 7-Scenes, registered GT depth | — | — | 0.0331 / 0.0427 / 82.9816 | 🟡 |
+| Neural RGB-D | 0.07 / 0.03 / 64.26 | 0.074 / 0.030 / 65.10 | 0.0737 / 0.0303 / 65.1071 | 🟢 |
 
-| dense protocol | keyframes cached | ATE |
-| --- | --- | --- |
-| `auto` -> 12 (the Table 3 row above) | ~328 | **5.16** |
-| forced `1` (genuine long-sequence cache) | 3,840 | **29.06** |
+All rows are exact, full-set reproductions; no scene is ever dropped from an
+aggregate.
 
-**ΔATE vs sparse flips from -1.03 to +22.87.** So the hypothesis is right in
-direction: the original dense row never stressed the streaming state, and that
-is why ours improved where the paper degraded.
+## 7-Scenes point clouds — cause found and fixed (2026-08-23)
 
-But +22.87 overshoots the paper's +0.69 by ~33x, so the paper's dense protocol
-is **neither** of these. That is consistent with the documented paper<->code gap:
-the paper uses flow-based keyframe selection, which lands on some intermediate
-keyframe count and is not implemented in the streaming path at all. Table 3
-cannot be reproduced from the released streaming code at any fixed interval —
-`auto` undershoots the stress, `1` massively overshoots it.
+Upstream reads GT depth from `frame-{id}.depth.proj.png`, i.e. depth already
+registered into the colour camera. No `.proj` variant ships with the raw
+Microsoft distribution, so we switched to `.depth.png` — which is in the
+**depth** camera frame. The pipeline then unprojects it with the colour focal
+(525) when the depth camera's is ~599, stretching the GT cloud radially: zero at
+the principal point, ~15 cm at the corners at 2 m, against a 5 cm F1 threshold.
+Being radial, Umeyama+ICP cannot absorb it — which is why it survived every
+alignment check, and why swapping 525→585 made Acc worse instead of better.
+Only depth-consuming metrics move; pose is unaffected. Full derivation in
+`paper_vs_repo.md` §2.5.
 
-Mechanism for the overshoot: at interval 1 the 3D RoPE frame index runs to 3,840
-while the model was trained on <=320 views, so positions 320-3,840 are out of
-distribution. `_auto_keyframe_threshold = 320` exists precisely to prevent this.
+**Fix, and it works.** `_register_depth` in `datasets/seven_scenes.py` warps
+depth into the colour frame before use — intrinsics untouched — using the
+Kinect calibration estimated by `zinsmatt/7-Scenes-Calibration` (Microsoft ship
+none). Arm `campaigns/lingbot_map/depthproj`, job 738368.
 
-**Consequence worth carrying:** in the regime this model actually works in, the
-trajectory memory can never exceed ~2.6% of visible context — `auto` caps
-keyframes at ~320, hence ~248 evicted frames x 6 tokens against 72 resident
-frames x 783. Raising the memory's share requires either shrinking the resident
-window (in-distribution, see the ablation's w8/w4 blocks) or leaving the trained
-frame range (out-of-distribution, as here).
+Every one of the six point-cloud metrics moved toward upstream; F1 went from
+3.32 below their row to 0.60 above it. Two controls say the effect is real:
 
-Note this does **not** explain Table 2 — at 320 frames / interval 1 we're
-in-distribution and matching the paper's training length, so keyframing
-isn't the suspect for the RPE gap there. Keep the two separate.
+- **Pose is unchanged** — ATE/RPE deltas vs the raw-depth arm are ≤1.5e-04, i.e.
+  float nondeterminism. Only GT moved, exactly as predicted.
+- **Precision improved** (74.26 → 79.51) even though registration *shrinks* the
+  GT cloud to the depth camera's narrower FOV (91.5% → 73.5% frame coverage).
+  A sparser GT should hurt precision; it improved, so this is alignment, not a
+  coverage artifact.
 
-## Table 4 — Pose (AUC@3 / AUC@30 / ATE)
+Sign of the translation was fixed empirically, not guessed: scoring RGB gradient
+magnitude at depth discontinuities (a model-free check — a correctly registered
+depth map puts its jumps on image edges) showed only one sign improves it, by
+30-60% on every sequence tested.
 
-| Dataset | Paper | Ours (macro / micro) |
-| --- | --- | --- |
-| ETH3D | 37.22 / 81.09 / 0.43 | 36.98 / 81.01 / 0.442  ·  40.04 / 87.90 |
-| 7-Scenes | 12.63 / 78.59 / 0.08 | 12.33 / 78.07 / 0.0789  ·  13.18 / 79.05 |
-| Tanks & Temples | 45.80 / 92.80 / 0.20 | 47.99 / 93.17 / 0.2095  ·  44.87 / 92.33 |
+We now sit slightly *above* upstream rather than on them, so this reproduces
+their **cause**, not their exact GT — our estimated calibration is not
+necessarily the one their `.proj` files were built with. Treat 82.98 as "the
+gap is explained and closed", not as a bit-match.
 
-## Table 5 — Reconstruction (Acc / Comp / F1)
+## Settlement against upstream's README (2026-08-23)
 
-| Dataset | Paper | Ours |
-| --- | --- | --- |
-| ETH3D | 0.16 / 0.08 / 86.79 | 0.168 / 0.090 / 86.72 |
-| 7-Scenes | 0.02 / 0.07 / 80.39 | 0.0347 / 0.0431 / 81.78 — **not reproduced**, see `fixes.md` |
-| NRGBD | 0.07 / 0.03 / 64.26 | 0.0737 / 0.0303 / 65.11 |
+Status marks in the three tables above:
 
-## Not paper benchmarks
+| mark | meaning |
+| --- | --- |
+| 🟢 | exact — every metric within run-to-run noise |
+| 🟡 | close; the residual is named and understood, but not eliminated |
+| 🔴 | does not reproduce, or is not comparable |
+| — | upstream publishes no baseline for that row |
 
-- DROID-W: no baseline in the paper, pipeline-only test.
-- VBR: no baseline in the paper, pipeline-only test. ATE 31.12, RPE-trans
-  2.72, RPE-Rot 4.37 (7 scenes) — pipeline runs clean end to end.
-- KITTI (Odometry): not in the paper either (repo calls it an ablation-only
-  dataset). Re-ran on sof1/gcp-eu1 (11 GT scenes) with full artifacts kept
-  for viewing: ATE 24.08, RPE-trans 2.862, RPE-rot 0.879 — matches the
-  original msp3 run closely.
-- TUM: no baseline in the paper either (no documented subset, downloaded
-  full public benchmark). Re-ran on sof1/gcp-eu1 (66 scenes) with full
-  artifacts kept for viewing: ATE 0.1303, RPE-trans 0.0273, RPE-rot 0.919 —
-  matches the original msp3 run.
+Deltas computed cell by cell from the `eval/*.json` aggregates, not eyeballed.
 
-## Trajectory-memory context-token ablation (2026-08-20)
+### ETH3D — closed, and it was never an AUC bug
 
-Question: which of the paper's 6 "context tokens" does the trajectory memory
-actually need? §3.2 keeps camera + anchor + 4 registers for every frame evicted
-from the anchor set and the sliding window; these arms vary WHICH survive.
-Anchor and window frames keep all 783 of their tokens in every arm.
+`DA3_FILTER_KEYS` is ruled out. Replaying the filter against the real frame
+stems drops exactly 4 / 6 / 12 / 11 / 6 frames from `delivery_area`, `electro`,
+`relief`, `relief_2`, `playground` — the intended lists, with no over- or
+under-match. The `endswith` test looks fragile but is deliberate: the keys are
+bare numbers (`427.JPG`) and the stems carry a camera prefix (`DSC_0427`).
 
-Results: `campaigns/lingbot_map/context_token_ablation/` — 13 method configs,
-20 arm-runs (all 13 on Oxford across 3 protocols, 7 on NRGBD). Provenance (base
-commit + working-tree diff + config snapshot) under its `_provenance/`.
+The actual reading is that **all 17 published ETH3D metrics are worse by the
+same small amount, and the deficit shrinks monotonically as the tolerance
+loosens**:
 
-**Only the SDPA backend can run this.** `FlashInferKVCacheManager.evict_frames`
-accepts `cross_frame_special` / `include_scale_frames` / `camera_only` and then
-ignores all three, so a FlashInfer run silently returns baseline numbers. The
-aggregator now raises instead. Hence the `lingbot_map` arm below: same 6 tokens,
-FlashInfer, purely to size the backend gap (-0.07 AUC@15 — negligible next to
-the effect being measured).
+| | @3 | @5 | @15 | @30 |
+| --- | ---: | ---: | ---: | ---: |
+| AUC macro, worse by | 0.65% | 0.56% | 0.21% | 0.12% |
+| AUC micro, worse by | 0.74% | 0.52% | 0.16% | 0.08% |
 
-### Oxford Spires sparse s12, 10 scenes — pose
+with ATE +0.77%, RPE-t +0.71%, completeness +0.78%, chamfer +0.79% at the tight
+end, and precision / recall / F1 at +0.10 / +0.09 / +0.10%.
 
-| arm | kept per evicted frame | n | AUC@15 | ATE | RPE-rot |
-|---|---|---|---|---|---|
-| `traj_regonly` | register | 4 | 63.81 | 6.076 | 4.574 |
-| `traj_noscale` | camera+register | 5 | 63.77 | 6.115 | 4.299 |
-| `traj_nocam` | register+scale | 5 | 63.70 | 6.132 | 4.321 |
-| `traj6` (control) | camera+register+scale | 6 | 63.66 | 6.143 | 4.276 |
-| `lingbot_map` (FlashInfer) | camera+register+scale | 6 | 63.58 | 6.167 | 4.311 |
-| `traj_noreg` | camera+scale | 2 | 60.81 | 6.861 | 4.782 |
-| `traj_camonly` | camera | 1 | 60.79 | 6.761 | 4.871 |
+The uniform sign across 17 cells is not evidence of bias — they are 17 views of
+one set of predictions, not 17 independent draws. What matters is the *shape*: a
+frame-subset or aggregation difference would perturb these erratically, whereas
+a tiny numeric difference in the predictions themselves is exactly what bites at
+tight tolerance and washes out at loose. Consistent with a different GPU / torch
+/ attention backend. Nothing to fix.
 
-**The registers carry the memory; the camera and anchor tokens contribute
-nothing measurable.** Keep the 4 registers and you are within +0.15 AUC@15 of
-control no matter what else is dropped; drop them and you lose ~2.85 AUC@15 and
-~0.7 m ATE regardless of what else is kept. It is not token count: 4-token
-`regonly` matches control while 2-token `noreg` and 1-token `camonly` are
-equally bad, and 2 -> 1 costs nothing further. `regonly` beats control on 8/10
-scenes, so 6 -> 4 tokens (-33% memory) looks free here — though the deltas among
-register-keeping arms are within noise at n=10, and `regonly` does pay RPE-rot
-+0.30 while ATE/AUC improve.
+### Oxford — the authors published per-scene ATE, and it reframes this
 
-`noreg` degrades on 8/10 scenes, worst on `bodleian-library-02` (62.6 -> 46.3).
-`christ-church-05` sits at AUC@15 ~2.7 in every arm — a scene the method fails
-on regardless, unrelated to the ablation.
+Upstream issue [#38](https://github.com/Robbyant/lingbot-map/issues/38) contains
+`LinZhuoChen`'s per-scene ATE for all 14 Oxford scenes at "first 320 frames,
+sampled every 12 frames" — our exact protocol. The mean of the ten kept scenes is
+**6.4246**, which is the paper's 6.42, so these are Table 2's own per-scene
+values. It also settles the scene set (#38 calls the paper's "13 scenes" a typo
+for 14, but see below — 13 is in fact correct;
+four were dropped because "the poses and point clouds in 4 of those scenes were
+not properly aligned", leaving the ten we use) and gives the 14-scene figure,
+ATE 5.59.
 
-Control sanity: `traj6` at 63.66 / 6.14 reproduces the `sparse_s12` run
-(63.50 / 6.19) and still beats the paper's 61.64 / 6.42.
+| scene | paper (#38) ATE ↓ | ours ATE ↓ | diff | ratio |
+| --- | ---: | ---: | ---: | ---: |
+| bodleian-library-02 | 9.5920 | 4.1618 | −5.4302 | 0.43× |
+| christ-church-02 | 3.2969 | 3.3469 | +0.0500 | 1.02× |
+| christ-church-03 | 0.4530 | 0.5116 | +0.0586 | 1.13× |
+| christ-church-05 | 35.9870 | 40.5017 | +4.5147 | 1.13× |
+| keble-college-02 | 3.0160 | 2.8568 | −0.1592 | 0.95× |
+| keble-college-03 | 1.9570 | 2.1473 | +0.1903 | 1.10× |
+| keble-college-04 | 1.5780 | 1.4577 | −0.1203 | 0.92× |
+| keble-college-05 | 2.8290 | 2.6356 | −0.1934 | 0.93× |
+| observatory-quarter-01 | 2.8610 | 1.9408 | −0.9202 | 0.68× |
+| observatory-quarter-02 | 2.6760 | 2.3269 | −0.3491 | 0.87× |
+| **mean** | **6.4246** | **6.1887** | −0.2359 | 0.96× |
 
-### Validation
+This corrects the earlier "Oxford is `christ-church-05`" reading. Eight of ten
+scenes agree within 13%. The two that do not are `bodleian-library-02` (we are
+2.3× *better*) and `christ-church-05` (we are 1.13× worse), and they carry 45%
+and 38% of the total per-scene movement in opposite directions — so the close
+means (6.19 vs 6.42) are substantially cancellation, not agreement.
 
-`.agents/scratch/reproduction/validate_trajmem.py` (invariants) and
-`analyze_ctx_ablation.py` (divergence). Key facts established:
+`christ-church-05` is no longer the anomaly: the paper's 35.99 sits inside the
+34.8–42.5 band our own 14 near-identical arms span on that scene, i.e. within
+config/run variance. **`bodleian-library-02` is the real outlier** and is where
+to look in viser — a 2.3× gap on a scene neither run treats as a failure.
 
-- The two stores behave differently: `k_i_special` is `cat`-ed on every eviction
-  and grows **without bound** (one entry per evicted frame, never trimmed or
-  recycled); `k_i` is **rebuilt** as `[:scale] ⧺ [-window:]` and stays pinned at
-  scale+window frames. `memory + resident == frames processed` every frame, so
-  no frame is double-counted or lost. Non-keyframes persist to neither store.
-- Resident tokens/frame stays 783 under **every** arm — the window and anchor
-  tokens are provably untouched.
-- All 50 (10 scenes x 5 ablations) Oxford comparisons are **bit-identical to
-  control through frame 71 and first diverge at exactly frame 72** = anchor 8 +
-  window 64. Divergence earlier would mean the change leaked into the anchor or
-  window; never diverging would mean the flag never reached the model.
-- The 6-token spec reproduces the original contiguous slice byte for byte, so
-  the control arm is unchanged from upstream.
+Its likely explanation is in issue
+[#62](https://github.com/Robbyant/lingbot-map/issues/62): Table 2 was produced
+with "the 160-th epoch checkpoint", and the released weights "can achieve better
+ATE than the results in table 2". A released checkpoint that fixes one scene the
+160-epoch one botched is exactly this shape. **Table 2 is therefore not
+reproducible from public weights by construction** — see `paper_vs_repo.md`.
 
-### The floor: no trajectory memory at all (2026-08-22)
+Ruled out as causes: frame set (320 frames from 3,840 at stride 12, confirmed
+from `sampling.json` and the rgb count, and now confirmed against #38's wording),
+scene set (the ten, confirmed by #38), and run-to-run noise (our SDPA and
+FlashInfer arms agree to 0.4% on the dataset mean).
 
-`kv_cache_cross_frame_special: false` — an evicted frame retains 0 of its 6 tokens.
-Added because the NRGBD nulls were indistinguishable from a failed ablation without
-it, and because nothing else puts an absolute scale on the per-token deltas.
+### RPE-rot is outlier-dominated — measured, not asserted
 
-| benchmark | with memory | memory OFF | mechanism worth |
-|---|---|---|---|
-| Oxford sparse (AUC@15) | 63.66 | 60.58 | **3.08** |
-| Neural RGB-D (F1) | 65.108 | 65.161 | **~0** |
+`evaluation/trajectory.py` computes it as `main_rpe.rpe(...,
+rotation_angle_deg, delta=1, all_pairs=True)` and reports `stats["rmse"]`. On
+KITTI the top 1% of frame pairs carry 4.5–90.6% of the total squared error
+(uniform would be 1%), and instability tracks that concentration:
 
-**Oxford: the registers are 93% of the whole mechanism** (2.85 of 3.08). Arms form
-two clusters, not a gradient — registers present (6/5/5/4 tokens) 63.66-63.81
-spread 0.15; registers absent (2/1/0) 60.58-60.81 spread 0.23. Inside the
-register-less cluster the metric ordering contradicts itself (AUC says fewer is
-worse, ATE says fewer is better), which is the signature of noise: once the
-registers are gone, what else you keep is irrelevant. `none` worse on 9/10 scenes.
+| seq | top-1% share of RMSE² | spread between our two identical-config runs |
+| --- | ---: | ---: |
+| 02 | 90.6% | 35.0% |
+| 07 | 63.7% | 32.5% |
+| 00 | 22.4% | 65.2% |
+| 10 | 15.0% | 0.09% |
+| 03 | 9.7% | 0.40% |
+| 04 | 4.5% | 0.83% |
 
-**NRGBD: the mechanism is inert.** All 8 arms within 0.113 F1 and memory-off is the
-highest. Confirmed independently of the eval protocol by trajectory deviation:
-Oxford `none` mean 1.073 vs NRGBD `none` mean 0.0094 — **114x**. The ablation is
-still correctly graded on NRGBD (`none` diverges 2.5x more than `noreg`); every step
-is just tiny. So every NRGBD null in this work is a property of revisiting indoor
-trajectories, not a failed ablation.
+On seq 02, deleting the single worst pair out of ~1,900 moves RMSE from 3.674 to
+2.730. Those same two runs agree to ≤2.5% per scene on ATE. So RPE-rot cannot be
+reproduced better than tens of percent on these datasets, and a mismatch there
+is not evidence of a pipeline difference — which is why NRGBD (+13.6%) and KITTI
+(+26.3%) are marked 🟡 rather than 🔴. DROID-W and Tanks & Temples happening to
+match exactly is luck, not a stronger reproduction.
 
-Verification that the NRGBD arms really were ablated (the doubt that prompted this):
-every arm logs its own composition at load, and divergence starts at exactly frame
-72 on 8/9 scenes — the 9th being `whiteroom`, which has 336 frames, crosses the 320
-threshold so `auto` gives interval 2, putting the 72nd *keyframe* at frame
-8 + (72-8)*2 = **136**. Observed 136. The mechanism is behaving exactly as designed.
+### Oxford vs upstream's README — closed 2026-08-23 by a 10-configuration sweep
 
-### Memory-share stress test (does the finding survive when the memory matters?)
+Upstream say their numbers come from "the released `lingbot-map.pt` checkpoint
+(streaming mode), evaluated on the shipped dataset configs", so flow-based
+keyframing is not implicated in *this* row and the question is purely data,
+config or numerics. Full evidence in
+`.agents/scratch/reproduction/oxford/oxford_readme_ruleouts.md`; the load-bearing parts:
 
-At the default anchor 8 / window 64 the memory is only 2.6% of visible context.
-Shrinking the resident store raises that share on the same data, far cheaper than
-a 3,840-frame run — and anchor 2 / window 4 lands at 28.6%, exactly matching
-`oxford_long` at 3,840 frames with `keyframe_interval 1`.
+**Ruled out with measurements, not inspection.** Config drift (`git diff` shows
+only paths differ), checkpoint (sha256 matches the published file), the
+`christ-church-05` sequence (upstream's hardcoded `2024-03-18` does not exist;
+only `2024-03-20` does, so they made our fix too), scene set and stride
+(confirmed by issue #38), the `max_frames=3840` truncation (the three
+most-truncated scenes would diverge 3–4x under a different cap; they agree with
+the paper to 8%), raw-data authenticity, stale upstream code, non-metric
+predicted scale (3.5–27x on *every* dataset), evaluation frame density
+(subsampling moves ATE 0.6% while moving both RPE metrics the *same* way), a
+different 10-scene selection (all 1001 subsets of #38's fourteen: those with
+cc-05 average ≥5.722, those without ≤3.832, and 5.374 falls in the gap), and
+GPU/backend (SDPA-A100 vs FlashInfer-a6000 moves Oxford <1%).
 
-ΔAUC@15 against each block's OWN control (blocks are different protocols; never
-compare absolute numbers across them):
+**What the sweep found.** Twelve arms, all SDPA/A100 so mutually comparable; the
+control submitted twice returned identical numbers to four decimals, so the
+pipeline is deterministic and every delta is signal.
 
-| resident store | memory share | `regonly` (4 reg) | `noreg` (no reg) | block control AUC@15 |
-|---|---|---|---|---|
-| anchor 8 / window 64 | 2.6% | +0.15 | -2.85 | 63.66 |
-| anchor 8 / window 8 | 12.7% | -0.29 | -4.02 | 30.87 |
-| anchor 2 / window 4 | 28.6% | +0.13 | -2.20 | 24.19 |
+| | ATE | RPE-t | RPE-rot | worst delta |
+| --- | ---: | ---: | ---: | ---: |
+| upstream README | 5.374 | 0.930 | 3.694 | |
+| anchors 4 | 5.625 | 0.892 | 3.832 | 4.7% |
+| anchors 16 + window 128 | 5.511 | 0.865 | 3.420 | 7.4% |
+| **shipped default** | 6.143 | 0.771 | 4.276 | **17.1%** |
+| `lingbot-map-long.pt` | 4.737 | 0.876 | 3.173 | 14.1% |
 
-**The finding is protocol-independent**: at every memory share tested, the 4
-register tokens alone reproduce the full 6-token control (|Δ| ≤ 0.29) and dropping
-them costs 2.2-4.0 AUC@15. So it is not an artifact of the memory being a
-negligible slice of context.
+- **The shipped default is the 6th-closest of ten configs to upstream's own
+  row.** Most single-knob changes fit their numbers better than the config they
+  name. That, plus environment being worth <1%, is why this is read as "not the
+  shipped config" rather than "an environment difference".
+- **The row is bracketed by the two released checkpoints** on ATE and RPE-rot:
+  `lingbot-map.pt` sits 14.3% above, `lingbot-map-long.pt` 11.8% below, and
+  solving for the crossing gives lambda 0.453 from ATE and 0.472 from RPE-rot —
+  agreeing to 4%. With issue #62 (Table 2 used an unreleased 160-epoch
+  checkpoint; both released ones beat it), an unpublished intermediate checkpoint
+  is the economical explanation.
+- **Oxford ATE spans 4.74–8.25 across single-knob changes**, a 74% range with
+  5.374 inside it. A 14.3% gap is small against that sensitivity — and it is why
+  the other eight rows reproduce within 1% while this one does not: they are
+  short or well-constrained sequences where the memory config barely bites.
+- **Only the checkpoint, the KV window and the aspect ratio move ATE and
+  RPE-trans in opposite directions.** The README needs exactly that (lower ATE,
+  higher RPE-trans), which no protocol or evaluation change can produce.
 
-The penalty magnitude is NOT monotonic in memory share (-2.85 → -4.02 → -2.20).
-Most likely a floor effect rather than anything about the memory: shrinking the
-window wrecks the model outright (control 63.66 → 30.87 → 24.19 AUC@15, ATE
-6.14 → 18.90 → 22.77), leaving less to lose. Treat within-block direction as the
-result and cross-block magnitude as uninterpretable.
+**Not pursued further, deliberately.** Two arms land within 10% on all three
+metrics and several within 15%. Picking the closest would be curve-fitting, and
+`anchors 4` contradicts both the shipped config and issue #68's "the number of
+scale images is 8".
 
-### NRGBD reconstruction — no effect, and not because the metric is blunt
+### Oxford's aspect squash — a real bug, but not a performance win
 
-All arms land within +/-0.06 F1 (65.05-65.12), including `noreg`, which costs
-2.85 AUC@15 on Oxford. Accuracy 0.0736-0.0737, completeness 0.0303-0.0304,
-chamfer 0.0520 throughout — the spread is smaller than the SDPA/FlashInfer gap.
+`datasets/oxford_spires.py` fixes width to 518 and floors height to a multiple of
+14, turning a 1440x1080 (1.3333) source into 518x378 (1.3704): a 2.78%
+anisotropic squash. GT intrinsics are scaled per axis so GT stays consistent, but
+the model predicts fx~=fy — square pixels — and structurally cannot represent
+that camera. `load_img_size: 504` gives exact 4:3 at the same patch count
+(972 vs 999), isolating geometry from resolution:
 
-The poses genuinely barely move: max |delta| vs control is **7.9e-03** across all
-9 scenes, against **3.06** for `noreg` on Oxford. Three orders of magnitude, at
-comparable sequence lengths (184-336 frames) and eviction counts (112-264).
+| | squashed | exact 4:3 | change |
+| --- | ---: | ---: | ---: |
+| ATE | 6.1429 | 6.0403 | −1.7% |
+| RPE-trans | 0.7710 | 0.8686 | +12.7% |
+| RPE-rot RMSE | 4.2763 | 3.0547 | −28.6% |
+| RPE-rot **median per-pair** | 0.969 | 0.948 | −2.2% |
+| AUC@3 / @15 | 17.74 / 63.66 | 17.87 / 61.94 | +0.7% / −2.7% |
 
-Likely driver is trajectory shape, not volume through the memory: NRGBD is
-room-scale indoor capture that keeps revisiting the same space, so the 64-frame
-window still overlaps nearly everything relevant and the distant past adds
-nothing; Oxford traverses large outdoor sites and rarely returns, so evicted
-frames hold information available nowhere else. Supporting detail: `whiteroom`
-has the most evicted frames of any scene (264) and the *smallest* deviation
-(1.5e-03).
+The −28.6% RMSE is a tail effect: the median per-pair rotation error barely
+moves, both distributions are heavy-tailed, AUC is a wash and RPE-trans gets
+worse. Worth reporting upstream as a correctness bug; not worth claiming as an
+accuracy improvement.
 
-### Long-span test (2026-08-21) — finding holds at 3,840 keyframes
+### TUM — solved 2026-08-23, the nine are Freiburg1
 
-Minimal arm set at stride 1, `keyframe_interval: 1`, `max_frame_num: 4096`, so
-the trajectory memory spans 3,768 evicted frames instead of 248.
+Upstream's row is "TUM RGB-D | 9" with its figure captioned *fr1/desk*. The nine
+are the standard Freiburg1 set — 360, desk, desk2, floor, plant, room, rpy,
+teddy, xyz — the same subset DROID-SLAM and NICE-SLAM report on. Restricting to
+them reproduces the row outright:
 
-| arm | kept per evicted frame | n | ATE | dATE | RPE-t | RPE-rot | worse on |
-|---|---|---|---|---|---|---|---|
-| `long_traj6` (control) | camera+register+scale | 6 | 29.063 | — | 0.3748 | 2.769 | — |
-| `long_regonly` | register | 4 | 28.931 | -0.132 | 0.3846 | 2.706 | 6/10 |
-| `long_noreg` | camera+scale | 2 | 31.877 | **+2.814** | 0.2795 | **3.680** | **9/10** |
+| | upstream | ours (9) |
+| --- | ---: | ---: |
+| ATE ↓ | 0.045 | 0.04508 |
+| RPE-trans ↓ | 0.013 | 0.01323 |
+| RPE-rot ↓ | 0.513 | 0.51242 |
 
-Registers necessary and sufficient, same as every other regime. The **relative**
-penalty is near-identical across a 12x change in memory span:
+Not a hand-computed subset: `configs/datasets/tum.yaml` now carries a `_scenes`
+whitelist of the nine, so the scope is declared rather than inferred, and the
+aggregate above is `evaluate.py`'s own `eval/traj.json`. As shipped the config
+has no whitelist and `TumDataset.get_scenes` discovers every
+`rgbd_dataset_freiburg*` with a `groundtruth.txt` — 66 against a full download,
+so upstream evidently had only Freiburg1 on disk. The nine are scored from the
+earlier 66-sequence run's predictions, which is why the arm holds symlinks into
+`default/tum` rather than its own copies.
 
-| regime | keyframes | memory span | noreg ATE penalty |
-|---|---|---|---|
-| sparse s12 | 320 | 248 frames | +0.719 on 6.143 = **+11.7%** |
-| long s1 | 3,840 | 3,768 frames | +2.814 on 29.063 = **+9.7%** |
+RPE-rot landing within 0.11% here is worth noting given how unstable that metric
+is elsewhere — see below.
 
-Frame-72 property holds on 6 of 10 long scenes. The other four
-(keble-college-04/05, observatory-quarter-01/02) diverge at frame **0** because
-they ran on H200 while everything else ran on A100 — cross-hardware float
-nondeterminism, not ablation leakage. Measured on identical inputs it is ~1% of
-the ablation signal at frame 3839 (7.4e-03 vs 7.8e-01), and the subgroup means
-agree (+2.745 A100 vs +2.917 H200), so the result stands. Details and the
-platform-pair comparison are in the campaign's `RESULTS.md`.
+### Upstream issue tracker — what it settled
 
-**Read this with the caveat that the control is itself broken here** (ATE 29 m on
-~100 m paths — see the Table 3 decisive-test result above for why interval 1
-leaves the trained frame range). The floor effect that risked swamping the
-necessity signal did not materialise — noreg is worse on 9/10 scenes — but the
-trustworthy in-distribution evidence remains the sparse arms plus the w8/w4
-memory-share blocks. `noreg` RPE-trans is *better* (0.2795 vs 0.3748) while ATE
-and RPE-rot are worse: it produces a locally smoother path that drifts more
-globally.
+| issue | what it gives |
+| --- | --- |
+| [#38](https://github.com/Robbyant/lingbot-map/issues/38) | per-scene ATE for all 14 Oxford scenes at stride 12 / first 320; confirms the 10-scene set. Its claim that the paper's "13 scenes" is a typo for 14 is wrong — `christ-church-01` ships no `gt-tum.txt`, so 13 is the evaluable maximum |
+| [#62](https://github.com/Robbyant/lingbot-map/issues/62) | Table 2 used an unreleased 160-epoch checkpoint; released weights score *better*; AUC follows DA3 |
+| [#68](https://github.com/Robbyant/lingbot-map/issues/68) | 7-Scenes protocol: `lingbot-map.pt`, pure streaming, `num_scale_frames=8`, `keyframe_interval=1`, unproject predicted depth with predicted poses, no confidence/sky masking |
 
-### Open
-
-- `regonly` / `camonly` on NRGBD: eval still in flight. Every other arm there is
-  identical to 4 decimal places, so they are very unlikely to change the reading.
-- **Temporal span, not memory share, is what is left untested.** The w8/w4 blocks
-  above already show the finding holds when the memory is 28.6% of context, so
-  that half of the original caveat is closed. What they do NOT do is lengthen the
-  span the memory covers — 314 frames of history, not 3,768. A real `oxford_long`
-  run at `keyframe_interval 1` (3,840 keyframes, ~34 min/scene on SDPA) is still
-  the only direct test of very long-range recall. Note `auto` keyframing would
-  subsample it back to ~320 and defeat the point; set the interval explicitly.
+Nothing in the tracker mentions TUM, ETH3D or NRGBD protocol. #68 asks about
+7-Scenes but never mentions `.depth.proj.png`, so it is *not* evidence that
+another user hit our GT-registration issue — the earlier note claiming so was
+unsupported.
 
 ## Checklist
 
-- [x] Oxford Spires (Table 2) — AUC/ATE close, RPE-trans/RPE-Rot **not
-      reproduced exactly**
-- [ ] Oxford Spires sparse/dense (Table 3) — **not reproduced**: ours
-      improves dense vs. sparse where paper degrades slightly; opposite
-      trend. Leading hypothesis: `auto` keyframe_interval differs between
-      the two rows (1 vs 12), so both cache ~320 keyframes and the dense
-      row never stresses the streaming state — decisive test written up
-      above, not yet run
-- [x] ETH3D (Tables 4/5)
-- [x] Tanks & Temples (Table 4)
-- [x] NRGBD (Table 5)
-- [ ] 7-Scenes reconstruction gap — pose matches, Acc/Comp don't; root
-      cause unresolved (see `fixes.md`)
+Trajectory-memory ablation items moved to `trajectory_memory_ablation.md`.
+
+Against the paper where the paper is reachable, otherwise against upstream's
+`benchmark/README.md` — see the note at the top.
+
+- [x] ETH3D pose + point clouds
+- [x] Tanks & Temples pose
+- [x] NRGBD point clouds
+- [x] 7-Scenes point clouds — **closed 2026-08-23**. Raw depth-camera-frame GT
+      unprojected with the colour focal; registering it into the colour frame
+      moves all six metrics onto upstream's row (F1 79.06 → 82.98 vs their
+      82.38), with pose unchanged as a control.
 - [x] VBR — pipeline validated, no paper baseline
-- [x] TUM — full artifacts kept for viewing, no paper baseline
 - [x] KITTI (Odometry) — full artifacts kept for viewing, no paper baseline
-- [x] Trajectory-memory context-token ablation — the 4 register tokens are 93%
-      of the whole mechanism (2.85 of 3.08 AUC@15); camera/anchor contribute
-      nothing measurable
-- [x] Floor arm (memory disabled entirely) — confirms NRGBD nulls are a real
-      property, not a failed ablation: mechanism worth ~0 there, 3.08 on Oxford
-- [x] Same ablation on NRGBD reconstruction — no effect on any arm; the
-      predicted poses barely move (7.9e-03 vs Oxford's 3.06)
-- [x] Memory-share stress test — finding holds at 2.6%, 12.7% and 28.6% of
-      context; the 28.6% point matches `oxford_long` @ 3,840 frames
-- [x] True long-span test at `oxford_long`, `keyframe_interval: 1` — finding
-      holds; noreg +9.7% ATE vs +11.7% on sparse, worse on 9/10 scenes
-- [x] Table 3 decisive test — hypothesis confirmed (dATE flips -1.03 -> +22.87)
-      but overshoots the paper's +0.69 ~33x, so Table 3 is not reproducible from
-      the released streaming code at any fixed keyframe interval
-- [ ] Decide whether to PR bugs found this round upstream
+- [x] Oxford Spires vs paper — per-scene ATE recovered from upstream issue #38
+      (their ten average 6.4246 = Table 2's 6.42). 8/10 scenes agree within 13%;
+      `bodleian-library-02` (we are 2.3x better) and `christ-church-05` (1.13x
+      worse) carry 45% and 38% of the movement in opposite directions, so the
+      close means are largely cancellation. Table 2 used an unreleased 160-epoch
+      checkpoint (#62), so it is not reproducible from public weights
+- [x] Oxford Spires vs upstream README — **closed 2026-08-23** by a 10-configuration sweep.
+      Their row is not the shipped config: the shipped default is the 6th-closest
+      of ten arms to it, environment is worth <1%, and the row is bracketed by
+      the two released checkpoints (lambda 0.453 from ATE, 0.472 from RPE-rot).
+      Oxford ATE spans 4.74-8.25 across single-knob changes, so 14.3% is small
+      against its own sensitivity
+- [x] Oxford aspect squash — 518x378 from a 4:3 source is a 2.78% anisotropic
+      warp the model cannot represent (it predicts square pixels). Real bug, but
+      fixing it moves median per-pair rotation error only 2.2% and worsens
+      RPE-trans; report it, do not sell it as an accuracy gain
+- [ ] `bodleian-library-02` in viser — the one Oxford scene whose gap is not
+      explained by run variance
+- [x] NRGBD trajectory — reproduced (ATE -0.99%) via `configs/neural_rgbd_traj.yaml`
+- [x] ETH3D AUC — **closed 2026-08-23**, not an AUC bug. `DA3_FILTER_KEYS` drops
+      exactly its intended frames; all 17 metrics are worse by 0.08-0.79% with
+      the deficit monotone in threshold, i.e. run numerics
+- [x] RPE-rot instability — measured: top 1% of KITTI frame pairs carry up to
+      90.6% of RMSE²; one pair in ~1,900 moves seq 02 from 3.674 to 2.730
+- [x] TUM — **solved 2026-08-23**. The nine are the standard Freiburg1 set;
+      `configs/tum.yaml` plus a `_scenes` whitelist reproduces the row at
+      0.04508 / 0.01323 / 0.51242 against 0.045 / 0.013 / 0.513
+- [ ] Decide whether to PR bugs found this round upstream (NOT the `.depth.png`
+      change — that was our data-prep gap)

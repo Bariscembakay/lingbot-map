@@ -17,31 +17,14 @@ Pipeline: `preprocess/<dataset>.py` (raw → BSS layout, Oxford only so far)
 `report.py`. Envs: `lingbot_map` (method) and `bench` (framework) —
 `run.py` shells from `bench` to `lingbot_map` via `conda run`.
 
-## Table 2 (Oxford Spires, sparse) — reproduced
+## Reproduction status
 
-Ran 2026-08-15 on sof1 (hala, a6000). Results:
-`/group/compact-3dmem/campaigns/lingbot_map/oxford_spires/sparse_s12/
-oxford/eval/{traj,auc_macro,auc_micro}.json`, HTML report in
-`.../sparse_s12/report/`.
-
-| Metric | Paper | Ours |
-|---|---|---|
-| AUC@15 | 61.64 | 63.50 |
-| AUC@30 | 75.16 | 76.50 |
-| ATE | 6.42 | 6.19 |
-| RPE-trans | 1.01 | 0.765 |
-| RPE-Rot | 3.70 | 4.29 |
-
-Ran on sof1 only — msp3 env/checkpoint are also set up (generic runner at
-`.agents/scratch/insait_cluster_files/submit_msp3.sh`) but unused, sof1
-succeeded first. msp3's checkout has local, uncommitted config overrides
-(`raw_data_root: /data/oxford_spires_processed`, `workspace: /scratch/...`)
-— expect it to show dirty.
-
-Bugs found + fixed getting here (committed, details in `fixes.md`):
-3 upstream Oxford Spires TLS-cloud naming bugs, a `setup_bench_env.sh`
-sourcing bug, two separate CUDA build gaps (`cuda-driver-dev`+`CPATH`;
-FlashInfer's `lib64` symlink), and `run.py`'s `conda` shim needing `PATH`.
+All numbers, per-benchmark settlement and open threads live in
+`reproduction.md`. Summary as of 2026-08-23: every published upstream row
+reproduces within ~1% except Oxford Spires, and both Oxford rows are settled as
+unreachable — Table 2 used an unreleased 160-epoch checkpoint (issue #62) and the
+README row is not the shipped config (10-configuration sweep). Bugs found and fixed getting
+here are in `fixes.md`.
 
 ## Cluster facts specific to this project
 
@@ -53,16 +36,17 @@ FlashInfer's `lib64` symlink), and `run.py`'s `conda` shim needing `PATH`.
 - Git: `origin` = fork (`Bariscembakay/lingbot-map`), `upstream` =
   `Robbyant/lingbot-map`. Push auth: PAT via `credential.helper store`
   (see `fixes.md`). msp3 has its own clone.
-- `/group/compact-3dmem`: run outputs → `campaigns/lingbot_map/<benchmark>/
-  <arm>/`; raw downloads → `datasets/<name>/`; preprocessed → 
-  `datasets/<name>_processed/`.
+- Retired campaigns keep metrics only, under `archive/retired/<name>/`.
+- `/group/compact-3dmem`: run outputs → `campaigns/lingbot_map/<arm>/<benchmark>/`
+  (arm above benchmark since 2026-08-20); raw downloads → `datasets/<name>/`;
+  preprocessed → `datasets/<name>_processed/`.
 - `campaigns/paper_reproduction/` is a different project's — don't touch.
 
 ## Dataset status
 
 | Dataset | Raw data | Ready to run | Registered |
 |---|---|---|---|
-| Oxford Spires | ✅ `datasets/oxford_spires` (161G, 10 scenes) | ✅ processed, Table 2 done | ✅ raw + processed |
+| Oxford Spires | ✅ `datasets/oxford_spires` (~196G, 14 scenes — the paper's 10 plus the 4 it excluded) | ✅ processed | ✅ raw + processed |
 | VBR | ✅ `datasets/vbr` (113G, 7 scenes) | ✅ | ✅ |
 | DROID-W | ✅ `datasets/DROID-W` (8G, 7 scenes) | ✅ | ✅ |
 | TUM RGB-D | ✅ `datasets/TUM-RGBD` (73G, 80 seqs) | ✅ | ✅ |
@@ -84,34 +68,60 @@ the way (flock race condition, `seven_scenes.py` eval_gt + depth filename,
 `lingbot_map_v1` unconfigured method, `tum.py` `_secret` sequences +
 prepare.py's any-failure-aborts-everything behavior) — see `fixes.md`.
 
-Paper comparison (Table 2/4/5), where finished:
+Per-benchmark results and status: `reproduction.md`.
 
-| Dataset | Pose (AUC/ATE) | Reconstruction (Acc/Comp/F1) |
-|---|---|---|
-| Oxford Spires | ✅ matches | — (not evaluated) |
-| ETH3D | ✅ matches closely | ✅ matches closely |
-| TAT | ✅ matches closely | — (points disabled) |
-| NRGBD | — (not evaluated) | ✅ matches closely (sof1 + msp3 bit-identical) |
-| 7-Scenes | ✅ matches closely | ❌ Acc/Comp off ~1.5-2x, unresolved — see below |
-| DROID-W | n/a — not one of the paper's benchmarks, no baseline to compare |
-| VBR / TUM | pipeline run, still in progress as of this writing |
+**7-Scenes reconstruction: solved 2026-08-23** — the cause was ground truth, not
+the model: raw `.depth.png` is in the depth-camera frame but the pipeline
+unprojects it with the colour focal. `_register_depth` in
+`benchmark/datasets/seven_scenes.py` (opt-in, default off) warps it into the
+colour frame. Full explanation in `reproduction.md`.
 
-**7-Scenes reconstruction: could not reproduce, deferred.** Pose/AUC
-matches the paper closely, but points.json (Acc/Comp/F1) doesn't, even
-after ruling out: sampling/eval config (identical to NRGBD's, which
-matched), frame correspondence, resolution, camera intrinsics (tried the
-empirically-"corrected" 585 vs hardcoded 525 — made Acc *worse*, reverted).
-Closest lead: the model's pred/GT depth scale ratio drifts slightly more
-across a 7-Scenes sequence (~7%) than NRGBD's (~4.5%), which Umeyama's
-single global scale can't fully correct — real but not enough to explain
-the whole gap on its own. `stairs` sequences are also genuine severe
-outliers (F1 ~57 vs 73-86 elsewhere) independent of this. Revisit later.
+**This change must NOT be PR'd** — it is our data-prep gap, not upstream's bug.
+Upstream reads `.depth.proj.png`, which their Pi3-based prep emits and the raw
+Microsoft distribution does not ship.
 
 ## Open items
 
-- 7-Scenes reconstruction gap (above) — revisit with a fresh angle.
-- Whether to PR the Oxford Spires upstream bugs + the 4 bugs found this
-  round back to `Robbyant/lingbot-map`: undecided. Note issue #68 on that
-  repo shows another user hit the same 7-Scenes symptom, unresolved there too.
+- Notes layout: `reproduction.md` = reproducing upstream (status, tables,
+  per-benchmark settlement). `trajectory_memory_ablation.md` = our own context-token
+  experiments. `paper_vs_repo.md` = full paper↔repo comparison (code, configs,
+  three-way number reconciliation, paper-internal contradictions).
+  `.agents/scratch/reproduction/oxford/oxford_readme_ruleouts.md` = the Oxford sweep
+  evidence.
+- Oxford vs the **paper** — the authors' per-scene ATE is in upstream issue #38
+  (their ten average 6.4246 = Table 2's 6.42), and issue #62 says Table 2 used an
+  unreleased 160-epoch checkpoint, so Table 2 is unreproducible from public
+  weights. 8/10 scenes agree within 13%; `bodleian-library-02` (we are 2.3x
+  better) and `christ-church-05` (1.13x worse) move in opposite directions, so
+  the close means are largely cancellation. **Open: inspect
+  `bodleian-library-02` in viser** — the only scene whose gap is not explained by
+  run variance.
+- Oxford vs the **README** — **closed 2026-08-23** by a 10-configuration sweep
+  (`.agents/scratch/reproduction/oxford/oxford_readme_ruleouts.md`). Their row is not
+  the shipped config: the shipped default is the 6th-closest of ten arms to it,
+  GPU+backend is worth <1%, and data/protocol/scene-selection are all ruled out
+  by measurement. The row is bracketed by the two released checkpoints, and
+  Oxford ATE spans 4.74-8.25 across single-knob changes, so the 14.3% gap is
+  small against the benchmark's own sensitivity. Not pursued further: several
+  configs land within 10%, so naming one would be curve-fitting.
+- Oxford **aspect squash** (new, reportable): `datasets/oxford_spires.py` warps
+  1440x1080 to 518x378, a 2.78% anisotropic squash the model cannot represent
+  since it predicts square pixels. `load_img_size: 504` fixes it at the same
+  patch count. Real correctness bug, but negligible accuracy effect — median
+  per-pair rotation error moves 2.2% and RPE-trans worsens.
+- TUM — **solved 2026-08-23.** Upstream's nine are the standard Freiburg1 set
+  (360, desk, desk2, floor, plant, room, rpy, teddy, xyz), given away by the
+  README's fr1/desk figure. `configs/datasets/tum.yaml` now carries a `_scenes`
+  whitelist of the nine and `configs/tum.yaml` points at the `tum_fr1` arm, which
+  reproduces their row: 0.04508 / 0.01323 / 0.51242 against 0.045 / 0.013 / 0.513.
+  Without the whitelist the adapter finds all 66 sequences in a full download.
+- ETH3D — **closed 2026-08-23.** Not an AUC bug: `DA3_FILTER_KEYS` drops exactly
+  its intended frames, and all 17 published metrics are worse by 0.08-0.79% with
+  the deficit monotone in threshold (@3 worst, @30 best) — the signature of run
+  numerics, not a frame-subset or aggregation difference.
+- Whether to PR the Oxford Spires upstream bugs + the 4 bugs found this round
+  back to `Robbyant/lingbot-map`: undecided. The strongest candidates are the
+  aspect squash and the non-monotonic anchor-count response; the `.depth.png`
+  change is not one of them.
 - msp3 workflow validated end-to-end (dataset pull → compute → rsync back
   to sof1) via the NRGBD run above.

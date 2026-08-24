@@ -6,3 +6,19 @@ evaluation:
     enable: false
   points:
     enable: false
+
+# Upstream's published TUM row is "9 scenes" and its figure is captioned fr1/desk:
+# the nine are the standard Freiburg1 set, the same subset DROID-SLAM and
+# NICE-SLAM report on. Without this whitelist the adapter discovers every
+# rgbd_dataset_freiburg* with a groundtruth.txt, which is 66 in a full download,
+# and no aggregate over those 66 is comparable to anything published.
+_scenes:
+  - rgbd_dataset_freiburg1_360
+  - rgbd_dataset_freiburg1_desk
+  - rgbd_dataset_freiburg1_desk2
+  - rgbd_dataset_freiburg1_floor
+  - rgbd_dataset_freiburg1_plant
+  - rgbd_dataset_freiburg1_room
+  - rgbd_dataset_freiburg1_rpy
+  - rgbd_dataset_freiburg1_teddy
+  - rgbd_dataset_freiburg1_xyz

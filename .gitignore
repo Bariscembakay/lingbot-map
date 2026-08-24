@@ -23,3 +23,4 @@ docs/
 # look dirty, since build_cache records git_dirty as provenance
 .agents/scratch/memory_logs/
 .agents/scratch/dev_scenes_missing.txt
+.vscode/

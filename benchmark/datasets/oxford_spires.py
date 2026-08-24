@@ -16,6 +16,8 @@ Reference:
   https://ori-drs.github.io/oxford-spires-dataset/
 """
 
+import os
+
 import numpy as np
 from pathlib import Path
 from PIL import Image
@@ -41,14 +43,28 @@ EXCLUDED_SCENES = [
     "christ-church-01",
 ]
 
+# Opt-in to score all 14 scenes. The exclusion above (and the matching commented
+# block in preprocess/oxford.py, "TLC points are not aligned with the images")
+# is about the TLS clouds, not the trajectories -- and configs/oxford.yaml scores
+# trajectory only. Used to test whether upstream's README row is a 14-scene
+# aggregate; default behaviour is unchanged.
+if os.environ.get("OXFORD_INCLUDE_EXCLUDED_4") == "1":
+    EXCLUDED_SCENES = []
+
 
 class OxfordSpiresDataset(BaseDataset):
     """Oxford Spires large-scale outdoor dataset."""
 
-    def __init__(self, raw_data_root: str, load_img_size: int = 518, logger=None):
+    def __init__(self, raw_data_root: str, load_img_size: int = 518,
+                 include_excluded_scenes: bool = False, logger=None):
         super().__init__(raw_data_root, logger=logger)
 
         self.load_img_size = load_img_size
+        # EXCLUDED_SCENES is about misaligned TLS *clouds*, so it is irrelevant to a
+        # trajectory-only config. Declared here rather than read from the environment:
+        # an env var is silently forgotten on one stage of a chain and the run then
+        # reports a smaller scene count that looks like a legitimate result.
+        self.include_excluded_scenes = include_excluded_scenes
 
         # Per-scene caches to avoid repeated file I/O
         self._poses: Dict[str, np.ndarray] = {}       # scene -> (N, 4, 4) float32
@@ -59,7 +75,7 @@ class OxfordSpiresDataset(BaseDataset):
         scenes = []
         for d in sorted(self.raw_data_root.iterdir()):
             if d.is_dir() and (d / 'images').is_dir() and (d / 'poses_c2w.txt').exists():
-                if d.name not in EXCLUDED_SCENES:
+                if self.include_excluded_scenes or d.name not in EXCLUDED_SCENES:
                     scenes.append(d.name)
         return scenes
 

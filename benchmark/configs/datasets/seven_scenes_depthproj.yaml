@@ -1,0 +1,13 @@
+# 7-Scenes with depth registered into the colour camera frame.
+# Same data and sampling as seven_scenes.yaml; the only change is that the raw
+# depth-camera-frame depth is warped into the colour frame before use, which is
+# what upstream's `.depth.proj.png` already is. See datasets/seven_scenes.py.
+dataset: seven_scenes
+raw_data_root: /group/compact-3dmem/datasets/7-scenes
+_split: test
+_register_depth: true
+sampling:
+  strategy: sequence
+  start_idx: 0
+  end_idx: -1
+  stride: 5
