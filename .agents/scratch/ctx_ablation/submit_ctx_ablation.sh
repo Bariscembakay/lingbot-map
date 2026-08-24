@@ -11,7 +11,7 @@
 # and a GPU-less job is also not a target for the idle-GPU reaper.
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$REPO_DIR"
 LOG_DIR="$REPO_DIR/.agents/logs/ctx_ablation"
 mkdir -p "$LOG_DIR"
@@ -33,7 +33,7 @@ PREP=$(sbatch --parsable \
   --job-name=ctxa_prep --partition=batch --constraint="$ZONE" \
   --cpus-per-task=16 --mem=96G --time=1:00:00 \
   --output="$LOG_DIR/00_prepare_%j.log" \
-  --wrap="GPU_KEEP_ALIVE=0 $SUBMIT bash .agents/scratch/reproduction/run_stage.sh prepare ${CFG[oxford]} ${CFG[neural_rgbd]}")
+  --wrap="GPU_KEEP_ALIVE=0 $SUBMIT bash .agents/scratch/run_stage.sh prepare ${CFG[oxford]} ${CFG[neural_rgbd]}")
 echo "stage 0  prepare              -> $PREP"
 
 # ── stage 1: one job per (dataset, arm) ───────────────────────────────────────
@@ -47,7 +47,7 @@ for ds in oxford neural_rgbd; do
           --gpus=$GPU:1 --cpus-per-task=12 --mem=64G --time=3:00:00 \
           --dependency=afterok:$PREP --kill-on-invalid-dep=yes \
           --output="$LOG_DIR/10_run_${ds}_${m}_%j.log" \
-          --wrap="GPU_KEEP_ALIVE_FRACTION=0.10 $SUBMIT bash .agents/scratch/reproduction/run_arm.sh ${CFG[$ds]} $ds $m")
+          --wrap="GPU_KEEP_ALIVE_FRACTION=0.10 $SUBMIT bash .agents/scratch/run_arm.sh ${CFG[$ds]} $ds $m")
         ids="${ids:+$ids:}$jid"
         echo "stage 1  run $ds / $m -> $jid"
     done
@@ -62,6 +62,6 @@ for ds in oxford neural_rgbd; do
       --cpus-per-task=32 --mem=192G --time="${EVAL_TIME[$ds]}" \
       --dependency=afterany:"${RUN_IDS[$ds]}" \
       --output="$LOG_DIR/20_eval_${ds}_%j.log" \
-      --wrap="GPU_KEEP_ALIVE=0 $SUBMIT bash .agents/scratch/reproduction/run_stage.sh evaluate ${CFG[$ds]}")
+      --wrap="GPU_KEEP_ALIVE=0 $SUBMIT bash .agents/scratch/run_stage.sh evaluate ${CFG[$ds]}")
     echo "stage 2  evaluate $ds        -> $jid"
 done

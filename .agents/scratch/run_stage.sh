@@ -13,7 +13,7 @@ set -euo pipefail
 
 STAGE="$1"; shift
 : "${MAMBA_ROOT_PREFIX:=/scratch/$USER/micromamba}"
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_DIR/benchmark"
 
 # CPU-only allocation: no visible GPU, so torch cannot autodetect an arch if

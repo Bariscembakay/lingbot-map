@@ -12,7 +12,7 @@
 #
 #   e.g. bash submit_msp3.sh oxford_spires_processed /scratch/$USER/ws \
 #          /group/compact-3dmem/campaigns/lingbot_map/oxford_spires/sparse_s12 \
-#          bash .agents/scratch/reproduction/run_stage.sh prepare configs/oxford.yaml
+#          bash .agents/scratch/run_stage.sh prepare configs/oxford.yaml
 set -euo pipefail
 
 DATASET_NAME="$1"

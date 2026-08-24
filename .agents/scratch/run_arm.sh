@@ -13,7 +13,7 @@ set -euo pipefail
 
 CONFIG="$1"; DATASET="$2"; METHOD="$3"; SCENE="${4:-}"
 : "${MAMBA_ROOT_PREFIX:=/scratch/$USER/micromamba}"
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_DIR/benchmark"
 
 "$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python" run_worker.py \

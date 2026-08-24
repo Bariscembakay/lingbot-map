@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run demo.py under debugpy on a GPU node and wait for VS Code to attach.
 #
-#   bash .agents/scratch/reproduction/debug_session.sh [extra demo.py args...]
+#   bash .agents/scratch/debug_session.sh [extra demo.py args...]
 #
 # Then run the "⚡ Attach to debugpy on GPU node" config in VS Code and give it
 # the host this script prints.
@@ -14,7 +14,7 @@
 #   DEBUG_BACKEND=flashinfer                 # default sdpa (dense, inspectable KV)
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 PORT="${DEBUG_PORT:-5678}"
 GPU="${DEBUG_GPU:-a6000:1}"

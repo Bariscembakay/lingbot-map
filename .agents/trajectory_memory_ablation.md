@@ -136,7 +136,7 @@ Control sanity: `traj6` at 63.66 / 6.14 reproduces the `sparse_s12` run
 
 ### Validation
 
-`.agents/scratch/reproduction/ctx_ablation/validate_trajmem.py` (invariants) and
+`.agents/scratch/ctx_ablation/validate_trajmem.py` (invariants) and
 `ctx_ablation/analyze_ctx_ablation.py` (divergence). Key facts established:
 
 - The two stores behave differently: `k_i_special` is `cat`-ed on every eviction

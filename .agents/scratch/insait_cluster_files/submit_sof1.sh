@@ -5,7 +5,7 @@
 # runs whatever command you give it.
 #
 # Usage: srun ... bash submit_sof1.sh <command...>
-#   e.g. bash submit_sof1.sh bash .agents/scratch/reproduction/run_stage.sh prepare configs/oxford.yaml
+#   e.g. bash submit_sof1.sh bash .agents/scratch/run_stage.sh prepare configs/oxford.yaml
 set -euo pipefail
 : "${MAMBA_ROOT_PREFIX:=/scratch/$USER/micromamba}"
 
