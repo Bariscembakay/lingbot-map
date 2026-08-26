@@ -56,12 +56,24 @@ mkdir -p "$CUT3R_DIR/data/7scenes"
 
 # add_ckpt_path.py puts dirname(weights) on sys.path so `dust3r` resolves, so the
 # weights argument must be the in-repo symlink, not the /group path it points to.
-"$PY_ENV" eval/mv_recon/launch.py \
-    --weights "$CUT3R_DIR/src/cut3r_512_dpt_4_64.pth" \
-    --output_dir "$OUT" \
-    --model_name ours \
-    --size 512 \
-    "$@"
+# NPROC>1 uses `accelerate launch`, which is how upstream's run.sh invokes this
+# (--num_processes 8). launch.py shards with accelerator.split_between_processes,
+# whose default apply_padding=False means each scene is still evaluated exactly
+# once -- but that is reasoning, and this switch lets it be measured.
+NPROC="${NPROC:-1}"
+if [ "$NPROC" -gt 1 ]; then
+    "${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/cut3r/bin/accelerate" launch \
+        --num_processes "$NPROC" --main_process_port 29501 eval/mv_recon/launch.py \
+        --weights "$CUT3R_DIR/src/cut3r_512_dpt_4_64.pth" \
+        --output_dir "$OUT" --model_name ours --size 512 "$@"
+else
+    "$PY_ENV" eval/mv_recon/launch.py \
+        --weights "$CUT3R_DIR/src/cut3r_512_dpt_4_64.pth" \
+        --output_dir "$OUT" \
+        --model_name ours \
+        --size 512 \
+        "$@"
+fi
 
 # /scratch is per-node local disk, so anything left there is invisible from the
 # submitting node -- the first successful run stranded its logs_all.txt on a gcp
