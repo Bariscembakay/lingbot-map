@@ -39,6 +39,7 @@ class LossWeights:
     grad: float = 1.0
     alpha: float = 0.2
     huber_eps: float = 1.0
+    loss2: float = 1.0        # weight on Loss 2, whichever variant is active
     fov: float = 0.0          # GT intrinsics are known and fixed here, so off by default
 
 
@@ -174,6 +175,39 @@ def rel_pose_loss(pred_c2w: torch.Tensor, gt_c2w: torch.Tensor,
             "rel_rot": l_rot, "rel_trans": l_trans}
 
 
+def recall_loss(pred: torch.Tensor, target: torch.Tensor) -> Dict[str, torch.Tensor]:
+    """Loss 2, recall variant: the state must reproduce the teacher's own tokens.
+
+    pred/target: [..., T, D] -- the query streams the state actually holds, and the
+    cached half-taps they stand for. Only streams the write ingested may be passed
+    here; `streams.recall_targets` enforces that, because the state cannot recall a
+    stream it was never given and training it to try teaches the read to invent.
+
+    A **per-token relative** L2, not a raw one: cached half-taps have per-token norm
+    ~463, so an absolute L1 would sit three orders above the depth term and no
+    single weight could balance the two. Relative error is dimensionless and starts
+    near 1.0 when the prediction is the mean tap, which is where the init puts it.
+    """
+    num = (pred - target).pow(2).sum(-1).sqrt()
+    den = target.pow(2).sum(-1).sqrt().clamp_min(1e-6)
+    cos = F.cosine_similarity(pred, target, dim=-1)
+    return {"recall": (num / den).mean(), "recall_cos": cos.mean()}
+
+
+def hindsight_loss(pred_depth: torch.Tensor, conf: torch.Tensor,
+                   gt_depth: torch.Tensor,
+                   weights: LossWeights = LossWeights(),
+                   y_space: bool = False) -> Dict[str, torch.Tensor]:
+    """Loss 2, hindsight variant: GT depth at a past camera, decoded from the state.
+
+    The same objective as Loss 1's depth term -- same conf mechanics, same alpha --
+    applied to a frame the state must answer for from memory alone. Keys are
+    prefixed so they never collide with Loss 1's own depth keys in a log line.
+    """
+    parts = depth_loss(pred_depth, conf, gt_depth, weights, y_space=y_space)
+    return {f"hs_{k}": v for k, v in parts.items()}
+
+
 def total_loss(parts: Dict[str, torch.Tensor],
                weights: LossWeights = LossWeights()) -> torch.Tensor:
     any_part = next(iter(parts.values()))
@@ -184,4 +218,8 @@ def total_loss(parts: Dict[str, torch.Tensor],
         total = total + weights.abs_pose * parts["abs_pose"]
     if "rel_pose" in parts:
         total = total + weights.rel_pose * parts["rel_pose"]
+    # Loss 2, whichever variant is active. `recall_cos` is a diagnostic, not a term.
+    for key in ("recall", "hs_depth"):
+        if key in parts:
+            total = total + weights.loss2 * parts[key]
     return total

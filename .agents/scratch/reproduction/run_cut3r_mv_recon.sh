@@ -28,6 +28,13 @@ ln -sfn /data/NRGBD "$CUT3R_DIR/data/neural_rgbd"
 ln -sfn /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth \
         "$CUT3R_DIR/src/cut3r_512_dpt_4_64.pth"
 
+# launch.py always CONSTRUCTS both datasets before --datasets can filter them,
+# and SevenScenes.load_all_scenes os.listdir()s its root unconditionally. An
+# empty directory lists to zero scenes, so the entry costs nothing and is then
+# dropped by the filter. Replace this with a real link if 7-Scenes is ever
+# wanted -- it needs `.depth.proj.png`, which we do not have (see UPSTREAM.md).
+mkdir -p "$CUT3R_DIR/data/7scenes"
+
 # add_ckpt_path.py puts dirname(weights) on sys.path so `dust3r` resolves, so the
 # weights argument must be the in-repo symlink, not the /group path it points to.
 "$PY_ENV" eval/mv_recon/launch.py \

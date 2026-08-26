@@ -131,28 +131,38 @@ except ImportError:
             self.F0 = F0
             self.cache = {}
 
-        def get_cos_sin(self, D, seq_len, device, dtype):
-            if (D, seq_len, device, dtype) not in self.cache:
+        def get_cos_sin(self, D, seq_len, device, dtype, pos_min=0):
+            # LOCAL PATCH (lingbot-map): `pos_min`. The CUDA kernel evaluates the
+            # angle analytically (`freq = pos * inv_freq`), so a negative
+            # position is simply a negative angle -- and CUT3R gives its pose
+            # token position -1. This fallback instead builds a table over
+            # arange(seq_len) and indexes it with F.embedding, which asserts on a
+            # negative index. Offsetting the table's origin to pos_min evaluates
+            # the SAME formula at the same integers, so it stays numerically
+            # equivalent to the kernel rather than approximating it.
+            if (D, seq_len, device, dtype, pos_min) not in self.cache:
                 inv_freq = 1.0 / (
                     self.base ** (torch.arange(0, D, 2).float().to(device) / D)
                 )
-                t = torch.arange(seq_len, device=device, dtype=inv_freq.dtype)
+                t = torch.arange(pos_min, seq_len, device=device,
+                                 dtype=inv_freq.dtype)
                 freqs = torch.einsum("i,j->ij", t, inv_freq).to(dtype)
                 freqs = torch.cat((freqs, freqs), dim=-1)
                 cos = freqs.cos()  # (Seq, Dim)
                 sin = freqs.sin()
-                self.cache[D, seq_len, device, dtype] = (cos, sin)
-            return self.cache[D, seq_len, device, dtype]
+                self.cache[D, seq_len, device, dtype, pos_min] = (cos, sin)
+            return self.cache[D, seq_len, device, dtype, pos_min]
 
         @staticmethod
         def rotate_half(x):
             x1, x2 = x[..., : x.shape[-1] // 2], x[..., x.shape[-1] // 2 :]
             return torch.cat((-x2, x1), dim=-1)
 
-        def apply_rope1d(self, tokens, pos1d, cos, sin):
+        def apply_rope1d(self, tokens, pos1d, cos, sin, pos_min=0):
             assert pos1d.ndim == 2
-            cos = torch.nn.functional.embedding(pos1d, cos)[:, None, :, :]
-            sin = torch.nn.functional.embedding(pos1d, sin)[:, None, :, :]
+            idx = pos1d - pos_min
+            cos = torch.nn.functional.embedding(idx, cos)[:, None, :, :]
+            sin = torch.nn.functional.embedding(idx, sin)[:, None, :, :]
             return (tokens * cos) + (self.rotate_half(tokens) * sin)
 
         def forward(self, tokens, positions):
@@ -168,12 +178,13 @@ except ImportError:
             ), "number of dimensions should be a multiple of two"
             D = tokens.size(3) // 2
             assert positions.ndim == 3 and positions.shape[-1] == 2  # Batch, Seq, 2
+            pos_min = min(int(positions.min()), 0)
             cos, sin = self.get_cos_sin(
-                D, int(positions.max()) + 1, tokens.device, tokens.dtype
+                D, int(positions.max()) + 1, tokens.device, tokens.dtype, pos_min
             )
             # split features into two along the feature dimension, and apply rope1d on each half
             y, x = tokens.chunk(2, dim=-1)
-            y = self.apply_rope1d(y, positions[:, :, 0], cos, sin)
-            x = self.apply_rope1d(x, positions[:, :, 1], cos, sin)
+            y = self.apply_rope1d(y, positions[:, :, 0], cos, sin, pos_min)
+            x = self.apply_rope1d(x, positions[:, :, 1], cos, sin, pos_min)
             tokens = torch.cat((y, x), dim=-1)
             return tokens

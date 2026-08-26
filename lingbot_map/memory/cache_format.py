@@ -19,10 +19,11 @@ CONF = "conf.npy"
 POSE = "pose_enc.npy"
 GT_DEPTH = "gt_depth.npy"
 GT_C2W = "gt_c2w.npy"
+GT_INTRINSICS = "gt_intrinsics.npy"
 REVISIT = "revisit.npy"
 META = "meta.json"
 
-FORMAT_VERSION = 3
+FORMAT_VERSION = 4
 
 # fp16 carries 10 mantissa bits against bfloat16's 8, so storing a bf16
 # aggregator output as fp16 is lossless -- but only inside fp16's much smaller
@@ -103,6 +104,11 @@ class ClipCache:
             shape=(m.num_frames, m.height, m.width),
         )
         self.gt_c2w = np.load(self.dir / GT_C2W)
+        # Post-resize, per frame. Needed to build a query raymap and to unproject
+        # GT depth into a pointmap; both are derived on the fly rather than
+        # stored, since a stored pointmap is ~1.2 MB/frame against a 4.3 MB/frame
+        # tap-23 cache, to save an unprojection that costs nothing.
+        self.gt_intrinsics = np.load(self.dir / GT_INTRINSICS)
         self.revisit = np.load(self.dir / REVISIT)
 
     def __len__(self) -> int:

@@ -1,482 +1,220 @@
-# Persistent summary memory — implementation plan
+# Spatial memory — implementation plan
 
-> **HANDOFF, 2026-08-23 ~13:30.** Session continued elsewhere. Read this section
-> first; the phase detail below is still current.
+Companion to `spatial_memory_design.md` (design closed 2026-08-26). This file is
+sequencing and status only; every architectural decision lives in the design
+record and is not restated here.
 
-## Live state
+**Revision 2026-08-26.** Rewritten for the CUT3R-fed-by-lingbot-map
+architecture. The previous plan (Loss 1, read/write pair, four smoke arms) is
+recoverable at `3d34cd5`.
 
-Four arms training on msp3, all `RUNNING`, all past 1000 updates with
-checkpoints on disk at
-`/group/compact-3dmem/campaigns/summary-memory/dev_v1/<arm>/last.pt`:
+## The two results
 
-| job | arm | step | s/update | proj. 20k | fate at the 12 h wall |
-|---|---|---|---|---|---|
-| 738577 | `A_full` | 1000 | **6.83** | 37.9 h | cut off ~6,300 |
-| 738578 | `A_frozenstate` | 2000 | 3.40 | 18.9 h | cut off ~12,700 |
-| 738579 | `B_pose` | 3000 | **1.77** | 9.9 h | finishes |
-| 738580 | `B_frozenstate` | 3000 | 1.77 | 9.9 h | finishes |
+**E1** — CUT3R hallucinates when a past camera is queried by raymap alone.
+**E2** — lingbot-map + CUT3R recalls it instead.
 
-`scripts/memory/arm_status.py` reproduces this table. Run it from a node that has
-the env on its local `/scratch` (msp3-1 or msp3-3) -- login nodes do not.
+Everything below is either a prerequisite for measuring that, or the measurement.
 
-**Two consequences to act on:**
+## Phase table
 
-1. **The A arms will be cut off at unequal update counts**, so any comparison must
-   be at **equal step**, never equal wall time. `A_full` at 6,300 vs
-   `A_frozenstate` at 12,700 would flatter the control.
-2. **The write path costs ~3.4 s/update** -- `A_full` (6.83) minus
-   `A_frozenstate` (3.40), since the frozen-state arm skips the write. That is
-   half of `A_full`'s cost and the first thing to profile.
+| phase | what | blocks | runs where |
+|---|---|---|---|
+| **0** | unblock: checkpoints, env, data | 1 | login / CPU |
+| **1** | reproduce CUT3R on NRGBD | trust in arm A | hala a6000 |
+| **2** | implement our model + validators + one-scene overfit | 4 | sof1 |
+| **3** | shared recall harness (drives arm A and arm C) | E1, E2 | hala / sof1 |
+| **4** | small-dataset training; arm A recall eval; compare | — | sof1, msp3 at scale |
 
-Resume works (V11), so the A arms can be continued by resubmitting the same
-`--out`; they will pick up from `last.pt`.
+0 and 2 overlap: 0a/0b are waiting, 2 is work. 1 and 2 overlap. 3 is written
+against arm A first, because arm A exists before our weights do.
 
-**While these four are alive, new jobs may hang in env setup.** They were
-submitted before the `micromamba run` fix (commit 7c358be) and each holds the
-`~/.cache/mamba/proc` lock on CephFS for its whole lifetime;
-`setup_lingbot_map_env.sh` calls micromamba internally, so a job sourcing it can
-block indefinitely with an empty log. Three timing jobs died this way (30, 45, 30
-minutes of walltime, no output). Jobs submitted from the current tree use the
-interpreter path and are unaffected *after* setup, but the setup call itself is
-shared infrastructure and was left alone. If a job hangs with an empty log, this
-is why -- check `squeue` for a long-running arm before debugging anything else.
+---
 
-Throughput was measured from the arms themselves via `arm_status.py`, not from
-`time_clip.py`; the latter never got past setup. It remains useful once the arms
-are done and the lock is free.
+## Phase 0 — unblock
 
-## The immediate next action
+- [ ] **0a. CUT3R checkpoints** -> `/group/compact-3dmem/checkpoints/CUT3R/`.
+      `cut3r_512_dpt_4_64.pth` is the one we build on; `cut3r_224_linear_4.pth`
+      is a backup. Record sha256 for both.
+      Note: this gdown build has no `--fuzzy`; use the Python API with `id=`.
+      Google Drive quota can bite -- HF mirror is the fallback.
+- [ ] **0b. `cut3r` micromamba env**, separate from `lingbot_map` so it cannot
+      break the working one. torch cu128, accelerate, open3d, einops,
+      transformers. **Skip gsplat** (training-logging only). **No evo** -- only
+      `eval/relpose` uses it, and it pulls pandas.
+      **curope MUST be built** (needs `cuda-nvcc=12.8`). An earlier reading of
+      this repo said the pure-torch RoPE2D fallback made it optional; that was
+      wrong. The fallback is not merely slower, it is not equivalent: the CUDA
+      kernel computes the angle analytically so a negative position is a
+      negative angle, while the fallback indexes a table built over
+      `arange(seq_len)` with `F.embedding`, which asserts on a negative index --
+      and CUT3R gives its pose token position -1. Also note **upstream's
+      `numpy==1.26.4` pin is stale** and deliberately not honoured; reasoning is
+      in the setup script's header.
+- [ ] **0c. NRGBD symlink**: `CUT3R/data/neural_rgbd -> /data/NRGBD`. The layout
+      already matches CUT3R exactly -- `{scene}/images/img{N}.png`,
+      `depth/depth{N}.png`, `poses.txt`, `focal.txt`. Nothing to preprocess.
+- [ ] *(deferred)* **7-Scenes**. CUT3R wants `frame-{N}.depth.proj.png` and we
+      have none. We do have the code -- `benchmark/datasets/seven_scenes.py:233`
+      `_register_depth`, exposed by `benchmark/configs/datasets/seven_scenes_depthproj.yaml`.
+      **Deliberately not on the critical path**: our reprojection uses estimated
+      Kinect calibration (zinsmatt/7-Scenes-Calibration), not Spann3R's pipeline,
+      so a mismatch there would not cleanly mean "we are driving CUT3R wrong".
+      NRGBD alone gates that.
 
-**Build the arm-comparison evaluation.** The four arms produce a comparison that
-nothing currently computes, and they are the go/no-go.
+## Phase 1 — reproduce CUT3R
 
-To be precise about what does and does not exist, because an earlier note in this
-file overstated it: the repo has a **complete** benchmark
-(`benchmark/benchmark/evaluation/{trajectory,depth,points,auc}.py`, evo-based
-Sim(3) ATE/RPE, loaders for ETH3D/TUM/7-Scenes/TnT/KITTI/Oxford/NRGBD) and it
-reproduces the paper exactly. Nothing there is missing. What is missing is two
-specific things:
+`eval/mv_recon`, `cut3r_512_dpt_4_64.pth`, protocol already encoded in
+`launch.py` (`full_video=True`, `kf_every=500` for NRGBD -- the paper's
+"2 to 4 frames per scene" sparse setting).
 
-| | what | effort |
-|---|---|---|
-| **(a) arm comparison** *(critical path)* | load each arm's checkpoint, iterate `val_top` and `val_median` **from the cached taps**, decode with the frozen head, and report depth/pose error **bucketed by revisit score**, each arm against **its own** frozen-state control at equal step. The benchmark cannot do this: it has no notion of revisit score, no arm-vs-control comparison, and it would re-run the aggregator on video at ~7 TFLOPs/frame when the taps are already cached. | ~hours |
-| (b) `benchmark/methods/lingbot_map_memory.py` | register the memory-augmented model as a benchmark *method* so the existing metrics apply unchanged. Needed for Phase 7 (Oxford Spires, NRGBD), not for the go/no-go. | ~day |
+Targets, Table 4:
 
-Also: wandb ran **offline** (msp3 has no `~/.netrc`). Runs are on the compute
-nodes' local `/scratch/$USER/wandb`, per node -- collect them with `wandb sync`
-before those nodes are wiped.
+| | Acc mean/med | Comp mean/med | NC mean/med |
+|---|---|---|---|
+| **NRGBD** | 0.099 / 0.031 | 0.076 / 0.026 | 0.837 / 0.971 |
+| 7-Scenes *(deferred)* | 0.126 / 0.047 | 0.154 / 0.031 | 0.727 / 0.834 |
 
-## Findings that were expensive to reach -- do not re-derive
+Table 5, `--revisit 2 --freeze`:
 
-- **`pose_encoding_to_extri_intri` returns camera-to-world, not world-to-camera.**
-  `absT` is the camera's absolute position. Inverting it cost 11.43 deg of
-  relative-rotation error against GT (0.41 deg without) and sent us searching 48
-  axis conventions that did not exist. Read a documented convention before
-  writing an estimator for it.
-- **The published depth head's tap-23 branch is inert.** `layer4_rn`'s output is
-  100% negative and `ReLU(inplace=True)` annihilates it through the residual, so
-  `d(depth)/d(tap23) == 0` exactly. V13 guards this.
-- **Never `micromamba run` in a job.** It locks on `~/.cache/mamba/proc` on
-  CephFS; a long job holds it for its lifetime and later invocations block. Two
-  timing jobs burned 30 and 45 minutes of walltime waiting. Use
-  `"$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"`.
-- **`/scratch` is per-node** (`/dev/md40`). The env, and anything staged, exists
-  only on the node that built it -- including on login nodes.
-- **ffprobe `nb_frames` is absent for some ScanNet++ mkv files.** Nine of twenty
-  array tasks died on it; the pose json is authoritative.
-- **24 of 300 ScanNet++ scenes have unreadable `depth.bin`** at any candidate
-  shape. Detected and skipped with a count.
-- **Depth has no long-horizon headroom.** pred/GT ratio is flat (+1.5% over a
-  clip), scale-corrected error 1.8% and falling. Depth is a consistency metric;
-  **pose is the claim**, because ATE accumulates and small per-frame gains compound.
+| | Acc | Comp | NC |
+|---|---|---|---|
+| NRGBD, Ours Revisit | 0.094 | 0.076 | 0.844 |
 
+**Gate: NRGBD within noise => we are driving the model correctly.** Nothing in
+Phase 3 or 4 is trustworthy until this passes.
 
-Architecture is in `spatial_memory_design.md`. This is the build order.
+Worth reproducing Table 5 as well, because **"Ours Revisit" is CUT3R's own recall
+experiment** -- freeze the final state, re-process the same inputs. It is weaker
+than our probe (it still hands the model the *image*), but it is the authors' own
+evidence that the state accumulates scene knowledge, and it is a free reference
+point on the same axis.
 
-Rule for the whole plan: **nothing runs on a dev set until the validation suite
-in Phase 4 is green.** The point of Phase 4 is that no GPU-hours are spent on a
-harness that was never going to learn.
+- [ ] 1a. NRGBD, online. Compare to Table 4.
+- [ ] 1b. NRGBD, `--revisit 2 --freeze`. Compare to Table 5.
+- [ ] 1c. Record both in the campaign record with the checkpoint sha256.
 
-Revision 2026-08-22 for the read/write-between-aggregator-and-heads
-architecture. Superseded: the standalone-memory build order, the 4-tap
-partitioned state, D=2048, teacher-distillation as the primary loss, 512-frame
-clips at stride 5.
+## Phase 2 — implement our model
 
-## The two-stage structure, and why it survives
+- [ ] **2a. Cache v3 -> v4.** Add `gt_intrinsics.npy [N,3,3]` (post-resize, per
+      frame); bump `FORMAT_VERSION`. GT pointmaps stay derived on the fly.
+      Extend one existing clip rather than rebuilding.
+- [ ] **2b. Model.** `in_proj` (2048->768 on tap 23), state + `s0` from the
+      checkpoint, both decoder stacks from the checkpoint, raymap encoder (2
+      blocks, scratch), mod token, two DPT heads at `patch_size=14` with the
+      terminal `interpolate` to (H, W).
+- [ ] **2c. Token-provider interface.** The training loop takes tokens from a
+      provider, not from the aggregator directly, so **arm B** (CUT3R's own
+      encoder, our objective) is later a config flag rather than a rewrite.
+      Implemented now because it is tidier now; not run now.
+- [ ] **2d. Validators**, in priority order:
 
-Injection happens **after** the aggregator, so the aggregator's output for frame
-*i* does not depend on the state. It is still precomputable once.
-
-```
-STAGE 1 (once)   frozen lingbot-map, per clip
-                   +- 4 tap tensors per frame      -> write input (tap 23 second
-                   |                                  half) + frozen head inputs
-                   +- depth + conf per frame       -> recall-loss target
-                   +- pose_enc per frame           -> raymap queries for Loss 2
-                   +- GT depth, GT pose, scale s   -> Loss 1 targets
-                   +- revisit score per frame      -> can this clip show anything
-
-STAGE 2 (many)   train write/read on cached tensors.
-                 The aggregator never runs again; the heads do.
-```
-
-The frozen aggregator forward is ~7 TFLOPs/frame. In-loop it would run once per
-clip pass -- hundreds of times per training run. Precomputed it runs once, ever.
-The label is also frozen, so two arms are exactly comparable.
-
-**Training must not import the aggregator.** If `scripts/memory/train.py` does,
-something is wrong. It needs only the depth head, the camera head, and the cache.
-
-## Layout
-
-```
-lingbot_map/memory/
-    cache_format.py   ClipCache / ClipMeta -- the on-disk contract      [done]
-    attention.py      CrossAttention, SelfAttention, Mlp, LayerScale    [done]
-    write.py          WriteBlock, WriteTransformer                      [done]
-    read.py           ReadBlock, ReadTransformer, zero-init gates        [done]
-    raymap.py         pose_enc -> Plucker rays -> encoder               [done, Loss 2 only]
-    schedule.py       WriteSchedule: disjoint / overlap + coverage audit [done]
-    camera_bridge.py  teacher camera cache + per-step refined pose        [done]
-    model.py          SummaryMemory.step / .read_at_camera              [done]
-    losses.py         L_depth / L_abs_pose / L_rel_pose, recall, hindsight
-    data.py           ClipReader, tap-23 split, query sampling             [done]
-    baselines.py      frozen-state arm, no-read arm
-scripts/memory/
-    export_head.py       depth_head.pt + camera_head.pt                 [done, depth only]
-    build_cache.py       stage 1                                        [done, needs GT + revisit]
-    submit_build_cache.sh                                               [done]
-    validate.py          the Phase 4 gate
-    time_clip.py
-    train.py
-```
-
-## Phase 1 — cache builder
-
-- Decode `iphone/rgb.mkv` at **stride 20**, take 320-frame clips (a 168 s /
-  10,110-frame recording gives ~505 frames at stride 20, so one full clip per
-  scene; shorter recordings truncate and `meta.json` records the actual length).
-  Stride 20 rather than 10 because the measured revisit score roughly doubles;
-  see the design record.
-- Resize with the benchmark's two steps: width 518, height floored to a multiple
-  of 14, then `area_budget=255000` with `align=14`. LANCZOS, no crop. 4:3 ->
-  518x378, 999 patches.
-- Run the frozen model via `inference_streaming` with the **published config** --
-  `num_scale_frames=8, kv_cache_sliding_window=64, keyframe_interval=1,
-  enable_3d_rope=True, use_sdpa=False` -- so the teacher is the published model,
-  not a variant.
-- Per clip, contiguous, fp16:
-
-  | file | shape | for |
-  |---|---|---|
-  | `taps.npy` | `[320, 4, 1005, 2048]` | write input + frozen head input |
-  | `depth.npy` | `[320, 378, 518]` | recall target |
-  | `conf.npy` | `[320, 378, 518]` | recall weighting |
-  | `pose_enc.npy` | `[320, 9]` fp32 | Loss 2 raymap queries |
-  | `gt_depth.npy` | `[320, 378, 518]` | **Loss 1 target** |
-  | `gt_pose.npy` | `[320, 4, 4]` fp32 | **Loss 1 target**, c2w, canonical frame |
-  | `meta.json` | | see below |
-
-  ~17.6 MB/frame -> 5.6 GB per clip.
-
-- **GT preparation** (`memory/gt.py`, done):
-  - `iphone/depth.bin` is `uint32` length-prefixed **LZ4 blocks** of 256x192
-    `uint16` millimetres -- established by inspection, not documentation. Reads a
-    320-frame clip in 0.7 s with 0% invalid pixels. Resized nearest so invalid
-    pixels never bleed. Switch to the laser mesh at `aligned_pose` before any
-    number goes in a paper.
-  - **The camera axis convention is detected, not assumed.** `detect_convention`
-    scores the four candidates against the model's own trajectory using
-    *long-baseline* relative rotations. Consecutive-frame rotations are
-    near-identity in a slow room scan and separated the candidates by only ~5
-    degrees, comparable to the teacher's own error; long baselines give a **40
-    degree** margin. All four scores go in `meta.json` so a wrong pick is visible.
-  - `s = mean ||x||_2` over the **anchor frames'** GT point cloud, the paper's §3.2
-    rule. Divide GT depth and GT translations by it; store `s`. Measured
-    s = 3.43 m on the first scene, after which GT depth percentiles
-    (0.25 / 0.54 / 1.70) sit close to the model's own (0.30 / 0.67 / 1.58) --
-    independent evidence the transform is right.
-  - GT poses as **camera-to-world**, expressed relative to the anchor frame
-    convention, translations scaled by `s`. This transformation is where mistakes
-    hide; V1c below checks it.
-- **Revisit score per frame**: fraction of this frame's visible surface last
-  observed more than 72 frames ago, from the teacher's own depth and poses. This
-  decides whether the clip can show a Loss-1 effect at all, and it is how the
-  final stride gets chosen. Store per frame and as a histogram in `meta.json`.
-- `meta.json` also carries: scene, clip index, stride, frame ids, H, W, P,
-  patch_start_idx, tap layers, `s`, ray-origin magnitude percentiles, checkpoint
-  sha256, git sha and dirty flag. A cache from a different checkpoint is a
-  different dataset.
-- **Storage: `/group/compact-3dmem/datasets/<name>`, never `/scratch`.** `/scratch`
-  is `/dev/md40`, a per-node local ext4 disk, so a cache written by a build job on
-  one node is invisible to a training job on another. `/group` is CephFS,
-  zone-shared, 2.8 T free. Same reason sbatch `--output` goes under `/home`:
-  Slurm opens the log on the compute node, and a `/scratch` path there does not
-  exist (this cost job 731866, exit 127 in 1 s with no log).
-  Then `dataset create` on sof1 and `dataset pull` + `dataset pin` on msp3.
-- Whether a training job reads the cache straight off CephFS or stages its clips
-  to local `/scratch` first is a **Phase 5 measurement**, not a guess. Phase 5
-  predicted 0.3-1.2 GB/s sustained; if CephFS falls short, stage per job.
-
-`export_head.py` exports **both** frozen heads: depth (62 keys, 32.7 M) and
-camera (69 keys, **216.2 M**). 995 MB total, at
-`/group/compact-3dmem/checkpoints/lingbot-map/frozen_heads.pt`. [done]
-
-## Phase 2 — modules
-
-Rework from the earlier 4-tap design:
-
-- `SummaryMemory`: one state `[N, 1024]`, N=512. `state_init` is an
-  `nn.Parameter`, reset at every clip start.
-- `step(x_i, S_prev) -> (S_i, refined_x_i)`, computing both **from `S_prev`**.
-- `WriteTransformer`: `L_w` pre-norm layers of
-  `[cross-attn(Q=S, KV=x) -> self-attn(S) -> MLP]`.
-- `ReadTransformer`: `L_r` pre-norm layers of
-  `[cross-attn(Q=x, KV=S) -> MLP]`, **separately gated** so the state path's
-  contribution can be measured rather than inferred.
-- Zero-init `LayerScale` on the read residual, so step 0 is bit-identically
-  published lingbot-map and every improvement is attributable.
-- `raymap.py` stays as built but outputs 1024-d, and is used only by Loss 2.
-- `WriteSchedule` selects `disjoint` (lag = window-1 = 63, exact partition with
-  the cache) or `overlap` (lag 0, CUT3R's regime). Both implemented; disjoint is
-  the default and the two are a first-class ablation.
-- Flags wired from day one: `position_mode {none,pose,xyz}`,
-  `write_residual_gate`, `frozen_state` (the control arm), and later `interleaved`
-  (the CUT3R-style escalation).
-- The read's residual gates are **always present and zero-initialised** -- that is
-  what makes the untrained model bit-identical to published lingbot-map (V9).
-  Cross-attention and MLP gate separately so the state path's contribution is
-  measurable.
-
-## Phase 3 — training loop
-
-- Iterate a clip sequentially: at step *i*, `S_i, y_i = step(x_i, S_{i-1})`.
-- **Unroll long, supervise sparsely.** 32-64 steps in the graph; evaluate the
-  heads and Loss 1 every 4th step. The recurrence is ~435 GFLOPs/frame and the
-  DPT head is ~1.5 TFLOPs, so this buys 4-8x longer write gradient at the same
-  activation budget. This is the highest-leverage knob in the setup.
-- Keep a rolling buffer of the last 64 **predicted** poses for `L_rel_pose`;
-  detach those outside the BPTT window.
-- Mirror the paper's **progressive view training**: start on short subsequences
-  and grow the view count.
-- AdamW, lr 1e-4, linear warmup + cosine (CUT3R and the paper agree), grad clip
-  1.0, bf16 autocast.
-- Loss weights `lambda_depth / abs / rel / trans`, `alpha`, `eps` are not in the
-  paper -- start from VGGT's and sweep small.
-- Build order for Loss 1: **depth term first**, then add the pose terms once
-  depth works. The camera head's never-evicting causal cache becomes a second
-  recurrence as soon as it sees refined tokens, and that is worth confronting
-  separately from getting depth to move.
-- Loss 2 (recall, hindsight) implemented but its experiments deferred. Planned
-  arms: loss1 alone / loss1+hindsight / loss1+recall.
-
-### wandb
-
-`wandb login` on msp3 once (it has public internet), `WANDB_DIR` on `/scratch`,
-never `/home`.
-
-- project `lingbot-summary-memory`, run name = arm name, full config logged.
-- per step: `loss/{total,depth,abs_pose,rel_pose}`, `lr`, `grad_norm/{write,read}`,
-  `state/norm`, `gate/{read_cross,read_mlp}`, `nan_count`.
-- per eval, the chart that is the experiment: **depth error bucketed by revisit
-  score**, with the frozen-state arm and frozen lingbot-map on the same axes. An
-  average over all frames will hide a real effect.
-- images every few thousand steps: predicted vs GT depth and the error map.
-- system: s/clip-pass, peak VRAM, dataloader wait fraction.
-- **Resumable**: `wandb.init(resume="allow")` plus step-level checkpointing.
-  `PreemptMode=REQUEUE` means a `batch` job gets bounced back into the queue by
-  someone's `debug`/`rendering` job and restarted. V11 tests this.
-
-## Phase 4 — validation suite (gate)
-
-`scripts/memory/validate.py`, minutes on one a6000.
-
-| id | check | catches |
-|---|---|---|
-| V1 | cached taps -> frozen DPT head reproduces cached `depth.npy` within fp16 tol | wrong tap order, wrong slicing, corrupt memmap |
-| V1b | `sign(d)*log1p(|d|)` round-trips through `inv_log` back to `d` | the y-space loss built on a wrong inverse |
-| V1c | GT poses, after the canonical transform, reproduce the teacher's poses to within its own error | the c2w / anchor-frame / scale transform, where mistakes hide |
-| V1d | `camera_bridge.pose_at` fed the teacher's own token reproduces the teacher's pose exactly, and leaves the teacher cache unmutated | cache slicing, `frame_idx` (which flips `is_scale_frames`), accidental in-place writes. **already passing: 0.0 err** |
-| V2 | perturb one patch token; depth changes at the expected pixel | transposed / column-major grid |
-| V3 | refined tokens feed both heads and yield documented shapes | interface drift, P hardcoding |
-| V4 | after one backward: every trainable param has finite non-zero grad; every frozen param has `grad is None` | detached graph, unfrozen backbone |
-| V5 | zeroing the state changes the read output; the read at step *i* is unaffected by frame *i*'s write | that parallel read/write is wired as designed, not accidentally sequential |
-| V5b | `coverage_report` in disjoint mode: zero gaps and zero overlaps over a full clip | the lag being off by one, which silently loses a frame from both memories |
-| V6 | gradient does not reach writes older than the unroll window | detach in the wrong place |
-| V7 | 320 untrained steps; log `norm(S)` per step | state drift or collapse -- must be known before training, not after |
-| V8 | overfit one clip to ~0 loss | if it cannot memorise one sample the wiring is wrong |
-| V9 | at init, with the zero-init gate, output is **bit-identical** to frozen lingbot-map | the attributability baseline |
-| V10 | fixed seed reproduces bitwise | hidden nondeterminism |
-| V11 | kill and resume mid-run; the loss curve continues without a discontinuity | non-resumable run under REQUEUE preemption |
-| V4b | Loss-2 path: the raymap encoder receives gradient | the raymap branch silently disconnected |
-| V4c | refined tap 23 reaches the camera head and back; the zero-init gate opens, then the branch goes live | passing the 1024-d refined half where the head needs the full 2048-d token, and mistaking zero-init gating for a dead path |
-| V12 | report peak VRAM and s/clip-pass at target config | sizing the real run |
-
-**Status: 12/12 passing** against a synthetic cache
-(`make_synthetic_cache.py`) on CPU. V1 is provisional until it runs on a real
-teacher cache: the synthetic depth is produced by the same frozen head, so V1
-currently proves the memmap/slicing/dtype plumbing but not that the *builder*
-stores what it claims.
-
-Four real defects the gate caught before any GPU time:
-
-1. **The depth head's activation is `exp`, not `inv_log`**, and `output_dim=2`,
-   not 4. `DPTHead`'s defaults belong to the point heads. Wrong shape fails
-   loudly; wrong activation would have failed silently. Fixed by routing all head
-   construction through `memory/frozen.py`.
-2. **The write recurrence diverged**: `||S||` 14.5 -> 40,206 (x2775) over 128
-   untrained frames. Fixed with a LayerNorm on the state (now x1.000) and a
-   matching `std=1.0` state init.
-3. **The camera arm passed the 1024-d refined half** where the camera head needs
-   the full 2048-d tap-23 token. Now both heads consume one `rebuild_tap23`.
-4. **V2 was degenerate** -- `patch_h//3 == patch_w//4`, so the transposed
-   candidate coincided with the row-major one and the check could not fail.
-
-## Phase 5 — timing run
-
-One clip, one GPU, measured not estimated. Current paper estimate: write ~258 +
-read ~177 GFLOPs/frame plus a ~1.5 TFLOPs DPT head, so the head is ~77% of cost
-and a 320-frame clip pass should be seconds. Also confirms whether the job is
-I/O bound, which sets `/scratch` layout and worker count.
-
-## Phase 6 — first dev run
-
-- **24 train / 4 val scenes**, 3 clips of 320 frames each. ~473 GB cache at
-  17.6 MB/frame; final sizing from the Phase 5 number, not this line.
-- Arms in the first batch, because the controls are what make the result mean
-  anything:
-
-  | arm | |
+  | | check |
   |---|---|
-  | frozen lingbot-map | the baseline, exact at step 0 |
-  | **frozen state** | same read transformer, state pinned at init and never written |
-  | **arm A** `refine_taps=(0,1,2,3)`, depth + pose | the full claim |
-  | **arm B** `refine_taps=(3,)`, pose only | tap 23 is inert for depth, so this is the clean trajectory arm |
-  | full, N=512, disjoint, window 64 | story (a): same cache, better predictions |
-  | full, N=512, disjoint, **window 16** | story (b): smaller cache, same quality -- and where the revisit score says the signal is |
-  | full, N=1024, disjoint | separates capacity from mechanism |
-  | full, N=512, overlap | does duplicating the cache help or waste capacity |
+  | V1 | **probe gradient reaches the write at step *q* for *q* << *t*.** The load-bearing claim of the design. If this fails, nothing else matters. |
+  | V2 | probe gradient reaches `s0` |
+  | V3 | zeroing `s_t` changes the probe output -- no dead path |
+  | V4 | head output shape `== (H, W)` after the terminal interpolate |
+  | V5 | token counts and slices: 1005->999 write, 1000->999 probe |
+  | V6 | **leak check**: the probe forward never touches the tap tensors |
+  | V7 | raymap origins are c2w, checked **positionally** (magnitude checks are blind: `||t_w2c|| == ||t_c2w||`) |
+  | V8 | peak VRAM and s/step at 160 frames x 4 probes, checkpointed |
 
-- Go / no-go: does depth error improve **over the frozen-state arm**, bucketed by
-  revisit score. Beating only frozen lingbot-map proves nothing -- a plain adapter
-  would do that.
-- The measured revisit score says only 33-43% of frames at window 64 can show a
-  Loss-1 effect at all, so **report bucketed, never averaged**, and run the
-  window-16 arm alongside.
-- Then: trajectory-memory on/off x state on/off; write layers; gate vs plain;
-  N sweep.
-- Then Loss 2, then `a` vs `c` (position_mode).
+- [ ] **2e. One-scene overfit + visualisation.** Purpose is implementation and
+      gradient flow, not a result. Visualise probe pointmaps against GT per lag
+      via `vis/glb_export.py` / `vis/viser_wrapper.py`.
+      **The no-write control runs here too** -- see the design record: it is
+      mandatory at every rung, and its failure signature is a lag sweep that is
+      flat *and* good.
 
-## Phase 7 — evaluation on Oxford Spires and Neural RGB-D
+## Phase 3 — the shared recall harness
 
-Held-out, different-domain, and neither is in the training set: Oxford Spires is
-large-scale outdoor with TLS ground truth, Neural RGB-D is small indoor with a GT
-mesh. Configs already exist (`benchmark/configs/oxford.yaml`,
-`oxford_long.yaml`, `neural_rgbd.yaml`) and both datasets are registered
-(`oxford_spires` 156 GB, `NRGBD` 7.3 GB, local zone).
+One implementation driving **both** CUT3R (`inference_step`) and ours, so E1 and
+E2 are the same measurement rather than two similar ones.
 
-**This needs a piece that does not exist yet.** Training runs on cached taps with
-the memory outside the model; evaluation has to run the memory *inside* the
-streaming loop. So Phase 7 is a new benchmark method wrapper:
+### The query is not sequential, and that changes the harness
 
-`benchmark/methods/lingbot_map_memory.py`
-- subclass/wrap the existing `lingbot_map` method so all preprocessing, resize
-  and metric code is shared and comparable;
-- hold a `SummaryMemory` plus its trained checkpoint;
-- hook `model.aggregator` to intercept its output, run
-  `memory.step(state, tokens, write_tokens)` on the schedule, and substitute the
-  refined taps before the heads -- the same substitution `data.head_inputs` does,
-  but live;
-- reset the state at each sequence start.
+A probe needs only `s_t` and a raymap. So once the clip has been consumed, every
+frame's camera can be queried **in one batched pass** -- no recurrence, batch
+over *q*. Two consequences:
 
-Two evaluation regimes, and the difference matters:
+1. **Eval is cheap and embarrassingly parallel**, unlike training's per-frame
+   loop. Batch dimension = number of probes.
+2. **Unioning all probe pointmaps gives a whole-scene point cloud** in one shot,
+   which is exactly the input `eval/mv_recon/utils.py` (`accuracy`,
+   `completion`) already consumes. So arm A and arm C land on the paper's own
+   axis with their own code.
 
-| regime | camera cache holds | measures |
+### Two modes, same harness
+
+| mode | what | gives |
 |---|---|---|
-| bridged | teacher values for frames < i | per-frame pose improvement, matching how the arms were trained |
-| **free-running** | refined tokens, as deployed | **trajectory** improvement (ATE/RPE) -- the only regime where drift can compound |
-| | | |
+| **final-state** | probe every frame's camera against `s_T` | the headline number, and the direct parallel to CUT3R's "Revisit" -- except we withhold the image |
+| **online** | probe frame *q* against `s_t` for several *t > q* | the lag curve |
 
-The arms are trained bridged and must be evaluated free-running, which is a
-train/eval gap. If it costs accuracy, the fix is scheduled sampling: feed refined
-poses into the cache for a growing fraction of steps during training.
+### Metrics
 
-Report, per arm and per dataset:
-- depth and pose metrics **bucketed by revisit score**, never averaged;
-- each arm against its own `frozen_state` control, not against frozen
-  lingbot-map -- a residual adapter beats the latter without using the state;
-- `val_median` alongside `val_top`, since the training split is curated.
+- **Primary: Acc / Comp / NC**, via their `Regr3D_t_ScaleShiftInv`, so arm A sits
+  directly on Table 4's axis and we reuse their code.
+- **Secondary: AbsRel and delta<1.25 on ray depth** -- readable, and standard.
+- **Report both unaligned (metric) and per-sequence-scale.** CUT3R claims metric
+  while our canonical normalisation is a different convention; conflating them
+  would quietly decide the result.
+- **Everything broken down by lag `t - q`.** That is the plot that carries the
+  claim.
 
-## Open items, in priority order
+### Protocol details read out of `eval/mv_recon/launch.py` (must be matched)
 
-1. **Validate the pose pipeline on a benchmark dataset with trusted GT.** Run the
-   repo's own `benchmark/` ATE path (evo, `correct_scale=True`) on e.g. TUM-RGBD or
-   ETH3D and compare against the published numbers. This is the only way to
-   separate "the model's pose is poor on this clip" from "our GT transform is
-   wrong", and no trajectory claim can be made before it. **Contamination-free
-   signal: use a benchmark, not our ScanNet++ cache.**
-2. Build a clip starting mid-recording rather than at source frame 0 -- the
-   opening seconds of a handheld scan make poor anchor frames, and all 8 anchors
-   set the trajectory's reference.
-3. Implement V1c (GT poses reproducing the teacher's within its own error). It was
-   specced and never written, which is why (1) is still open.
-4. Re-measure the revisit score and the depth-ratio trend on a 320-frame clip and
-   across scenes; the current numbers are one 128-frame clip.
+- **GT points come from unprojected GT depth, not a mesh.** No NRGBD ground-truth
+  mesh is needed.
+- **Predicted points are aligned to GT by point-to-point ICP** before Acc / Comp /
+  NC (`o3d.pipelines.registration.registration_icp`, identity init). The metric is
+  therefore invariant to a rigid misalignment -- generous, and *not* what "metric
+  scale" alone implies. Our recall harness must apply the same alignment, or arm A
+  and arm C are not on the same axis.
+- Normals for NC come from `estimate_normals()` on both clouds *after* that
+  alignment.
+- NRGBD intrinsics are **hardcoded** in the loader (`fx = fy = 554.2562584220408,
+  cx = 320, cy = 240`); `focal.txt` is ignored.
+- Frame subsampling is `img_idxs[:: min(kf_every, len(img_idxs) // 2)]`, so
+  `kf_every=500` yields the paper's "2 to 4 frames per scene".
 
-## Cluster-convention compliance
+- [ ] 3a. Harness against arm A (exists before our weights do). This *is* E1.
+- [ ] 3b. Same harness against arm C.
 
-Checked 2026-08-23. Three deviations found, two fixed:
+## Phase 4 — train small, compare
 
-| | rule | state |
-|---|---|---|
-| job logs | `campaigns/_joblogs/` already existed in this repo; `/home` is repositories and scripts only | **fixed** -- submitters now default there |
-| smoke caches | deleted, not filed | **fixed** -- `_smoke2` (2.2 GB) removed |
-| the teacher cache | "stage everything a job needs into `/scratch` before the job starts" | **outstanding** -- read directly off `/group` CephFS and not registered with `dataset create` |
+- [ ] 4a. Train arm C on a few scenes. Full BPTT over 160 frames (320-frame clip
+      subsampled by 2, effective stride 40), 4 probes/frame, gradient
+      checkpointing, recall loss only.
+- [ ] 4b. Arm A recall eval on the same scenes (Phase 3 harness). Runs in
+      parallel -- no training needed.
+- [ ] 4c. Compare, with the controls from the design record at this rung too.
+- [ ] 4d. **Report as a curve over clip length**, with a point at <= 64 frames.
+      Arm A has no KV cache and never trained past 64 views, so at 160 frames it
+      is out of distribution; without the <= 64 point the comparison is open to
+      exactly that objection.
+- [ ] *(later)* arm B, all scenes, the tap-23-vs-four-taps probe.
 
-The cache deviation is deliberate but temporary. `/scratch` is `/dev/md40`, a
-per-node local disk, so a cache written by a build job on one node is invisible
-to a training job on another -- which is why it lives on `/group` for now. The
-correct end state is the one the convention describes: keep the canonical copy in
-the `dataset` registry and have each training job `dataset pull` it to local
-`/scratch` at start.
+---
 
-Two reasons that is not merely cosmetic:
-- measured `read_bytes` is currently **0** because the 89 GB train split fits
-  entirely in the node's 1.9 TB page cache. That stops being true as the scene
-  count grows, and then CephFS becomes the bottleneck.
-- `dataset create` must wait until no job is reading the path; two arms are
-  reading it now, and finding out the hard way whether it moves or replicates is
-  not worth breaking hour-long runs for.
+## Operating conventions for this campaign
 
-## Cluster notes
+- **Zone**: sof1 for repro, overfit and small training; msp3 when training gets
+  heavy. A rule of thumb, not a constraint -- be flexible.
+- **Storage**: jobs run on `/scratch` always; artifacts ship to **sof1**
+  `/group/compact-3dmem`. msp3's `/group` is not a consideration -- nothing is
+  filed there.
+- **Small evals** (Phase 1, Phase 3 against arm A) -> hala a6000,
+  `--partition=rendering --qos=rendering`. Both hala partitions carry
+  `AllowQos=<own name>`, so a matching `--qos` is mandatory.
+- **Always pass `--cpus-per-task` and `--mem` explicitly.** There is no
+  auto-sizing on this cluster; the default is `cpu=1, mem=2G`.
+- Job logs -> `/group/compact-3dmem/campaigns/_joblogs`.
+- Never `micromamba run` inside a job; call the env's interpreter directly.
 
-**Everything on msp3.** One-time `dataset pull ScanNetpp` + `dataset pin`
-(1.79 TiB, ~6.6 h at the observed 75 MB/s; lands as a `/data` mount, does not
-touch msp3's 300 G `/group`). Worth it because the cache will be rebuilt more
-than once. `--constraint=zone-msp3 --gpus=h200:1`.
+## Deferred, recorded so it is not lost
 
-Validation runs anywhere; `hala` a6000 with `--partition=rendering
---qos=rendering` is cheapest, and both hala partitions **require** a matching
-`--qos` or the job is rejected outright.
-
-**Only committed, pushed code runs on msp3.** `lingbot_map/memory/` and
-`scripts/memory/` must be pushed before any msp3 job; an agent shell needs a PAT
-via `git config --global credential.helper store`.
-
-**Frozen surface at training time:** `frozen_heads.pt` (995 MB, depth + camera)
-at `$GROUP_ROOT/checkpoints/lingbot-map/`. No aggregator.
-
-**Always pass `--cpus-per-task` and `--mem` explicitly** -- nothing is auto-sized
-here and the default is `cpu=1, mem=2G`.
-
-**Nothing durable on `/scratch`, and no sbatch `--output` there either.** It is a
-per-node local disk. Logs go to `/home`, caches to `/group`, only genuine
-per-job intermediates to `/scratch`.
-
-**Run `gpu_keep_alive.py 0.05`** alongside training: small kernels plus heavy I/O
-reads as idle to the reaper.
-
-**Results reduce in-zone; the record lives on sof1.** `rsync -a` to the `sof1`
-alias under `campaigns/summary-memory/<arm>/<benchmark>/<scene>` via
-`campaign_dir()`. Arm names carry what makes numbers incomparable, e.g.
-`a_N512_L2_320f_s10`. Smoke runs are deleted, not filed.
+7-Scenes reproduction · other CUT3R benchmarks (monodepth, video_depth, relpose)
+· arm B execution · four-taps input (sweep axis (b)) · KV-window shrinking ·
+current-frame loss at low weight (A/B) · probe density 4-per-frame vs
+4-every-8th · unfreezing the aggregator · 7-Scenes `.depth.proj.png`.

@@ -4,7 +4,7 @@ Debugging reference. Pseudocode, real shapes, real line numbers.
 
 Numbers below are for:
 
-```
+```text
 demo.py --model_path ckpt/lingbot-map.pt --image_folder example/university \
         --first_k 24 --num_scale_frames 4 --keyframe_interval 2 --use_sdpa
 ```

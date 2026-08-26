@@ -21,7 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lingbot_map.memory import camera_bridge as cb                      # noqa: E402
 from lingbot_map.memory import frozen                                   # noqa: E402
 from lingbot_map.memory import losses as L                              # noqa: E402
+from lingbot_map.memory import streams as ST                            # noqa: E402
 from lingbot_map.memory.data import ClipReader, find_clips              # noqa: E402
+from lingbot_map.memory.raymap import plucker_rays                      # noqa: E402
+from lingbot_map.utils.geometry import closed_form_inverse_se3          # noqa: E402
 from lingbot_map.memory.model import SummaryMemory                      # noqa: E402
 from lingbot_map.memory.schedule import DISJOINT, OVERLAP, WriteSchedule, coverage_report  # noqa: E402
 
@@ -320,6 +323,98 @@ def v10(device):
     return "exact"
 
 
+def _pose_enc(device):
+    """A valid absT_quaR_FoV row: position, unit quaternion, two FoVs."""
+    q = torch.tensor([0.1, -0.2, 0.3, 0.9])
+    q = q / q.norm()
+    return torch.cat([torch.tensor([0.4, -0.3, 0.7]), q,
+                      torch.tensor([0.9, 0.7])]).to(device).unsqueeze(0)
+
+
+@check("V14 raymap ray origins are camera-to-world (positional, not magnitude)")
+def v14(device):
+    H, W = 28, 42
+    pe = _pose_enc(device)
+    o = plucker_rays(pe, H, W, 14)[0, :, 3:6]
+    c2w = L.pose_enc_to_c2w(pe, (H, W))
+    err = (o - c2w[0, :3, 3]).abs().max().item()
+    assert err < 1e-4, f"origins disagree with c2w translation by {err:.3g}"
+    # The check must be able to fail: ||t_w2c|| == ||t_c2w|| exactly, so a magnitude
+    # histogram cannot detect the inverted convention. Only position can.
+    alt = (o - closed_form_inverse_se3(c2w)[0, :3, 3]).abs().max().item()
+    assert alt > 1e-2, f"the two conventions are indistinguishable here ({alt:.3g})"
+    return f"err {err:.2e} vs inverted {alt:.3f}"
+
+
+@check("V15 stream vocabulary matches the cache, and recall targets are reachable")
+def v15(reader):
+    for s in range(ST.NUM_STREAMS):
+        tap, _ = ST.split(s)
+        got = reader.stream(0, s)[0]
+        want = reader.raw_tap(0, tap)[0, 0][:, ST.slice_for(s)]
+        assert torch.equal(got, want), f"stream {s} != tap {tap} slice"
+    n = 0
+    for qm in ST.QUERY_STREAMS:
+        for wp in ST.WRITE_STREAMS:
+            written = ST.write_streams(wp)
+            for qi, s in ST.recall_targets(qm, wp):
+                assert s in written, f"{qm}x{wp}: stream {s} not written"
+                assert qi < ST.num_query_streams(qm)
+                n += 1
+    return f"8 streams verified, {n} reachable (query, target) pairs across 9 combos"
+
+
+@check("V16 a recall loss reaches the write AT INIT (the whole point of Loss 2)")
+def v16(device):
+    H, W = 28, 42
+    m = SummaryMemory(dim=1024, num_slots=32, num_heads=8, write_layers=1,
+                      read_layers=1, refine_taps=(3,), patch_start_idx=6,
+                      write_input=ST.WRITE_TAP23_HALF,
+                      query_mode=ST.QUERY_SINGLE).to(device)
+    tok = 6 + (H // 14) * (W // 14)
+    x = {3: torch.randn(1, tok, 1024, device=device)}
+    s1, _ = m.step(m.new_state(1), x, write_tokens=torch.randn(1, tok, 1024, device=device))
+    qr = m.read_at_camera(s1, _pose_enc(device), H, W)
+    loss = L.recall_loss(qr, torch.randn_like(qr))["recall"]
+    loss.backward()
+    live = [n for n, p in m.write.named_parameters()
+            if p.grad is not None and p.grad.abs().sum() > 0]
+    assert live, ("no gradient reaches the write. If the query path shares the "
+                  "token path's zero-init gate, d(loss)/d(state) is exactly 0 and "
+                  "Loss 2 supplies nothing -- see read.py's query-path gates")
+    return f"{len(live)}/{len(list(m.write.parameters()))} write tensors have grad"
+
+
+@check("V17 every query_mode builds a 4-tap head input that depends on the state")
+def v17(device):
+    H, W = 28, 42
+    tok = 6 + (H // 14) * (W // 14)
+    out = []
+    for qm in (ST.QUERY_PER_HALF, ST.QUERY_PER_TAP, ST.QUERY_SINGLE):
+        m = SummaryMemory(dim=1024, num_slots=32, num_heads=8, write_layers=1,
+                          read_layers=1, refine_taps=(3,), patch_start_idx=6,
+                          write_input=ST.WRITE_ALL_FULL, query_mode=qm).to(device)
+        st = m.new_state(1)
+        # Before `set_query_init` the projection is a zero placeholder, so the decode
+        # is constant and a hindsight loss would have no gradient anywhere upstream.
+        # Assert that, so the reason the init exists stays visible.
+        if m.to_taps is not None:
+            flat = m.query_taps(m.read_at_camera(st, _pose_enc(device), H, W))[0]
+            assert flat.std().item() == 0.0, f"{qm}: placeholder should be constant"
+        m.set_query_init(torch.randn(ST.NUM_STREAMS, 1024, device=device))
+        qr = m.read_at_camera(st, _pose_enc(device), H, W)
+        taps = m.query_taps(qr)
+        assert len(taps) == ST.NUM_TAPS, f"{qm}: {len(taps)} taps"
+        for k, tp in enumerate(taps):
+            assert tuple(tp.shape) == (1, 1, tok, 2048), f"{qm} tap {k}: {tuple(tp.shape)}"
+        zero = m.query_taps(m.read_at_camera(torch.zeros_like(st),
+                                             _pose_enc(device), H, W))
+        moved = max((a - b).abs().max().item() for a, b in zip(taps, zero))
+        assert moved > 1e-6, f"{qm}: zeroing the state changed nothing ({moved:.2g})"
+        out.append(f"{qm}:{moved:.3g}")
+    return "state sensitivity " + " ".join(out)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cache", required=True)
@@ -339,6 +434,7 @@ def main():
     depth_head, _ = frozen.load_frozen(a.heads, device, need_camera=False)
 
     v1b(); v5b(); v9(device); v10(device); v1d(device)
+    v14(device); v15(reader); v16(device); v17(device)
     v1(reader, depth_head, device)
     v2(reader, depth_head, device)
     v4(reader, depth_head, device)

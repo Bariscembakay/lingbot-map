@@ -54,9 +54,27 @@ mkdir -p "$MAMBA_ROOT"
     fi
 )
 
-# No curope build. croco/models/pos_embed.py:121 falls back to a pure-torch
-# RoPE2D when the CUDA extension is absent, which is correct but slower. That is
-# fine for eval; revisit if this env is ever used for training throughput.
+# curope is NOT built, and this is a considered decision rather than a shortcut.
+#
+# The pure-torch RoPE2D fallback is not simply slower: the CUDA kernel computes
+# the angle analytically (`freq = pos * inv_freq`), so a negative position is a
+# negative angle, while the fallback built its cos/sin table over
+# arange(seq_len) and indexed it with F.embedding -- which asserts on a negative
+# index. CUT3R gives its pose token position -1, so eval died with a device-side
+# assert. That is why building curope looked mandatory.
+#
+# It does not compile against torch 2.8, for two independent reasons:
+#   kernels.cu:101  AT_DISPATCH(tokens.type(), ...) -- the pre-2.4 API; the
+#                   DeprecatedTypeProperties -> ScalarType conversion is gone.
+#   mathcalls.h:79  cospi/sinpi exception-specification clash between glibc 2.41+
+#                   and CUDA 12.8's host headers.
+# Fixing the first means editing the CUDA kernel, which destroys the only reason
+# to prefer it ("run exactly what upstream ran").
+#
+# So croco/models/pos_embed.py is patched instead to offset the table origin to
+# pos_min, evaluating the SAME formula at the same integers. Verified against an
+# independent analytic implementation of kernels.cu's arithmetic: max abs error
+# 0.000e+00, including at pos = -1. See CUT3R/UPSTREAM.md.
 
 export CUDA_HOME="$ENV_PREFIX"
 export PATH="$ENV_PREFIX/bin${PATH:+:$PATH}"

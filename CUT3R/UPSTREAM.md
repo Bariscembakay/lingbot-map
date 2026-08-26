@@ -36,6 +36,26 @@ attributable.
   than listing its root — so an absent 7-Scenes directory could not be skipped.
   **Selection only: the model, protocol and metric code are untouched.**
 
+- **`src/dust3r/model.py`** (`load_model`) — added `weights_only=False` to
+  `torch.load`. torch >= 2.6 flipped that default to `True`, and this checkpoint
+  pickles an `omegaconf.DictConfig` in `args`, which the restricted unpickler
+  rejects. Upstream predates the change. **Compatibility only.**
+
+- **`src/croco/models/pos_embed.py`** — the pure-torch `RoPE2D` fallback now
+  handles negative positions. It built its cos/sin table over `arange(seq_len)`
+  and indexed it with `F.embedding`, which asserts on a negative index — while
+  the CUDA kernel evaluates the angle analytically, so CUT3R's pose token at
+  position `-1` is fine there. Offsetting the table origin to `pos_min`
+  evaluates the same formula at the same integers, so it is numerically
+  equivalent to the kernel rather than an approximation. **Only reachable when
+  curope is absent**, which is always: the CUDA extension does not build against
+  torch 2.8 (`AT_DISPATCH(tokens.type(), ...)` is the pre-2.4 API, and glibc
+  2.41+ clashes with CUDA 12.8's `cospi`/`sinpi` declarations). Repairing it
+  would mean editing the kernel, which removes the only reason to prefer it.
+  Equivalence is verified numerically against an independent analytic
+  implementation of `kernels.cu`'s arithmetic: **max abs error 0.000e+00**,
+  including at `pos = -1`.
+
 ## What is deliberately not tracked
 
 - `assets/` (41 MB of README gifs), `examples/` (47 MB of demo media) and

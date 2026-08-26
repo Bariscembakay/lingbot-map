@@ -28,7 +28,7 @@ from .attention import CrossAttention, LayerScale, Mlp
 class ReadBlock(nn.Module):
     def __init__(self, dim: int, num_heads: int = 16, mlp_ratio: float = 4.0,
                  qk_norm: bool = True, gate_init: float = 0.0,
-                 relative_residual: bool = True):
+                 relative_residual: bool = True, query_gate_init: float = 1.0):
         super().__init__()
         self.relative_residual = relative_residual
         self.branch_norm = nn.LayerNorm(dim, elementwise_affine=False)
@@ -39,6 +39,8 @@ class ReadBlock(nn.Module):
         self.mlp = Mlp(dim, mlp_ratio)
         self.gate_cross = LayerScale(dim, gate_init)
         self.gate_mlp = LayerScale(dim, gate_init)
+        self.gate_cross_q = LayerScale(dim, query_gate_init)
+        self.gate_mlp_q = LayerScale(dim, query_gate_init)
 
     def _scaled(self, branch: torch.Tensor, q: torch.Tensor) -> torch.Tensor:
         if not self.relative_residual:
@@ -47,28 +49,34 @@ class ReadBlock(nn.Module):
         rms = q.detach().pow(2).mean(-1, keepdim=True).sqrt()
         return self.branch_norm(branch) * rms
 
-    def forward(self, q: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
+    def forward(self, q: torch.Tensor, state: torch.Tensor,
+                query_path: bool = False) -> torch.Tensor:
+        g_cross = self.gate_cross_q if query_path else self.gate_cross
+        g_mlp = self.gate_mlp_q if query_path else self.gate_mlp
         b = self.cross(self.norm_q(q), self.norm_kv(state))
-        q = q + self.gate_cross(self._scaled(b, q))
+        q = q + g_cross(self._scaled(b, q))
         b = self.mlp(self.norm_mlp(q))
-        q = q + self.gate_mlp(self._scaled(b, q))
+        q = q + g_mlp(self._scaled(b, q))
         return q
 
 
 class ReadTransformer(nn.Module):
     def __init__(self, dim: int, num_layers: int = 2, num_heads: int = 16,
                  mlp_ratio: float = 4.0, qk_norm: bool = True,
-                 gate_init: float = 0.0, relative_residual: bool = True):
+                 gate_init: float = 0.0, relative_residual: bool = True,
+                 query_gate_init: float = 1.0):
         super().__init__()
         self.blocks = nn.ModuleList([
-            ReadBlock(dim, num_heads, mlp_ratio, qk_norm, gate_init, relative_residual)
+            ReadBlock(dim, num_heads, mlp_ratio, qk_norm, gate_init,
+                      relative_residual, query_gate_init)
             for _ in range(num_layers)
         ])
 
-    def forward(self, query: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
+    def forward(self, query: torch.Tensor, state: torch.Tensor,
+                query_path: bool = False) -> torch.Tensor:
         """query: [B, Q, D] tokens or rays. state: [B, N, D]."""
         for blk in self.blocks:
-            query = blk(query, state)
+            query = blk(query, state, query_path)
         return query
 
     def gate_norms(self) -> dict:
@@ -76,4 +84,6 @@ class ReadTransformer(nn.Module):
         for i, b in enumerate(self.blocks):
             out[f"read{i}/gate_cross"] = b.gate_cross.gamma.abs().mean().item()
             out[f"read{i}/gate_mlp"] = b.gate_mlp.gamma.abs().mean().item()
+            out[f"read{i}/gate_cross_q"] = b.gate_cross_q.gamma.abs().mean().item()
+            out[f"read{i}/gate_mlp_q"] = b.gate_mlp_q.gamma.abs().mean().item()
         return out

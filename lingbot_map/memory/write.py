@@ -50,8 +50,10 @@ class WriteTransformer(nn.Module):
                  mlp_ratio: float = 4.0, qk_norm: bool = True,
                  residual_gate: bool = False,
                  position_mode: str = "none",
-                 state_norm: bool = True):
+                 state_norm: bool = True,
+                 num_write_streams: int = 1):
         super().__init__()
+        self.num_write_streams = num_write_streams
         if position_mode not in ("none", "pose", "xyz"):
             raise ValueError(f"unknown position_mode {position_mode!r}")
         # "none" is arm (a): the write sees only the frame's own tokens, so pose
@@ -64,10 +66,22 @@ class WriteTransformer(nn.Module):
             for _ in range(num_layers)
         ])
         self.out_norm = nn.LayerNorm(dim) if state_norm else nn.Identity()
+        # Streams arrive concatenated along the token axis, so without a marker the
+        # write cannot tell tap 4's pre-global tokens from tap 23's post-global
+        # ones. Small random rather than zero init: there is no manifold to sit on
+        # here, the write only needs them distinguishable from step 0.
+        self.stream_emb = (nn.Parameter(torch.randn(num_write_streams, dim) * 0.02)
+                           if num_write_streams > 1 else None)
 
     def forward(self, s: torch.Tensor, kv: torch.Tensor,
                 position: torch.Tensor | None = None) -> torch.Tensor:
         """s: [B, N, D] state slots. kv: [B, P, D] one frame's tokens."""
+        if self.stream_emb is not None:
+            s = self.num_write_streams
+            if kv.shape[1] % s:
+                raise ValueError(f"kv has {kv.shape[1]} tokens, not divisible by {s} streams")
+            kv = (kv.view(kv.shape[0], s, -1, kv.shape[-1])
+                  + self.stream_emb.view(1, s, 1, -1)).reshape(kv.shape)
         if self.position_mode != "none":
             if position is None:
                 raise ValueError(f"position_mode={self.position_mode} needs `position`")

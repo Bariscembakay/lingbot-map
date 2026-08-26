@@ -26,7 +26,8 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from lingbot_map.memory.cache_format import (  # noqa: E402
-    CONF, DEPTH, FORMAT_VERSION, FP16_MAX, GT_C2W, GT_DEPTH, META, POSE,
+    CONF, DEPTH, FORMAT_VERSION, FP16_MAX, GT_C2W, GT_DEPTH,
+    GT_INTRINSICS, META, POSE,
     REVISIT, TAPS, ClipMeta,
 )
 
@@ -262,6 +263,7 @@ def main() -> None:
     np.memmap(out / GT_DEPTH, dtype=np.float16, mode="w+",
               shape=g["gt_depth"].shape)[:] = g["gt_depth"].astype(np.float16)
     np.save(out / GT_C2W, g["gt_c2w"])
+    np.save(out / GT_INTRINSICS, g["gt_intrinsics"])
     np.save(out / REVISIT, g["revisit"])
 
     # The sinusoidal band for ray origins has to cover the range that actually
