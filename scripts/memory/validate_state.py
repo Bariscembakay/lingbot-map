@@ -21,6 +21,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lingbot_map.memory.cut3r_state import (  # noqa: E402
     DEC_DIM, TAP_DIM, StateMemory, grid_positions,
 )
+from lingbot_map.memory.probe_data import (  # noqa: E402
+    build_raymap, gt_pointmaps, ray_depth, relative_c2w,
+)
 
 PH, PW = 4, 6          # tiny patch grid; the DPT pyramid halves and re-upsamples
 PATCH = 14
@@ -148,6 +151,91 @@ def v6_probe_cannot_see_the_taps(m, device) -> None:
           f"leaking taps: {leaked or 'none'}")
 
 
+def v7_raymap_geometry(m, device) -> None:
+    """The raymap and the GT pointmap must describe the same rays.
+
+    Checked positionally, not by magnitude: ||t_w2c|| == ||t_c2w||, so a norm
+    comparison is blind to the exact inversion error that has bitten this repo
+    before. Under the `true` convention every GT point must lie ON its ray, so
+    the residual is a hard zero; under CUT3R's convention it must NOT, and the
+    size of that violation is the quirk we deliberately inherit.
+    """
+    torch.manual_seed(0)
+    h, w = 24, 32
+    B = 3
+    K = torch.tensor([[120.0, 0, w / 2], [0, 120.0, h / 2], [0, 0, 1]],
+                     device=device).expand(B, 3, 3).contiguous()
+    c2w_0 = torch.eye(4, device=device)[None]
+    c2w_q = torch.eye(4, device=device).repeat(B, 1, 1)
+    for i in range(B):                       # distinct rotations and translations
+        a = 0.3 * (i + 1)
+        c2w_q[i, :3, :3] = torch.tensor(
+            [[torch.cos(torch.tensor(a)), 0, torch.sin(torch.tensor(a))],
+             [0, 1, 0],
+             [-torch.sin(torch.tensor(a)), 0, torch.cos(torch.tensor(a))]], device=device)
+        c2w_q[i, :3, 3] = torch.tensor([0.4 * (i + 1), -0.2, 0.7 * (i + 1)], device=device)
+    depth = 1.0 + torch.rand(B, h, w, device=device)
+
+    x_self, x_world, valid = gt_pointmaps(depth, K, c2w_q, c2w_0)
+
+    # (a) origin channel must equal the RELATIVE camera centre, positionally.
+    rm_true = build_raymap(K, c2w_q, c2w_0, h, w, convention="true")
+    t_rel = relative_c2w(c2w_q, c2w_0.expand(B, -1, -1))[:, :3, 3]
+    o = rm_true[:, :3, 0, 0]
+    err_o = (o - t_rel).abs().max().item()
+    # what an inverted pose would have produced, for contrast
+    t_bad = torch.linalg.inv(relative_c2w(c2w_q, c2w_0.expand(B, -1, -1)))[:, :3, 3]
+    contrast = (t_bad - t_rel).abs().max().item()
+
+    # (b) under `true`, every GT point lies on its ray: X = o + s*d, s > 0.
+    d = rm_true[:, 3:].permute(0, 2, 3, 1)
+    ovec = rm_true[:, :3].permute(0, 2, 3, 1)
+    v = x_world - ovec
+    s = (v * d).sum(-1, keepdim=True)
+    resid = (v - s * d).norm(dim=-1)[valid]
+    rel = (resid / v.norm(dim=-1)[valid].clamp_min(1e-9)).max().item()
+    ahead = bool((s.squeeze(-1)[valid] > 0).all())
+
+    # (c) X_self must round-trip to X_world through the relative pose.
+    c2w = relative_c2w(c2w_q, c2w_0.expand(B, -1, -1))
+    xs = x_self.reshape(B, -1, 3).transpose(1, 2)
+    rt = (c2w[:, :3, :3] @ xs + c2w[:, :3, 3][:, :, None]).transpose(1, 2)
+    err_rt = (rt.reshape(x_world.shape) - x_world).abs().max().item()
+
+    # (d) CUT3R's convention must MISS the ray -- that is the inherited quirk.
+    rm_c = build_raymap(K, c2w_q, c2w_0, h, w, convention="cut3r")
+    dc = rm_c[:, 3:].permute(0, 2, 3, 1)
+    ang = torch.rad2deg(torch.arccos(
+        (dc * d).sum(-1).clamp(-1, 1)))[valid].median().item()
+
+    ok = err_o < 1e-5 and contrast > 1e-3 and rel < 1e-4 and ahead and err_rt < 1e-4
+    check("V7 raymap geometry: origins positional, GT points on the ray", ok,
+          f"origin err {err_o:.2e} (inverted would be {contrast:.3f}) | "
+          f"on-ray resid {rel:.2e} | s>0 {ahead} | self->world {err_rt:.2e} | "
+          f"cut3r-vs-true median angle {ang:.2f} deg")
+
+
+def v8_ray_depth_convention_free(m, device) -> None:
+    """Ray depth must not depend on the direction-channel convention.
+
+    This is what keeps the readable metric comparable across
+    --raymap-convention, since only the origin channel enters it.
+    """
+    h, w = 16, 20
+    K = torch.tensor([[100.0, 0, w / 2], [0, 100.0, h / 2], [0, 0, 1]],
+                     device=device)[None]
+    c2w_0 = torch.eye(4, device=device)[None]
+    c2w_q = torch.eye(4, device=device)[None].clone()
+    c2w_q[0, :3, 3] = torch.tensor([0.9, -0.1, 1.4], device=device)
+    depth = 1.0 + torch.rand(1, h, w, device=device)
+    _, x_world, _ = gt_pointmaps(depth, K, c2w_q, c2w_0)
+    d1 = ray_depth(x_world, build_raymap(K, c2w_q, c2w_0, h, w, "cut3r"))
+    d2 = ray_depth(x_world, build_raymap(K, c2w_q, c2w_0, h, w, "true"))
+    err = (d1 - d2).abs().max().item()
+    check("V8 ray depth is independent of the direction convention",
+          err < 1e-6, f"max diff {err:.2e}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--device", default="cpu")
@@ -162,6 +250,8 @@ def main() -> int:
         "V4": v4_head_output_shape,
         "V5": v5_token_bookkeeping,
         "V6": v6_probe_cannot_see_the_taps,
+        "V7": v7_raymap_geometry,
+        "V8": v8_ray_depth_convention_free,
     }
     keep = [k.strip() for k in args.only.split(",") if k.strip()] or list(tests)
     for name in keep:

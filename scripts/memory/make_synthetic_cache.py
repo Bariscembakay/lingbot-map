@@ -19,7 +19,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from lingbot_map.memory import frozen                              # noqa: E402
 from lingbot_map.memory.cache_format import (                       # noqa: E402
-    CONF, DEPTH, FORMAT_VERSION, GT_C2W, GT_DEPTH, META, POSE, REVISIT, TAPS, ClipMeta,
+    CONF, DEPTH, FORMAT_VERSION, GT_C2W, GT_DEPTH, GT_INTRINSICS, META, POSE,
+    REVISIT, TAPS, ClipMeta,
 )
 
 
@@ -71,7 +72,17 @@ def main() -> None:
               shape=depth.shape)[:] = (depth.astype(np.float32) * 1.05).astype(np.float16)
     c2w = np.tile(np.eye(4, dtype=np.float32), (L, 1, 1))
     c2w[:, 0, 3] = np.linspace(0, 0.5, L)
+    # Rotate as well as translate: identity rotations would let a raymap bug
+    # (c2w vs w2c, or a missing rotation) pass unnoticed.
+    ang = np.linspace(0, 0.6, L)
+    c2w[:, 0, 0] = np.cos(ang); c2w[:, 0, 2] = np.sin(ang)
+    c2w[:, 2, 0] = -np.sin(ang); c2w[:, 2, 2] = np.cos(ang)
+    c2w[:, 2, 3] = np.linspace(0, 0.3, L)
     np.save(out / GT_C2W, c2w)
+    f = 0.7 * a.width
+    K = np.tile(np.array([[f, 0, a.width / 2], [0, f, a.height / 2], [0, 0, 1]],
+                         np.float32), (L, 1, 1))
+    np.save(out / GT_INTRINSICS, K)
     np.save(out / REVISIT, np.linspace(0, 0.6, L).astype(np.float32))
 
     meta = ClipMeta(
@@ -83,6 +94,7 @@ def main() -> None:
         kv_cache_sliding_window=16, keyframe_interval=1,
         model_sha256="synthetic", git_sha="synthetic", git_dirty=False,
         gt_scale=1.0, gt_convention="synthetic",
+        gt_pose_trusted=True, gt_pose_residual_deg=0.0,
         stats={"synthetic": True},
     )
     (out / META).write_text(meta.to_json())

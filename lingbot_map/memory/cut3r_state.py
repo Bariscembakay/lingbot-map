@@ -19,6 +19,7 @@ from types import SimpleNamespace
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint
 
 
 def cut3r_src() -> Path:
@@ -135,8 +136,9 @@ class ProbeHead(nn.Module):
 
     def __init__(self, patch_size: int = 14, dec_num_heads: int = 12, rope=None,
                  depth_mode=("exp", -float("inf"), float("inf")),
-                 conf_mode=("exp", 1, float("inf"))):
+                 conf_mode=("exp", 1, float("inf")), grad_ckpt: bool = False):
         super().__init__()
+        self.grad_ckpt = grad_ckpt
         self.depth_mode, self.conf_mode = depth_mode, conf_mode
         args = dict(
             num_channels=4,               # xyz + conf
@@ -166,12 +168,14 @@ class ProbeHead(nn.Module):
         for blk in self.final_transform:
             cross_last = blk(cross_last, mod, pos)
         out = {}
+        ck = self.grad_ckpt and self.training and torch.is_grad_enabled()
+        run = ((lambda f, *a, **k: checkpoint(f, *a, use_reentrant=False, **k))
+               if ck else (lambda f, *a, **k: f(*a, **k)))
         with torch.amp.autocast("cuda", enabled=False):
-            self_raw = self.dpt_self([t.float() for t in taps], image_size=(h, w))
-            cross_raw = self.dpt_cross(
-                [t.float() for t in taps[:-1]] + [cross_last.float()],
-                image_size=(h, w),
-            )
+            self_raw = run(self.dpt_self, [t.float() for t in taps], image_size=(h, w))
+            cross_raw = run(self.dpt_cross,
+                            [t.float() for t in taps[:-1]] + [cross_last.float()],
+                            image_size=(h, w))
             # croco's DPT ends at 16*N; resize DOWN to the patch-14 target rather
             # than dropping the head's final 2x and upsampling from 8*N, which
             # would invent detail instead of decimating it.
@@ -199,8 +203,12 @@ class StateMemory(nn.Module):
     def __init__(self, patch_size: int = 14, tap_dim: int = TAP_DIM,
                  state_tokens: int = STATE_TOKENS, dec_depth: int = DEC_DEPTH,
                  dec_num_heads: int = 12, state_dec_num_heads: int = 16,
-                 patch_start_idx: int = 6):
+                 patch_start_idx: int = 6, grad_ckpt: bool = False):
         super().__init__()
+        # Full BPTT over 160 frames is required by the objective (a probe at t
+        # must credit the write at q), and 954 decoder passes of activations do
+        # not fit without recomputation: ~439 GB against ~31-48 GB checkpointed.
+        self.grad_ckpt = grad_ckpt
         self.patch_size = patch_size
         self.patch_start_idx = patch_start_idx
         self.state_tokens = state_tokens
@@ -231,7 +239,7 @@ class StateMemory(nn.Module):
 
         self.raymap = RaymapEncoder(patch_size=patch_size)
         self.head = ProbeHead(patch_size=patch_size, dec_num_heads=dec_num_heads,
-                              rope=self.rope)
+                              rope=self.rope, grad_ckpt=grad_ckpt)
 
     # -- state ---------------------------------------------------------------
     def init_state(self, batch: int, device) -> tuple[torch.Tensor, torch.Tensor]:
@@ -253,10 +261,19 @@ class StateMemory(nn.Module):
         output. Returns (new_state, taps) where taps are the four the head reads.
         """
         pairs = [(state, tokens)]
+        use_ckpt = self.grad_ckpt and self.training and torch.is_grad_enabled()
         for blk_s, blk_i in zip(self.dec_blocks_state, self.dec_blocks):
             s_prev, i_prev = pairs[-1]
-            s_new, _ = blk_s(s_prev, i_prev, state_pos, tok_pos)   # write
-            i_new, _ = blk_i(i_prev, s_prev, tok_pos, state_pos)   # read
+            if use_ckpt:
+                # Both stacks must read the SAME layer l-1 pair, so they are
+                # checkpointed separately rather than as one fused step.
+                s_new = checkpoint(lambda a, b, bs=blk_s: bs(a, b, state_pos, tok_pos)[0],
+                                   s_prev, i_prev, use_reentrant=False)
+                i_new = checkpoint(lambda a, b, bi=blk_i: bi(a, b, tok_pos, state_pos)[0],
+                                   i_prev, s_prev, use_reentrant=False)
+            else:
+                s_new, _ = blk_s(s_prev, i_prev, state_pos, tok_pos)   # write
+                i_new, _ = blk_i(i_prev, s_prev, tok_pos, state_pos)   # read
             pairs.append((s_new, i_new))
         state_out = self.dec_norm_state(pairs[-1][0])
         img_out = self.dec_norm(pairs[-1][1])
