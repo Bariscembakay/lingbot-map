@@ -113,13 +113,38 @@ with CUT3R's confidence form, `c * ||xhat/shat - x/s|| - alpha * log c`, and
 
 | | |
 |---|---|
-| probes per frame | **4**, sampled uniformly from `q in [0, t-1]` |
+| probes per frame | **4** past, uniform over `q in [0, t-1]`, **plus 1 at the current camera `q = t`** (default on -- see axis) |
 | at small *t* | `min(4, t)` distinct *q*; no probe at `t = 0` |
-| probes per 160-frame clip | 1+2+3 + 4×156 = **634** |
+| probes per 160-frame clip | 634 past + 160 current = **794** |
 | targets | **both** `X_self` (camera *q*'s own frame) and `X_world` (camera 0's frame) |
 
 The raymap gives ray *direction* but not *distance*, so the probe is not
 degenerate: the pose is handed over, the geometry is not.
+
+### The lag-0 probe is not the current-frame loss we dropped
+
+Read the mechanism, not the name. The dropped loss queried the state with the
+frame's **image tokens**, which the aggregator's KV cache already covers -- so
+the cheapest way to reduce it was to route around the state, which is the
+suppression we measured. The lag-0 probe queries with a **raymap only**: no
+image, no aggregator, so the sole path to frame *t*'s content is `s_t`. Same
+clean-probe property as every other query.
+
+It must read `s_t`, **after** frame *t* is written. Reading `s_{t-1}` would make
+it prediction of an unseen view -- CUT3R's regime, and the thing we depart from.
+
+What it buys: the lag>0 probes credit the write at step *q* through `t - q`
+recurrence steps, so they supervise "write it in" and "don't overwrite it" only
+jointly. Lag 0 credits the write through **one** step and isolates the first.
+
+It also fills a real hole -- with past-only probes the loss at `t = 0` is
+*empty* (there is no `q < 0`) and `t = 1` admits a single query, so the opening
+of every clip is thinly supervised. The narrower claim is the correct one:
+`write(frame 0)` was never *uncredited*, since later probes sampling `q = 0`
+reach it through the recurrence; what was missing is a loss term at step 0.
+
+Pose is GT, as for every probe -- the camera head is dropped, so there is no
+predicted pose to use.
 
 ### Why the current-frame loss is dropped
 
@@ -266,6 +291,21 @@ taps** — keep four taps through the one-scene run, and decide before building 
 276-scene cache, which is the only point where the storage difference costs
 anything.
 
+### Probe at the current camera (lag 0) -- default ON
+
+`--probe-current {on,off}`. One extra probe at `q = t` against `s_t`, alongside
+the four sampled past cameras.
+
+**What the axis tests is echo.** Frame *t* has just been written, so lag 0 is the
+easiest query the model will ever face: it could be satisfied by a recency buffer
+that copies the frame into scratch state and reads it straight back, learning
+nothing about compression or retention. Two things bound the risk -- an easy term
+drives its own loss toward zero and stops contributing gradient, and the lag>0
+probes demand retention regardless. But state capacity spent on a buffer is
+capacity not spent on the map, so measure it rather than assume.
+
+Cost: 954 decoder passes per clip against 794, about 20% more.
+
 ### Deferred to later axes
 
 - **KV window shrinking.** Reducing `kv_cache_sliding_window` from 64 makes the
@@ -376,16 +416,16 @@ Token geometry, measured: preprocessing follows the **benchmark**, not
 **518×378 -> 37×27 = 999 patches**, +6 specials = **1005 tokens**. The raymap is
 at the same resolution => 999 patches + 1 probe pose token = **1000 tokens**.
 
-Decoder passes per 160-frame clip: 160 writes + 634 probes = **794**.
+Decoder passes per 160-frame clip: 160 writes + 794 probes = **954**.
 
 | | |
 |---|---|
 | activations per decoder block per pass, bf16 | ~38 MB `((1005+768) tokens × ~14×768 floats)` |
 | × 12 blocks | ~**0.46 GB per pass** |
-| 794 passes, no checkpointing | ~366 GB — **impossible** |
-| 794 passes, **gradient checkpointing** | ~**26–40 GB** — fits an H200 at B=1 |
+| 954 passes, no checkpointing | ~439 GB — **impossible** |
+| 954 passes, **gradient checkpointing** | ~**31–48 GB** — fits an H200 at B=1 |
 
-Heads run on probes only (634), never on write passes. In the earlier
+Heads run on probes only (794), never on write passes. In the earlier
 architecture the DPT head was ~77% of training cost, so this matters.
 
 These are estimates from token counts. **Measure peak VRAM on the first run
@@ -439,7 +479,7 @@ before fixing the clip length.**
   and add `interpolate` down from 16N to (H, W) -- decimating real detail rather
   than inventing it. (Dropping the final x2 and upsampling 1.75x from 8N is
   literally lingbot's head, and accepts a blurrier ceiling; we don't have to.)
-  Cost is ~28 GFLOP per head call, so ~0.5 s per optimizer step across 634
+  Cost is ~28 GFLOP per head call, so ~0.6 s per optimizer step across 794
   probes and both heads including backward -- not a constraint. The earlier
   "DPT head is 77% of training cost" figure was lingbot's 2048-d head.
 - The state is LayerNormed every frame before propagating (`dec_norm_state`
