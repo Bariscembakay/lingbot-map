@@ -100,7 +100,7 @@ computes.
 
 | | ours | theirs | assessed |
 |---|---|---|---|
-| processes | 1 (also tested 2) | `accelerate launch --num_processes 8` | `split_between_processes` defaults to `apply_padding=False`, so each scene is evaluated once either way; measured with `NPROC=2` |
+| processes | 1 | `accelerate launch --num_processes 8` | **closed by reasoning, not measurement.** `split_between_processes` defaults to `apply_padding=False`, so every scene is evaluated exactly once at any process count, and the four identical repeats already rule out per-rank RNG. Runs were queued (751015 `NPROC=2`, 751054 `NPROC=8` on 8x a100-80g) and **cancelled** as not worth the GPUs. `NPROC` remains in the runner if this is ever revisited. |
 | GPU | rtx6000 (Turing, sm_75) / h200 | 8x A100 (sm_80) | **real numerical difference**: Turing has no TF32, so our fp32 convs are exact where an A100's `cudnn.allow_tf32=True` path is ~10 mantissa bits. Cuts the wrong way to explain our numbers. |
 | torch / numpy | 2.8 / 2.x | early-2025 era | upstream's `numpy==1.26.4` pin is unsatisfiable against current open3d/opencv/pandas |
 | source | 3 patches | — | `--datasets`, `weights_only=False`, RoPE negative positions (verified bit-identical). See `CUT3R/UPSTREAM.md`. |

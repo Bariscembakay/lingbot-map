@@ -198,7 +198,7 @@ second property and never reached it cleanly.
 | clip | 320-frame cached clip **subsampled by 2 -> 160 frames at effective stride 40** | wide baseline, more of the room per frame |
 | BPTT | **full, over the whole clip**, gradient checkpointing on | required by the objective, above |
 | grad clip | 1.0 | CUT3R's |
-| raymap convention | `inv(c2w_0) @ c2w_q`, 6 channels | CUT3R's, and our c2w convention is settled |
+| raymap convention | `inv(c2w_0) @ c2w_q`, 6 channels, **built exactly as CUT3R's `get_ray_map`** -- direction channel included, which is `normalize(R*d_cam + t)` rather than `normalize(R*d_cam)` | it is the distribution the released raymap encoder was trained on. Arm A must use it or E1 understates CUT3R; arm C matches so A/B/C stay on one footing and the inherited 25 M raymap-encoder weights stay in-distribution. Open question and the numbers are in `AGENTS.md`; `--raymap-convention {cut3r,true}` is a sweep axis. |
 | RoPE for non-patch tokens | **all of them at the same position, (-1, -1)**; patches at their grid coordinates | CUT3R's choice, so the loaded decoder weights stay in distribution. lingbot's `zeros` would alias every special onto patch (0,0). Distinct positions per special (-1,-2,...) were rejected: they put the loaded weights at RoPE phases never seen in training, and the six are already separated by content. |
 | probe token block | **`[mod_token ; raymap patches x999]`** -- no register or scale analogues | registers exist to park global information and the state already is that place; scale is carried by the raymap's ray origins, which are in world coordinates and canonical units (p50 0.48). The write is expected to encode scale into the state. |
 

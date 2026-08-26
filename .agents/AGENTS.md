@@ -87,7 +87,9 @@ Microsoft distribution does not ship.
   experiments. `paper_vs_repo.md` = full paper↔repo comparison (code, configs,
   three-way number reconciliation, paper-internal contradictions).
   `.agents/scratch/reproduction/oxford/oxford_readme_ruleouts.md` = the Oxford sweep
-  evidence.
+  evidence. `spatial_memory_design.md` = the CUT3R-fed-by-lingbot-map architecture
+  (decisions, closed). `spatial_memory_plan.md` = its implementation sequencing.
+  `cut3r_evaluation.md` = every run against the published CUT3R checkpoint.
 - Oxford vs the **paper** — the authors' per-scene ATE is in upstream issue #38
   (their ten average 6.4246 = Table 2's 6.42), and issue #62 says Table 2 used an
   unreleased 160-epoch checkpoint, so Table 2 is unreproducible from public
@@ -125,3 +127,37 @@ Microsoft distribution does not ship.
   change is not one of them.
 - msp3 workflow validated end-to-end (dataset pull → compute → rsync back
   to sof1) via the NRGBD run above.
+- **CUT3R's raymap direction channel — open, and we deliberately match it.**
+  `get_ray_map` (`src/dust3r/datasets/base/base_multiview_dataset.py:13`, and
+  identically in `viser_utils.py:453`) builds the direction as
+
+      rd = inv(K) @ [u, v, 1]                    # a direction, camera frame
+      rd = (c2w @ vstack([rd, ones]))[:3]        # <- the `ones` make it a POINT,
+      rd = rd / |rd|                             #    so c2w applies R *and* t
+
+  i.e. `normalize(R·d_cam + t)` where a ray direction is `normalize(R·d_cam)`.
+  Verified numerically: exact when `t = 0` (which is camera 0, since the raymap
+  is relative to it), **10.57 deg off at `t = (1.5, -0.3, 2.0)`**. Our camera
+  origin norms are p50 0.48 / p100 0.97 canonical with `|d_cam| ~ 1`, so we sit
+  in that regime.
+
+  Not asserted to be a bug. `inv(K) @ [u,v,1]` has z exactly 1, so
+  `c2w @ [d_cam; 1]` is the world **point** at camera-depth 1 along the ray, and
+  origin-plus-a-point-on-the-ray is a valid encoding -- what makes it odd is
+  normalising a point afterwards, which discards the distance. The paper (§3.2)
+  says "encoding the origin and direction of rays at each pixel" and the variable
+  is named `rd`, so code and paper disagree; a stray homogeneous `1` is the most
+  likely explanation, but the code alone cannot settle intent.
+
+  Recoverability: **as a field, not per pixel.** `p = λn` for unknown λ, and
+  `normalize(λn - t)` depends on λ; λ is pinned only because `d_cam.z == 1`,
+  which needs `R`, which is shared across the image. So it is learnable, by a
+  weaker route than a true direction.
+
+  **Decision: match their construction.** It is the distribution the released
+  raymap encoder was trained on, so arm A *must* use it -- feeding correct rays
+  would be off-distribution input and would make E1 understate CUT3R, flattering
+  us. Arm C matches it too, to keep A/B/C on one footing and to keep the
+  inherited 25 M `enc_blocks_ray_map` weights in-distribution.
+  `--raymap-convention {cut3r,true}` stays a one-flag sweep axis. Settling intent
+  properly means asking upstream.
