@@ -259,5 +259,8 @@ over *q*. Two consequences:
 
 7-Scenes reproduction · other CUT3R benchmarks (monodepth, video_depth, relpose)
 · arm B execution · four-taps input (sweep axis (b)) · KV-window shrinking ·
-current-frame loss at low weight (A/B) · probe density 4-per-frame vs
-4-every-8th · unfreezing the aggregator · 7-Scenes `.depth.proj.png`.
+current-frame **token-space** loss at low weight (A/B), which is *not* the lag-0
+raymap probe -- that is on by default · `--probe-current {on,off}`: does the
+lag-0 term teach an echo buffer rather than a map? · `--raymap-convention
+{cut3r,true}` · probe density 4-per-frame vs 4-every-8th · unfreezing the
+aggregator · 7-Scenes `.depth.proj.png`.
