@@ -80,8 +80,51 @@ Table 5, `--revisit 2 --freeze`:
 |---|---|---|---|
 | NRGBD, Ours Revisit | 0.094 | 0.076 | 0.844 |
 
-**Gate: NRGBD within noise => we are driving the model correctly.** Nothing in
-Phase 3 or 4 is trustworthy until this passes.
+**Gate: PASSED 2026-08-26** (job 750327, `cut3r_512_dpt_4_64.pth` sha256
+`45f7e98a...`, rtx6000, 9/9 scenes, 33 s). Measured against Table 4:
+
+| metric | ours | paper | delta |
+|---|---|---|---|
+| Acc | **0.0999** | 0.099 | **+0.9%** |
+| Comp | **0.0781** | 0.076 | +2.7% |
+| NC | **0.8339** | 0.837 | -0.4% |
+| NC med | **0.9701** | 0.971 | -0.1% |
+| Acc med | 0.0366 | 0.031 | +18.1% |
+| Comp med | 0.0318 | 0.026 | +22.3% |
+
+Four of six within 3%, including the headline Acc. **We are driving the model
+correctly.**
+
+### The median residual, and what it is not
+
+The two medians sit ~20% high, reproducibly. Two explanations were tested and
+neither is the cause, so the residual is recorded as **unexplained** rather than
+argued away:
+
+1. **Not run-to-run noise.** `launch.py` passes no `seed`, so `base.py:83` falls
+   back to `torch.initial_seed()` and `_crop_resize_if_necessary` draws
+   `rng.integers(2)` -- which looked like nondeterminism. Four repeat runs
+   (750432-4) returned **identical numbers to four decimals, spread 0.0000**.
+   The draw happens but does not change the outcome at this resolution.
+2. **Not the depth variant, on its own.** NRGBD ships `depth/`,
+   `depth_filtered/` and `depth_with_noise/`; the loader reads `depth/`, while
+   reconstruction work often scores against the filtered maps (which mask 8.3%
+   of pixels here and differ by 1.3 cm mean where both are valid). Tested
+   (job 750447, `NRGBD_DEPTH=depth_filtered`): it helps four metrics and hurts
+   two -- Acc goes +0.9% -> **-5.8%**, NC med -0.1% -> -2.5%, while Acc med
+   +18.1% -> +7.9% and NC lands at -0.0%. No single variant matches on all six.
+
+**Decision: both arms use raw `depth/`**, which is what the released loader
+reads, and which matches on Acc and NC med. What matters for E1 vs E2 is that
+arm A and arm C are scored against the *same* GT, not which variant is closer to
+a published table.
+
+Untested candidates, not worth GPU time now: a different NRGBD release (frame
+counts, pose file), a paper revision predating the released code, or a different
+median aggregation (pooled over points vs mean of per-scene medians -- the last
+is not testable from the logs).
+
+Nothing in Phase 3 or 4 was trustworthy until this passed.
 
 Worth reproducing Table 5 as well, because **"Ours Revisit" is CUT3R's own recall
 experiment** -- freeze the final state, re-process the same inputs. It is weaker

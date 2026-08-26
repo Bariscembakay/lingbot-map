@@ -24,7 +24,26 @@ cd "$CUT3R_DIR"
 # and /data is an autofs registry mount that needs `dataset pull` first.
 dataset pull NRGBD >/dev/null 2>&1 || true
 mkdir -p "$CUT3R_DIR/data"
-ln -sfn /data/NRGBD "$CUT3R_DIR/data/neural_rgbd"
+# NRGBD ships raw `depth/`, `depth_filtered/` and `depth_with_noise/`. The loader
+# reads `depth/`, but reconstruction papers conventionally score against the
+# filtered variant, which masks ~8% of unreliable pixels. Which one upstream used
+# is not documented, so it is selectable: NRGBD_DEPTH=depth_filtered builds a
+# shadow tree whose `depth` points at the filtered maps.
+NRGBD_DEPTH="${NRGBD_DEPTH:-depth}"
+if [ "$NRGBD_DEPTH" = "depth" ]; then
+    ln -sfn /data/NRGBD "$CUT3R_DIR/data/neural_rgbd"
+else
+    SHADOW="$CUT3R_DIR/data/neural_rgbd_$NRGBD_DEPTH"
+    for sc in /data/NRGBD/*/; do
+        name="$(basename "$sc")"
+        mkdir -p "$SHADOW/$name"
+        ln -sfn "$sc/images"          "$SHADOW/$name/images"
+        ln -sfn "$sc/$NRGBD_DEPTH"    "$SHADOW/$name/depth"
+        ln -sfn "$sc/poses.txt"       "$SHADOW/$name/poses.txt"
+        ln -sfn "$sc/focal.txt"       "$SHADOW/$name/focal.txt"
+    done
+    ln -sfn "$SHADOW" "$CUT3R_DIR/data/neural_rgbd"
+fi
 ln -sfn /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth \
         "$CUT3R_DIR/src/cut3r_512_dpt_4_64.pth"
 
@@ -43,3 +62,11 @@ mkdir -p "$CUT3R_DIR/data/7scenes"
     --model_name ours \
     --size 512 \
     "$@"
+
+# /scratch is per-node local disk, so anything left there is invisible from the
+# submitting node -- the first successful run stranded its logs_all.txt on a gcp
+# node. Ship the whole workspace to sof1's /group, which is the system of record.
+SHIP="${SHIP_TO:-/group/compact-3dmem/campaigns/spatial_memory/cut3r_repro}"
+mkdir -p "$SHIP"
+rsync -a "$OUT/" "$SHIP/$(basename "$OUT")/" || true
+echo "[run_cut3r_mv_recon] shipped $OUT -> $SHIP/$(basename "$OUT")"
