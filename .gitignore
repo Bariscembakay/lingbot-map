@@ -24,3 +24,13 @@ docs/
 .agents/scratch/memory_logs/
 .agents/scratch/dev_scenes_missing.txt
 .vscode/
+
+# --- vendored CUT3R (see CUT3R/UPSTREAM.md) ---
+# `docs/` above matches at any depth and would swallow CUT3R's own docs, which
+# carry the training/eval protocol we reproduce against.
+!CUT3R/docs/
+# ~99 MB of README gifs and demo media. Not needed to run eval/ or import
+# src/dust3r; demo.py is the only consumer of examples/.
+CUT3R/assets/
+CUT3R/examples/
+CUT3R/cut3r.pdf
