@@ -67,6 +67,10 @@ def emit(out: Path, tag: str, pred: np.ndarray, gt: np.ndarray,
     # DIRECTORY holding pred_cloud.ply, GT as <scene>-gt.ply beside it), so a
     # render dir dropped under campaigns/<campaign>/<arm>/ is discoverable
     # with no CLI args. Flat pred_/gt_/both_ files were invisible to it.
+    # Per-lag clouds go under _lags/ -- the walker skips "_" names, so the
+    # browser shows only fused (+ overlay + GT); the lag clouds stay on disk.
+    if tag != "fused":
+        out = out / "_lags"
     (out / tag).mkdir(parents=True, exist_ok=True)
     (out / f"{tag}_overlay").mkdir(parents=True, exist_ok=True)
     write_ply(out / tag / "pred_cloud.ply", p, heat(err, lo, hi))
