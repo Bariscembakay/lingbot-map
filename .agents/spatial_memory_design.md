@@ -225,7 +225,14 @@ multi-scene batching.
 
 `train_state.py --tbptt K`: detach the state every K writes and backward each
 window at its boundary (gradients accumulate; one optimizer step per clip —
-same total FLOPs as one full backward). `K=0` (default) is full BPTT.
+same total FLOPs as one full backward). `K=8` is the default since
+2026-08-27 (`K=0` restores full BPTT): at matched steps of the one-scene
+overfit the two loss curves are within noise (step 200: 0.5754 vs 0.5742),
+while measured memory stops scaling with probe count entirely (every-frame
+probing at 4+1: 22 GB vs OOM>94 GB full; 15+1 every-frame: 65 GB). Density
+now costs only time (~linear in query views — the fp32 DPT probe head
+dominates: 18.5/32/46/89 s-step at 120/384/480/1536 views). The end-of-run
+lag-sweep comparison against the full-BPTT baseline remains the referee.
 
 ---
 
@@ -248,7 +255,7 @@ same total FLOPs as one full backward). `K=0` (default) is full BPTT.
 | `pose_retriever` (LocalMemory) | **dropped** | its job is ego-motion context across frames; the aggregator's KV cache does it far better |
 | read gate | **none** | zero-init existed for attributability against frozen lingbot heads; with Loss 1 gone there is no baseline to stay attributable to, and CUT3R runs its state path live from step 0 |
 | clip | 320-frame cached clip **subsampled by 2 -> 160 frames at effective stride 40** | wide baseline, more of the room per frame |
-| BPTT | **full by default**, gradient checkpointing on; `--tbptt K` truncates — sweep axis | see "Full BPTT vs truncated" |
+| BPTT | **tbptt-8 by default (2026-08-27)**, gradient checkpointing on; `--tbptt 0` restores full | curves matched full BPTT through step 200 of the overfit (loss 0.575 vs 0.574; self 0.152 vs 0.173); lag sweep at completion is the standing referee |
 | grad clip | 1.0 | CUT3R's |
 | raymap convention | `inv(c2w_0) @ c2w_q`, 6 channels, **built exactly as CUT3R's `get_ray_map`** -- direction channel included, which is `normalize(R*d_cam + t)` rather than `normalize(R*d_cam)` | it is the distribution the released raymap encoder was trained on. Arm A must use it or E1 understates CUT3R; arm C matches so A/B/C stay on one footing and the inherited 25 M raymap-encoder weights stay in-distribution. Open question and the numbers are in `AGENTS.md`; `--raymap-convention {cut3r,true}` is a sweep axis. |
 | RoPE for non-patch tokens | **all of them at the same position, (-1, -1)**; patches at their grid coordinates | CUT3R's choice, so the loaded decoder weights stay in distribution. lingbot's `zeros` would alias every special onto patch (0,0). Distinct positions per special (-1,-2,...) were rejected: they put the loaded weights at RoPE phases never seen in training, and the six are already separated by content. |

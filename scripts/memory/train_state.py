@@ -115,9 +115,12 @@ def main() -> int:
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
-    # 0 = full BPTT. K > 0: detach every K writes, backward per window
-    # (gradient accumulation; still one optimizer step per clip).
-    ap.add_argument("--tbptt", type=int, default=0)
+    # K > 0: detach every K writes, backward per window (gradient
+    # accumulation; still one optimizer step per clip). 0 = full BPTT.
+    # Default 8 since 2026-08-27: loss curves match full BPTT through the
+    # early overfit while memory stops scaling with probe count; the lag
+    # sweep at completion is the standing referee for the choice.
+    ap.add_argument("--tbptt", type=int, default=8)
     ap.add_argument("--zero-state", action="store_true")
     ap.add_argument("--no-grad-ckpt", action="store_true")
     # bf16 for the decoder. Checkpointing stores block INPUTS, and in fp32 that
