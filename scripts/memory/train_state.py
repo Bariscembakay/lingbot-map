@@ -152,6 +152,10 @@ def main() -> int:
     # sweep at completion is the standing referee for the choice.
     ap.add_argument("--tbptt", type=int, default=8)
     ap.add_argument("--zero-state", action="store_true")
+    # s0 is 590k trainable params sitting exactly where the memory should be --
+    # in the no-write control it IS the storage. Freezing it removes that
+    # memorisation channel (posterior-collapse discussion, 2026-08-28).
+    ap.add_argument("--freeze-s0", action="store_true")
     ap.add_argument("--no-grad-ckpt", action="store_true")
     # bf16 for the decoder. Checkpointing stores block INPUTS, and in fp32 that
     # is ~65 MB per pass: 576 passes at 96 frames is ~37 GB, which is what
@@ -205,6 +209,9 @@ def main() -> int:
         model.load_state_dict(sd["model"])
         print(f"[init] warm-started from {args.init_from} (step {sd.get('step')})",
               flush=True)
+    if args.freeze_s0:
+        model.register_tokens.requires_grad_(False)
+        model.decoder_embed_state.requires_grad_(False)
     model.train()
     n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"[model] {n_train/1e6:.1f} M trainable", flush=True)
