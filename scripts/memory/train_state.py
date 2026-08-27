@@ -41,7 +41,8 @@ TAP23 = 3   # index into the cache's 4 tap layers (4, 11, 17, 23)
 class Clip:
     """One cached clip, subsampled, with everything a probe needs on device."""
 
-    def __init__(self, path: Path, subsample: int, device, max_frames: int | None):
+    def __init__(self, path: Path, subsample: int, device, max_frames: int | None,
+                 taps: str = "23"):
         c = ClipCache(path)
         n = len(c)
         idx = list(range(0, n, subsample))
@@ -51,8 +52,13 @@ class Clip:
         self.meta = c.meta
         self.device = device
         # fp16 on disk; cast on GPU rather than single-threaded on the CPU.
-        self.taps = torch.from_numpy(
-            np.ascontiguousarray(c.taps[idx][:, TAP23])).to(device)
+        if taps == "all":
+            # channel-concat the four taps (4/11/17/23) -> 8192-d; sweep axis (b)
+            t4 = torch.from_numpy(np.ascontiguousarray(c.taps[idx])).to(device)
+            self.taps = t4.permute(0, 2, 1, 3).reshape(t4.shape[0], t4.shape[2], -1)
+        else:
+            self.taps = torch.from_numpy(
+                np.ascontiguousarray(c.taps[idx][:, TAP23])).to(device)
         self.gt_depth = torch.from_numpy(
             np.ascontiguousarray(c.gt_depth[idx])).to(device).float()
         self.gt_c2w = torch.from_numpy(c.gt_c2w[idx]).to(device).float()
@@ -104,6 +110,8 @@ def main() -> int:
     ap.add_argument("--probe-every", type=int, default=1)
     ap.add_argument("--probe-current", default="on", choices=["on", "off"])
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
+    # (a) tap 23 only vs (b) all four channel-concat; design doc "Sweep axes".
+    ap.add_argument("--taps", default="23", choices=["23", "all"])
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
@@ -145,12 +153,14 @@ def main() -> int:
         except Exception as e:  # e.g. no ~/.netrc on msp3 -- never kill the run
             print(f"[wandb] disabled: {e}", flush=True)
 
-    clips = [Clip(p, args.subsample, device, args.max_frames) for p in args.clips]
+    clips = [Clip(p, args.subsample, device, args.max_frames, args.taps)
+             for p in args.clips]
     print(f"[data] {len(clips)} clip(s), {len(clips[0])} frames each, "
           f"{clips[0].h}x{clips[0].w}, patch grid {clips[0].patch_hw}", flush=True)
 
     model = StateMemory(patch_size=clips[0].meta.patch_size if hasattr(
         clips[0].meta, "patch_size") else 14,
+        tap_dim=clips[0].taps.shape[-1],
         grad_ckpt=not args.no_grad_ckpt).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
     model.train()
