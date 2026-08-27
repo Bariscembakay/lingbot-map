@@ -406,7 +406,9 @@ def load_cut3r_weights(model: StateMemory, ckpt_path: str | Path,
                 reps = own[dst].shape[0] // v.shape[0]
                 new[dst] = v.repeat(reps, 1) + 1e-4 * torch.randn(
                     own[dst].shape, generator=torch.Generator().manual_seed(0))
-                loaded.append(dst + f" (tiled x{reps})")
+                loaded.append(dst)
+                print(f"[load_cut3r_weights] {dst}: tiled x{reps} to "
+                      f"{tuple(own[dst].shape)}")
                 continue
             if dst in own and own[dst].shape == v.shape:
                 new[dst] = v
