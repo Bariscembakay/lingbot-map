@@ -395,6 +395,19 @@ def load_cut3r_weights(model: StateMemory, ckpt_path: str | Path,
             if not (k == src_pre or k.startswith(src_pre + ".")):
                 continue
             dst = dst_pre + k[len(src_pre):]
+            if (dst == "register_tokens.weight" and dst in own
+                    and own[dst].shape[0] > v.shape[0]
+                    and own[dst].shape[0] % v.shape[0] == 0
+                    and own[dst].shape[1] == v.shape[1]):
+                # A widened state (state_tokens > 768) tiles the learned prior
+                # rather than random-initialising the extra rows: stays in the
+                # loaded decoders' distribution; tiny noise breaks the symmetry
+                # so tied rows can specialise.
+                reps = own[dst].shape[0] // v.shape[0]
+                new[dst] = v.repeat(reps, 1) + 1e-4 * torch.randn(
+                    own[dst].shape, generator=torch.Generator().manual_seed(0))
+                loaded.append(dst + f" (tiled x{reps})")
+                continue
             if dst in own and own[dst].shape == v.shape:
                 new[dst] = v
                 loaded.append(dst)
