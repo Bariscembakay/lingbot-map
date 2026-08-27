@@ -23,8 +23,20 @@ ROOT="${SCANNETPP_ROOT:-/data/ScanNetpp}"
 # repositories and scripts only, and campaigns/_joblogs already exists.
 LOG_DIR="${CACHE_LOG_DIR:-/group/compact-3dmem/campaigns/_joblogs}"
 
+# /scratch is per-node, so a cache built there is invisible from anywhere else.
+# That is normally a bug, hence the refusal. It is CORRECT when the array is
+# pinned to one node and the result is handed to `dataset create` from that node
+# -- the registry then replicates it and the local copy stops mattering. Requires
+# both CACHE_ALLOW_SCRATCH=1 and CACHE_NODELIST, so it cannot happen by accident.
 case "$OUT_ROOT" in
-    /scratch/*) echo "refusing: /scratch is per-node, the cache must be zone-shared" >&2; exit 1 ;;
+    /scratch/*)
+        if [ "${CACHE_ALLOW_SCRATCH:-0}" != "1" ] || [ -z "${CACHE_NODELIST:-}" ]; then
+            echo "refusing: /scratch is per-node. Set CACHE_ALLOW_SCRATCH=1 AND" >&2
+            echo "CACHE_NODELIST=<node> so every task lands on the same disk." >&2
+            exit 1
+        fi
+        echo "[submit] /scratch build pinned to ${CACHE_NODELIST}"
+        ;;
 esac
 N=$(grep -c . "$LIST")
 mkdir -p "$LOG_DIR" "$OUT_ROOT"
@@ -35,6 +47,7 @@ sbatch --parsable \
     --array="0-$((N-1))%${CONCURRENT}" \
     --partition=batch \
     --constraint="$ZONE" \
+    ${CACHE_NODELIST:+--nodelist="$CACHE_NODELIST"} \
     --gpus="$GPU" \
     --cpus-per-task="$CPUS" \
     --mem="$MEM" \
