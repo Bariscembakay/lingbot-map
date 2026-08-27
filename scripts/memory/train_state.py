@@ -91,6 +91,13 @@ def main() -> int:
     ap.add_argument("--subsample", type=int, default=2)
     ap.add_argument("--max-frames", type=int, default=160)
     ap.add_argument("--n-past", type=int, default=4)
+    # Probe every k-th frame. NOT an optional axis: the whole clip's graph is
+    # retained (no detach, by design), and each probe pass holds ~180 MB, so
+    # probing every frame costs ~180 MB x frames. Measured: 48, 96 and 160
+    # frames ALL hit 44 GB on an a6000 -- the ceiling is reached before the
+    # clip ends, which is why shortening the clip never helped. At every-frame
+    # density a 160-frame clip needs ~144 GB, so it does not fit an H200 either.
+    ap.add_argument("--probe-every", type=int, default=1)
     ap.add_argument("--probe-current", default="on", choices=["on", "off"])
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
     # Controls. no-write is the decisive one: if the probe still works with the
@@ -149,6 +156,8 @@ def main() -> int:
                     state = model.write(state, spos, clip.tap(t), clip.patch_hw)
             state_norms.append(float(state.detach().norm()))
 
+            if t % args.probe_every:
+                continue
             qs = sample_queries(rng, t, args.n_past, args.probe_current == "on")
             if not qs:
                 continue

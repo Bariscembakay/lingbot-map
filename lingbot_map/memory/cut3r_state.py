@@ -153,6 +153,21 @@ class ProbeHead(nn.Module):
         self.dpt_self.init(dim_tokens_enc=[DEC_DIM] * 4)
         self.dpt_cross = DPTOutputAdapter_fix(**args)
         self.dpt_cross.init(dim_tokens_enc=[DEC_DIM] * 4)
+        # Zero the last 1x1 conv of each head. depth_mode exponentiates the raw
+        # output, so random init sends a few logits through exp() and produces
+        # astronomic pointmaps: the first real step logged |grad| = 5.5e12, which
+        # clipping keeps alive but leaves pointing in a direction set by outliers.
+        # CUT3R never sees this because its heads are pretrained; ours are not.
+        # Small-but-nonzero, so exp(~0) = 1 and the initial prediction is O(1).
+        # NOT zero: zeroing the weight kills the gradient outright, which V1 and
+        # V3 caught the moment it was tried (grad@q and the live-vs-dead state
+        # difference both went to exactly 0.0). A zero weight gives a plausible
+        # loss curve with no gradient to the state, read, or write at all.
+        for h in (self.dpt_self, self.dpt_cross):
+            last = h.head[-1]
+            nn.init.normal_(last.weight, std=1e-4)
+            if last.bias is not None:
+                nn.init.zeros_(last.bias)
         # Only the world head is pose-conditioned, and only at its deepest tap:
         # camera-frame points do not need to know the camera.
         self.final_transform = nn.ModuleList(
