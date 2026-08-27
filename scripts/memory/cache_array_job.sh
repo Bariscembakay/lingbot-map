@@ -26,6 +26,13 @@ PY_ENV="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/lingbot_map/bin/pyt
     .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 &
 trap 'kill $! 2>/dev/null' EXIT
 
+# --use-sdpa, not FlashInfer. FlashInfer JIT-compiles its kernels on first use,
+# and on nodes with glibc >= 2.41 that fails against CUDA 12.8's headers:
+#   mathcalls.h(79): exception specification is incompatible ... "cospi"
+# glibc declares cospi/sinpi noexcept(true) and CUDA's crt/math_functions.h
+# disagrees. All 32 tasks of array 751246 died this way. SDPA is a supported
+# path in gct_stream_window (use_flashinfer=not use_sdpa) and needs no nvcc at
+# all, so it sidesteps the clash rather than fighting the toolchain.
 "$PY_ENV" scripts/memory/build_cache.py \
     --scannetpp-root "$ROOT" --scene "$scene" --clip-index "$clip" \
-    --clip-len "$CLIP_LEN" --stride "$STRIDE" --out "$out"
+    --clip-len "$CLIP_LEN" --stride "$STRIDE" --out "$out" --use-sdpa

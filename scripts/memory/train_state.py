@@ -165,13 +165,15 @@ def main() -> int:
                "l21_self": parts["l21_self"] / max(1, nprobe),
                "l21_world": parts["l21_world"] / max(1, nprobe),
                "grad_norm": gnorm, "state_norm": float(np.mean(state_norms)),
+               "peak_gb": (torch.cuda.max_memory_allocated() / 1e9
+                           if device.type == "cuda" else 0.0),
                "sec": time.time() - t0}
         hist.append(rec)
         if step % args.log_every == 0:
             print(f"[{step:5d}] loss {rec['loss']:8.4f} | L21 self "
                   f"{rec['l21_self']:.4f} world {rec['l21_world']:.4f} | "
                   f"|g| {gnorm:7.3f} | |s| {rec['state_norm']:8.1f} | "
-                  f"{rec['sec']:6.1f}s", flush=True)
+                  f"{rec['peak_gb']:5.1f}GB | {rec['sec']:6.1f}s", flush=True)
             (args.out / "history.json").write_text(json.dumps(hist))
         if step and step % args.save_every == 0:
             torch.save({"model": model.state_dict(), "step": step,
