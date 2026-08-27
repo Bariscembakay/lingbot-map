@@ -245,6 +245,29 @@ fault in `dpt_cross`'s adaLN modulation -- the one path with no pretrained
 weights. It was not a fault. The world head simply lags the self head and ended
 2.2x better. Do not diagnose a head from its first 80 steps.
 
+### Overfit v2 (2026-08-27, job 754903) -- eliminate "too short" before touching the architecture
+
+753962's curve never flattened (L21 self 0.43 -> 0.23 -> 0.16 over the last 100
+steps), half the run was warmup (`--warmup 100` of 200), the first ~25 steps were
+a clipped gradient explosion, and probe density was still the a6000-OOM setting
+(`--probe-every 8 --n-past 1`) despite landing on a 96 GB card. None of that is
+architectural, so no architecture change until this run plateaus:
+
+- same scene/cache, `--updates 2000 --probe-every 4 --n-past 4` (design
+  defaults), warmup now 5% of the run, viz + ckpt every 250 steps
+- `gcp-eu1-rtx6000-txtb` (RTX PRO 6000 Blackwell, 96 GB -- checked, not 24/48),
+  est ~22 s/step ~= 12 h, 16 h walltime
+- wandb online (`--wandb`, project `spatial_memory`, graceful no-op on failure)
+- job script now mirrors /scratch -> /group every 10 min: an EXIT trap does not
+  run under SIGKILL after KillWait, so a walltime kill would have stranded
+  everything on the node
+- out: `/group/compact-3dmem/campaigns/spatial_memory/overfit_1scene_2k`
+
+Known-minor, deliberately untouched (one variable at a time): every step clips
+at |g|~150 vs threshold 1.0 (AdamW largely absorbs a uniform rescale); loss
+regresses metric points with no avg_dis normalisation unlike CUT3R's Regr3D --
+fallback axis if this run plateaus high.
+
 ### What the runs corrected in this document
 
 - **`--probe-every` is not an optional axis.** The clip's graph is retained by

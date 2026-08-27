@@ -52,6 +52,14 @@ mkdir -p "$MAMBA_ROOT"
 
         echo "[setup_cut3r_env] Install done."
     fi
+
+    # Added later than the env itself, so existing envs need it too -- hence
+    # guarded on import rather than folded into the create branch above.
+    PY="$ENV_PREFIX/bin/python"
+    if ! "$PY" -c "import wandb" >/dev/null 2>&1; then
+        echo "[setup_cut3r_env] Installing wandb ..."
+        "$PY" -m pip install wandb
+    fi
 )
 
 # curope is NOT built, and this is a considered decision rather than a shortcut.

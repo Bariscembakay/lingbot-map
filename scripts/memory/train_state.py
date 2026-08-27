@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -111,6 +112,7 @@ def main() -> int:
     # with amp=1. The DPT heads stay fp32 regardless -- ProbeHead wraps them in
     # autocast(enabled=False), matching lingbot-map's own head handling.
     ap.add_argument("--amp", default="bf16", choices=["bf16", "off"])
+    ap.add_argument("--wandb", default="online", choices=["online", "offline", "off"])
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--log-every", type=int, default=10)
     ap.add_argument("--save-every", type=int, default=250)
@@ -123,6 +125,19 @@ def main() -> int:
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "config.json").write_text(
         json.dumps({k: str(v) for k, v in vars(args).items()}, indent=2))
+
+    run = None
+    if args.wandb != "off":
+        try:
+            import wandb
+            # Run dirs live on persistent /group, not the run's /scratch out dir.
+            wdir = Path("/group/compact-3dmem/wandb")
+            if not (wdir.is_dir() and os.access(wdir, os.W_OK)):
+                wdir = args.out
+            run = wandb.init(project="spatial_memory", name=args.out.name,
+                             mode=args.wandb, config=vars(args), dir=str(wdir))
+        except Exception as e:  # e.g. no ~/.netrc on msp3 -- never kill the run
+            print(f"[wandb] disabled: {e}", flush=True)
 
     clips = [Clip(p, args.subsample, device, args.max_frames) for p in args.clips]
     print(f"[data] {len(clips)} clip(s), {len(clips[0])} frames each, "
@@ -190,6 +205,8 @@ def main() -> int:
                            if device.type == "cuda" else 0.0),
                "sec": time.time() - t0}
         hist.append(rec)
+        if run is not None:
+            run.log(rec, step=step)
         if step % args.log_every == 0:
             print(f"[{step:5d}] loss {rec['loss']:8.4f} | L21 self "
                   f"{rec['l21_self']:.4f} world {rec['l21_world']:.4f} | "
@@ -206,6 +223,8 @@ def main() -> int:
                 "args": vars(args)}, args.out / "last.pt")
     (args.out / "history.json").write_text(json.dumps(hist))
     dump_viz(model, clips[0], args, device, args.updates)
+    if run is not None:
+        run.finish()
     print(f"[done] {time.time()-t0:.0f}s", flush=True)
     return 0
 

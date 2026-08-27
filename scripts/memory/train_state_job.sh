@@ -32,10 +32,19 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # system of record and /scratch is wiped.
 WORK="/scratch/$USER/train_state/$(basename "$OUT")"
 mkdir -p "$WORK"
+# OUT may be a remote rsync destination ("sof1:/group/...") when running on
+# msp3: results must ship to sof1's /group, never land on msp3's 300G one.
+case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
+
+# A walltime kill would strand everything on this node's /scratch (bash does not
+# run EXIT traps when SIGKILLed after KillWait). Mirror instead: history.json and
+# last.pt are rewritten continuously, so a 10-min sync loses at most 10 min.
+( while sleep 600; do rsync -a "$WORK/" "$OUT/" 2>/dev/null || true; done ) &
+SYNC_PID=$!
+trap 'kill "$SYNC_PID" 2>/dev/null || true' EXIT
 
 # shellcheck disable=SC2086
 "$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@"
 
-mkdir -p "$OUT"
 rsync -a "$WORK/" "$OUT/"
 echo "[train_state_job] shipped $WORK -> $OUT"
