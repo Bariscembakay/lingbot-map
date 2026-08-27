@@ -21,6 +21,12 @@ source .agents/scratch/insait_cluster_files/setup_cut3r_env.sh
 # it for its whole lifetime, wedging every later invocation on the node.
 PY_ENV="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/cut3r/bin/python"
 
+# /data is an autofs registry mount that resolves only after `dataset pull`
+# on the running node (idempotent; replicates cross-zone when needed).
+case "$CLIPS_SPEC" in
+    /data/*) dataset pull "$(echo "$CLIPS_SPEC" | cut -d/ -f3)" >/dev/null ;;
+esac
+
 # NO gpu_keep_alive here, deliberately. It exists for inference jobs that are
 # bursty on the GPU and read as idle to the deallocation reaper. This loop is the
 # opposite: ~954 decoder passes plus backward per update is near-continuous GPU
