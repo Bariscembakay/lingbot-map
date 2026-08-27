@@ -40,7 +40,16 @@ case "$OUT_ROOT" in
 esac
 N=$(grep -c . "$LIST")
 mkdir -p "$LOG_DIR" "$OUT_ROOT"
-cp "$LIST" "$OUT_ROOT/scene_list.txt"
+# Tasks read the list from LIST_FOR_TASKS, which must be visible on the node that
+# RUNS them -- not on the node that submits. Copying it into $OUT_ROOT breaks the
+# moment $OUT_ROOT is on /scratch: the copy lands on the submitting node's local
+# disk and every task fails with "sed: can't read .../scene_list.txt". /home is
+# zone-shared, so the original path always resolves.
+LIST_ABS="$(cd "$(dirname "$LIST")" && pwd)/$(basename "$LIST")"
+case "$OUT_ROOT" in
+    /scratch/*) LIST_FOR_TASKS="$LIST_ABS" ;;
+    *) cp "$LIST" "$OUT_ROOT/scene_list.txt"; LIST_FOR_TASKS="$OUT_ROOT/scene_list.txt" ;;
+esac
 
 sbatch --parsable \
     --job-name="tapcache" \
@@ -54,4 +63,4 @@ sbatch --parsable \
     --time="$TIME" \
     --chdir="$REPO_DIR" \
     --output="$LOG_DIR/tapcache_%A_%a.out" \
-    scripts/memory/cache_array_job.sh "$OUT_ROOT/scene_list.txt" "$ROOT" "$CLIP_LEN" "$STRIDE" "$OUT_ROOT"
+    scripts/memory/cache_array_job.sh "$LIST_FOR_TASKS" "$ROOT" "$CLIP_LEN" "$STRIDE" "$OUT_ROOT"
