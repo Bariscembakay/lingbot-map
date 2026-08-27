@@ -224,6 +224,47 @@ over *q*. Two consequences:
 - [ ] 3a. Harness against arm A (exists before our weights do). This *is* E1.
 - [ ] 3b. Same harness against arm C.
 
+## Overfit result (2026-08-27) -- the setup works end to end
+
+Job 753962, scene `285efbc7cf`, rtx6000, 200 updates in 46 min, **19.1 GB flat**.
+
+| | start | end | ratio |
+|---|---|---|---|
+| loss | 3.6859 | **0.6501** | 5.7x |
+| L21 self | 0.9325 | **0.1736** | 5.4x |
+| L21 world | 1.0491 | **0.4788** | 2.2x |
+| state norm | 641.5 | 639.1 | **stable -- no drift over 200 recurrent updates** |
+
+The stable state norm is a real confirmation, not a formality: the design argued
+that the per-frame `dec_norm_state` keeps `d s_t / d s_{t-1}` from drifting, and
+this is that claim holding across a full run rather than a synthetic check.
+
+**A premature call, recorded so it is not repeated.** At step 80 `L21 world` was
+flat (1.05 -> 1.03) while `L21 self` had halved, and it was flagged as a likely
+fault in `dpt_cross`'s adaLN modulation -- the one path with no pretrained
+weights. It was not a fault. The world head simply lags the self head and ended
+2.2x better. Do not diagnose a head from its first 80 steps.
+
+### What the runs corrected in this document
+
+- **`--probe-every` is not an optional axis.** The clip's graph is retained by
+  construction, so cost scales with *probe passes*, not frames: 48, 96 and 160
+  frames all hit the same 44 GB ceiling, because it is reached before the clip
+  ends. At every-frame density a 160-frame clip needs ~144 GB and **does not fit
+  an H200 either**. The "794 probes per clip" and "31-48 GB" figures elsewhere in
+  the design are wrong.
+- **The decoder runs in bf16.** Checkpointing stores block *inputs*; in fp32 that
+  is ~65 MB per pass. CUT3R trains every stage with `amp=1`.
+- **DPT output convs need a small non-zero init** (`std=1e-4`, zero bias).
+  `depth_mode` exponentiates the raw output, so random init gave `|grad| = 5.5e12`
+  on the first real step. Zeroing the weight instead is a **dead path** -- V1 and
+  V3 caught it at exactly 0.0, the same trap the old design hit with `to_taps`.
+- **No `gpu_keep_alive` in training jobs.** The loop is near-continuous GPU work,
+  so the reaper is not a risk, and the 6.79 GiB it holds was itself an OOM cause.
+- Ray-origin norms on `285efbc7cf` are **p50 0.90 / p100 1.95**, about 2x the
+  0.48 / 0.97 recorded from an earlier scene. This feeds the raymap encoder's
+  sinusoidal band.
+
 ## Phase 4 — train small, compare
 
 - [ ] 4a. Train arm C on a few scenes. Full BPTT over 160 frames (320-frame clip
