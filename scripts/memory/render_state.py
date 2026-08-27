@@ -63,9 +63,15 @@ def emit(out: Path, tag: str, pred: np.ndarray, gt: np.ndarray,
         keep = c >= np.percentile(c, conf_pct)
         p, g, err = p[keep], g[keep], err[keep]
     lo, hi = float(np.percentile(err, 5)), float(np.percentile(err, 95))
-    write_ply(out / f"pred_{tag}.ply", p, heat(err, lo, hi))
-    write_ply(out / f"gt_{tag}.ply", g, np.full((len(g), 3), 160, np.uint8))
-    write_ply(out / f"both_{tag}.ply", np.concatenate([p, g]),
+    # Layout matches ASVGGT's viser_view_cloud.py browser (shape B: a scene
+    # DIRECTORY holding pred_cloud.ply, GT as <scene>-gt.ply beside it), so a
+    # render dir dropped under campaigns/<campaign>/<arm>/ is discoverable
+    # with no CLI args. Flat pred_/gt_/both_ files were invisible to it.
+    (out / tag).mkdir(parents=True, exist_ok=True)
+    (out / f"{tag}_overlay").mkdir(parents=True, exist_ok=True)
+    write_ply(out / tag / "pred_cloud.ply", p, heat(err, lo, hi))
+    write_ply(out / f"{tag}-gt.ply", g, np.full((len(g), 3), 160, np.uint8))
+    write_ply(out / f"{tag}_overlay" / "pred_cloud.ply", np.concatenate([p, g]),
               np.concatenate([heat(err, lo, hi), np.full((len(g), 3), 160, np.uint8)]))
     # Centroid offset separates a rigid misalignment from diffuse noise: a large
     # offset with small spread means the cloud is in the wrong place, not the
@@ -131,7 +137,8 @@ def from_viz(viz_dir: Path, out: Path, conf_pct: float, frame: str = "world") ->
     for r in rows:
         print(f"{r['tag']:>10s} {r['n']:9d} {r['err_mean']:9.4f} "
               f"{r['err_med']:9.4f} {r['err_p95']:9.4f} {r['centroid_offset']:9.4f}")
-    print(f"\nwrote {len(rows)*3} PLYs to {out}")
+    print(f"\nwrote {len(rows)*3} PLYs to {out} (browsable: "
+          f"viser_view_cloud.py with no args)")
 
 
 def main() -> int:
