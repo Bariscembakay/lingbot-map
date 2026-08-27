@@ -36,7 +36,7 @@ thing:
    it.
 
 A recall probe supervises **both at once**, which is why this objective works
-where our earlier ones did not. See "Why full BPTT is a requirement".
+where our earlier ones did not. See "Full BPTT vs truncated (TBPTT)".
 
 ---
 
@@ -165,10 +165,12 @@ the only thing that ever shows the heads real image tokens.
 
 ---
 
-## Why full BPTT is a requirement, not a convenience
+## Full BPTT vs truncated (TBPTT) — demoted from requirement to sweep axis
 
-This is the most important consequence of the objective, and it is where CUT3R's
-training regime is structurally unable to follow.
+**Revised 2026-08-27.** This section originally claimed full BPTT was *required*.
+That was overclaimed: what is provable is only what truncation removes
+(below); whether that removal matters is empirical, and `--tbptt K` is now an
+axis. The argument for the demotion follows the math.
 
 A probe at time *t* of camera *q* reads `s_t`. Unrolling:
 
@@ -189,16 +191,41 @@ CUT3R's `loss_of_one_batch_tbptt` does the opposite on both counts:
 - every chunk except the last four runs under `torch.no_grad()`.
 
 So a CUT3R write is never credited more than 4 frames past the read that used it,
-and on a 64-view sequence frames 0–47 receive no gradient at all. Even given our
-objective, that regime could not train recall.
+and on a 64-view sequence frames 0–47 receive no gradient at all. That is the
+provable part: truncation removes **direct** long-range credit from a failed
+recall at *t* to the write at *q*.
 
-**Therefore: no detach anywhere inside a clip.** Gradient checkpointing on the
-decoder blocks (CUT3R already supports it) buys the memory back.
+**Why that may not matter (the case for TBPTT, 2026-08-27):** the write is the
+same weights at every timestep, so both halves of retention are supervised
+*locally* and generalise by weight sharing:
 
-And the payoff: one loss supervises both halves of retention. The gradient at
-step *q* teaches **write it in**; the gradient at steps *q+1 ... t* teaches
-**don't overwrite it**. Our earlier designs needed schedule tricks to reach the
-second property and never reached it cleanly.
+- the **lag-0 probe** at *t* directly supervises "write frame *t* in
+  retrievably" — every write gets this signal at its own timestep;
+- the **long-lag probes** at *t* backprop into the last *K* writes, teaching the
+  update "integrate the new frame without destroying what the state already
+  holds" — preservation pressure lands on the recent writes, which is where the
+  destruction would happen anyway.
+
+If those two local signals suffice, retention is learned as an *abstraction* of
+the update rule, no cross-clip credit needed. On this view CUT3R's recall
+failure is not its chunk-4 TBPTT but its **objective** — it is never asked to
+recall a past frame at any lag — and E1 must be interpreted accordingly.
+
+What full BPTT still uniquely buys, and TBPTT gives up: direct repair signal to
+the *originating* write when recall fails at long lag, and credit for damage
+that accumulates slowly across many updates (each window sees already-degraded
+state against the original GT, but can only adjust its local links).
+
+**The referee is the lag sweep.** If local credit is insufficient, the TBPTT-K
+arm's recall decays past ~K frames of lag while full BPTT stays flat; if the
+curves match, TBPTT wins outright — with per-window backward the probe
+activations are freed at every boundary, so peak memory stops scaling with
+probe count and clip length, unlocking every-frame probing, 160-frame clips and
+multi-scene batching.
+
+`train_state.py --tbptt K`: detach the state every K writes and backward each
+window at its boundary (gradients accumulate; one optimizer step per clip —
+same total FLOPs as one full backward). `K=0` (default) is full BPTT.
 
 ---
 
@@ -221,7 +248,7 @@ second property and never reached it cleanly.
 | `pose_retriever` (LocalMemory) | **dropped** | its job is ego-motion context across frames; the aggregator's KV cache does it far better |
 | read gate | **none** | zero-init existed for attributability against frozen lingbot heads; with Loss 1 gone there is no baseline to stay attributable to, and CUT3R runs its state path live from step 0 |
 | clip | 320-frame cached clip **subsampled by 2 -> 160 frames at effective stride 40** | wide baseline, more of the room per frame |
-| BPTT | **full, over the whole clip**, gradient checkpointing on | required by the objective, above |
+| BPTT | **full by default**, gradient checkpointing on; `--tbptt K` truncates — sweep axis | see "Full BPTT vs truncated" |
 | grad clip | 1.0 | CUT3R's |
 | raymap convention | `inv(c2w_0) @ c2w_q`, 6 channels, **built exactly as CUT3R's `get_ray_map`** -- direction channel included, which is `normalize(R*d_cam + t)` rather than `normalize(R*d_cam)` | it is the distribution the released raymap encoder was trained on. Arm A must use it or E1 understates CUT3R; arm C matches so A/B/C stay on one footing and the inherited 25 M raymap-encoder weights stay in-distribution. Open question and the numbers are in `AGENTS.md`; `--raymap-convention {cut3r,true}` is a sweep axis. |
 | RoPE for non-patch tokens | **all of them at the same position, (-1, -1)**; patches at their grid coordinates | CUT3R's choice, so the loaded decoder weights stay in distribution. lingbot's `zeros` would alias every special onto patch (0,0). Distinct positions per special (-1,-2,...) were rejected: they put the loaded weights at RoPE phases never seen in training, and the six are already separated by content. |

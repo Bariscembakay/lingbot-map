@@ -7,9 +7,12 @@ have already visited, scoring the answers against those frames' ground truth.
 
 Two properties this file must not lose:
 
-* **No detach anywhere inside a clip.** A probe at t must credit the write at q,
-  which is t-q recurrence steps back. Truncating that is what makes CUT3R's own
-  TBPTT unable to train recall, whatever objective it is given.
+* **No detach inside a clip by default.** A probe at t then credits the write
+  at q, t-q recurrence steps back. `--tbptt K` deliberately truncates this to
+  test whether local credit suffices (design doc: "Full BPTT vs truncated") --
+  it detaches every K writes and backwards each window at its boundary, which
+  also frees that window's probe activations, so memory stops scaling with
+  probe count.
 * **The probe never touches the taps.** Its only path to frame q's content is
   the state. Validator V6 asserts it; do not add a shortcut here.
 """
@@ -104,6 +107,9 @@ def main() -> int:
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
+    # 0 = full BPTT. K > 0: detach every K writes, backward per window
+    # (gradient accumulation; still one optimizer step per clip).
+    ap.add_argument("--tbptt", type=int, default=0)
     ap.add_argument("--zero-state", action="store_true")
     ap.add_argument("--no-grad-ckpt", action="store_true")
     # bf16 for the decoder. Checkpointing stores block INPUTS, and in fp32 that
@@ -160,8 +166,16 @@ def main() -> int:
     for step in range(args.updates):
         clip = clips[rng.integers(len(clips))]
         state, spos = model.init_state(1, device)
-        total, parts, nprobe = 0.0, {"l21_self": 0.0, "l21_world": 0.0}, 0
+        parts, nprobe = {"l21_self": 0.0, "l21_world": 0.0}, 0
+        # `window` holds the not-yet-backwarded loss; with tbptt it is settled
+        # at every boundary, otherwise once at clip end. Normalise by the stop
+        # count (known upfront) so both modes optimise the same objective.
+        window, loss_sum = 0.0, 0.0
+        n_stops = sum(1 for t in range(len(clip))
+                      if t % args.probe_every == 0
+                      and (t > 0 or args.probe_current == "on"))
         state_norms = []
+        opt.zero_grad(set_to_none=True)
 
         amp = torch.autocast("cuda", dtype=torch.bfloat16,
                              enabled=(args.amp == "bf16" and device.type == "cuda"))
@@ -171,33 +185,38 @@ def main() -> int:
                     state = model.write(state, spos, clip.tap(t), clip.patch_hw)
             state_norms.append(float(state.detach().norm()))
 
-            if t % args.probe_every:
-                continue
-            qs = sample_queries(rng, t, args.n_past, args.probe_current == "on")
-            if not qs:
-                continue
-            rm, xs, xw, valid = clip.probe_inputs(qs, args.raymap_convention)
-            st = torch.zeros_like(state) if args.zero_state else state
-            with amp:
-                # Batch the queries: they all read the same state, so one pass.
-                out = model.probe(st.expand(len(qs), -1, -1),
-                                  spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w))
-            # Heads already returned fp32; keep the loss there too.
-            out = {k: v.float() for k, v in out.items()}
-            loss, p = probe_loss(out, xs, xw, valid)
-            total = total + loss
-            for k in parts:
-                parts[k] += p[k]
-            nprobe += 1
+            if t % args.probe_every == 0:
+                qs = sample_queries(rng, t, args.n_past, args.probe_current == "on")
+                if qs:
+                    rm, xs, xw, valid = clip.probe_inputs(qs, args.raymap_convention)
+                    st = torch.zeros_like(state) if args.zero_state else state
+                    with amp:
+                        # Batch the queries: they all read the same state, so one pass.
+                        out = model.probe(st.expand(len(qs), -1, -1),
+                                          spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w))
+                    # Heads already returned fp32; keep the loss there too.
+                    out = {k: v.float() for k, v in out.items()}
+                    loss, p = probe_loss(out, xs, xw, valid)
+                    window = window + loss
+                    for k in parts:
+                        parts[k] += p[k]
+                    nprobe += 1
 
-        loss = total / max(1, nprobe)
-        opt.zero_grad(set_to_none=True)
-        loss.backward()
+            if args.tbptt and (t + 1) % args.tbptt == 0 and t + 1 < len(clip):
+                if torch.is_tensor(window):
+                    (window / max(1, n_stops)).backward()
+                    loss_sum += float(window.detach())
+                    window = 0.0
+                state = state.detach()
+
+        if torch.is_tensor(window):
+            (window / max(1, n_stops)).backward()
+            loss_sum += float(window.detach())
         gnorm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0))
         opt.step()
         sched.step()
 
-        rec = {"step": step, "loss": float(loss.detach()),
+        rec = {"step": step, "loss": loss_sum / max(1, n_stops),
                "l21_self": parts["l21_self"] / max(1, nprobe),
                "l21_world": parts["l21_world"] / max(1, nprobe),
                "grad_norm": gnorm, "state_norm": float(np.mean(state_norms)),
