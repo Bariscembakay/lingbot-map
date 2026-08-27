@@ -285,6 +285,28 @@ memory. Untrained reference valm_self = 1.003. Measured scaling at 16 frames:
 peak = ~37 GB + 15.3 GB x batch (B=8 needs ~160 GB -- does not fit an H200;
 B=4 = 98.6 GB), steady ~8-11 s/step at B=4, 4000 updates ~= 10 h.
 
+### The 32-scene axis fleet (2026-08-28, evening)
+
+Nine one-flag arms, one protocol (16-frame windows, batch 4, 4000 updates),
+one verdict metric (`valm_self` on the 8 unseen scenes), 8 H200s at the
+etiquette cap (state1536 gated `afterany` on the twin's slot):
+
+| job | arm | axis |
+|---|---|---|
+| 756322 | write | reference |
+| 756323 | no-write twin | state-usage floor |
+| 757883 | fullbptt (`--tbptt 0`) | truncation cost, honest re-run |
+| 757884 | probecur_off | lag-0 echo |
+| 757885 | raymap_true | input convention |
+| 757886 | freeze_s0 | trainable-constant channel |
+| 757997 | raydepth (`--head raydepth`) | read head capacity: 0.8 M vs 59 M, one geometry on true rays; untrained val 0.32 vs 1.00 (exp(0)=1 is a plausible depth) |
+| 757998 | tapsall (`--taps all`) | encoder taps; 105 GB CPU-resident, 66 MB/step H2D |
+| 757952 | state1536 | state capacity x2; loaded prior tiled with 1e-4 noise |
+
+Still held: small read DECODER (2-4 cross-attn blocks -- needs decoupling the
+probe path from the interconnected write path) and per-window optimizer
+stepping.
+
 ### What the runs corrected in this document
 
 - **`--probe-every` is not an optional axis.** The clip's graph is retained by
