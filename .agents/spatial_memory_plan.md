@@ -268,6 +268,23 @@ at |g|~150 vs threshold 1.0 (AdamW largely absorbs a uniform rescale); loss
 regresses metric points with no avg_dis normalisation unlike CUT3R's Regr3D --
 fallback axis if this run plateaus high.
 
+### 32-scene stage 1 (2026-08-28, jobs 756322 write / 756323 no-write twin)
+
+The single-scene overfit's no-write control matched the write arm at every
+step -- the scene was in the weights, so the arms measuring write-side axes
+went uninformative. This pair is the designed fix and the new decisive
+experiment: 32 train scenes, batch 4 (scene-specific memorisation gradients
+cancel across the batch; the read-the-state gradient is common and adds),
+16-frame random windows anchored at their own start (short-stream curriculum,
+CUT3R-style; stage 2+ warm-starts longer via --init-from), tbptt-8, msp3 H200s,
+data via `dataset pull lingbot-tapcache-v4-40`.
+
+**The verdict metric is `valm_*`/`valx_*`: recall on the 8 unseen val scenes,
+write vs no-write.** Weights cannot memorise unseen scenes, so the gap is the
+memory. Untrained reference valm_self = 1.003. Measured scaling at 16 frames:
+peak = ~37 GB + 15.3 GB x batch (B=8 needs ~160 GB -- does not fit an H200;
+B=4 = 98.6 GB), steady ~8-11 s/step at B=4, 4000 updates ~= 10 h.
+
 ### What the runs corrected in this document
 
 - **`--probe-every` is not an optional axis.** The clip's graph is retained by
