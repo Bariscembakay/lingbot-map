@@ -236,6 +236,69 @@ def v8_ray_depth_convention_free(m, device) -> None:
           err < 1e-6, f"max diff {err:.2e}")
 
 
+
+def _tbptt_rollout_backward(m, taps, K, probe_ts, device, stop_ts=None):
+    """Emulate train_state.py's tbptt loop: loss at probe_ts, cut at the
+    first stop (stop_ts, default probe_ts) >= K frames since the last cut --
+    the same cut-at-a-stop rule the training loop uses. Returns tap grads."""
+    stop_ts = probe_ts if stop_ts is None else stop_ts
+    state, spos = m.init_state(1, device)
+    window, since = 0.0, 0
+    for t, tap in enumerate(taps):
+        state = m.write(state, spos, tap, (PH, PW))
+        since += 1
+        if t in probe_ts:
+            out = m.probe(state, spos, fake_raymap(device), HW)
+            window = window + out["pts3d_in_self_view"].square().mean()
+        if t in stop_ts and since >= K and t + 1 < len(taps):
+            if torch.is_tensor(window):
+                window.backward()
+                window = 0.0
+            state = state.detach()
+            since = 0
+    if torch.is_tensor(window):
+        window.backward()
+    return [(0.0 if t.grad is None else t.grad.abs().max().item()) for t in taps]
+
+
+def v9_tbptt_gradient_coverage(m, device) -> None:
+    """Under tbptt every trainable component must still receive gradient:
+    s0 from window 1's probes, everything else from every window."""
+    m.zero_grad(set_to_none=True)
+    T, K = 8, 4
+    taps = fake_taps(T, device)
+    _tbptt_rollout_backward(m, taps, K, probe_ts={3, 7}, device=device)
+    groups = {"s0/register_tokens": m.register_tokens,
+              "in_proj": m.in_proj,
+              "write stack (dec_blocks_state)": m.dec_blocks_state,
+              "read stack (dec_blocks)": m.dec_blocks,
+              "raymap encoder": m.raymap,
+              "probe head": m.head}
+    detail, ok = [], True
+    for name, mod in groups.items():
+        g = max((0.0 if q.grad is None else q.grad.abs().max().item())
+                for q in mod.parameters())
+        ok &= g > 0
+        detail.append(f"{name}={g:.2e}")
+    check("V9 tbptt-8-style rollout reaches every trainable group",
+          ok, " | ".join(detail))
+
+
+def v10_tbptt_detach_actually_cuts(m, device) -> None:
+    """The boundary must stop write credit: a probe in window 2 gives zero
+    gradient to window-1 taps and non-zero to window-2 taps. If window 1
+    got gradient the detach is broken and 'tbptt' is silently full BPTT."""
+    m.zero_grad(set_to_none=True)
+    T, K = 8, 4
+    taps = fake_taps(T, device)
+    grads = _tbptt_rollout_backward(m, taps, K, probe_ts={7}, device=device,
+                                    stop_ts={3, 7})
+    w1, w2 = grads[:K], grads[K:]
+    check("V10 tbptt boundary cuts write credit at the window edge",
+          max(w1) == 0.0 and min(w2) > 0,
+          f"window1 max={max(w1):.3e} (must be 0) | window2 min={min(w2):.3e}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--device", default="cpu")
@@ -252,6 +315,8 @@ def main() -> int:
         "V6": v6_probe_cannot_see_the_taps,
         "V7": v7_raymap_geometry,
         "V8": v8_ray_depth_convention_free,
+        "V9": v9_tbptt_gradient_coverage,
+        "V10": v10_tbptt_detach_actually_cuts,
     }
     keep = [k.strip() for k in args.only.split(",") if k.strip()] or list(tests)
     for name in keep:

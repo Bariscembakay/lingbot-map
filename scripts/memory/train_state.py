@@ -184,6 +184,7 @@ def main() -> int:
         # at every boundary, otherwise once at clip end. Normalise by the stop
         # count (known upfront) so both modes optimise the same objective.
         window, loss_sum = 0.0, 0.0
+        frames_since_cut = 0
         n_stops = sum(1 for t in range(len(clip))
                       if t % args.probe_every == 0
                       and (t > 0 or args.probe_current == "on"))
@@ -215,12 +216,22 @@ def main() -> int:
                         parts[k] += p[k]
                     nprobe += 1
 
-            if args.tbptt and (t + 1) % args.tbptt == 0 and t + 1 < len(clip):
+            # Cut only AT a probe stop, at the first stop >= K frames since
+            # the last cut. Cutting mid-stride orphans the writes after the
+            # window's last stop: with stops at t%4==0 and cuts at t%8==7,
+            # frames 8w+5..8w+7 provably received zero gradient (measured:
+            # dead writes [5,6,7] per window). Ending every window on a stop
+            # keeps all writes supervised and the stop schedule identical to
+            # the full-BPTT baseline.
+            frames_since_cut += 1
+            if (args.tbptt and t % args.probe_every == 0
+                    and frames_since_cut >= args.tbptt and t + 1 < len(clip)):
                 if torch.is_tensor(window):
                     (window / max(1, n_stops)).backward()
                     loss_sum += float(window.detach())
                     window = 0.0
                 state = state.detach()
+                frames_since_cut = 0
 
         if torch.is_tensor(window):
             (window / max(1, n_stops)).backward()
