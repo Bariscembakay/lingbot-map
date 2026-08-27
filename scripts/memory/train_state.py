@@ -98,6 +98,12 @@ def main() -> int:
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--zero-state", action="store_true")
     ap.add_argument("--no-grad-ckpt", action="store_true")
+    # bf16 for the decoder. Checkpointing stores block INPUTS, and in fp32 that
+    # is ~65 MB per pass: 576 passes at 96 frames is ~37 GB, which is what
+    # OOM-killed jobs 753366/753437 on a 44 GB a6000. CUT3R trains every stage
+    # with amp=1. The DPT heads stay fp32 regardless -- ProbeHead wraps them in
+    # autocast(enabled=False), matching lingbot-map's own head handling.
+    ap.add_argument("--amp", default="bf16", choices=["bf16", "off"])
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--log-every", type=int, default=10)
     ap.add_argument("--save-every", type=int, default=250)
@@ -135,9 +141,12 @@ def main() -> int:
         total, parts, nprobe = 0.0, {"l21_self": 0.0, "l21_world": 0.0}, 0
         state_norms = []
 
+        amp = torch.autocast("cuda", dtype=torch.bfloat16,
+                             enabled=(args.amp == "bf16" and device.type == "cuda"))
         for t in range(len(clip)):
-            if not args.no_write:
-                state = model.write(state, spos, clip.tap(t), clip.patch_hw)
+            with amp:
+                if not args.no_write:
+                    state = model.write(state, spos, clip.tap(t), clip.patch_hw)
             state_norms.append(float(state.detach().norm()))
 
             qs = sample_queries(rng, t, args.n_past, args.probe_current == "on")
@@ -145,9 +154,12 @@ def main() -> int:
                 continue
             rm, xs, xw, valid = clip.probe_inputs(qs, args.raymap_convention)
             st = torch.zeros_like(state) if args.zero_state else state
-            # Batch the queries: they all read the same state, so one pass.
-            out = model.probe(st.expand(len(qs), -1, -1),
-                              spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w))
+            with amp:
+                # Batch the queries: they all read the same state, so one pass.
+                out = model.probe(st.expand(len(qs), -1, -1),
+                                  spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w))
+            # Heads already returned fp32; keep the loss there too.
+            out = {k: v.float() for k, v in out.items()}
             loss, p = probe_loss(out, xs, xw, valid)
             total = total + loss
             for k in parts:
