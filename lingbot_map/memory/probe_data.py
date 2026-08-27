@@ -97,3 +97,19 @@ def ray_depth(x_world: torch.Tensor, raymap: torch.Tensor) -> torch.Tensor:
     """
     o = raymap[:, :3].permute(0, 2, 3, 1)
     return (x_world - o).norm(dim=-1)
+
+
+def true_rays(K: torch.Tensor, c2w_q: torch.Tensor, c2w_0: torch.Tensor,
+              h: int, w: int):
+    """(origin, TRUE unit direction, relative pose) per pixel in the anchor
+    frame -- the OUTPUT parameterisation of the ray-depth head. Independent of
+    the raymap INPUT convention, so it composes with either `--raymap-convention`.
+    GT ray distance is then `||x_world - o||` (V7: GT points are on these rays
+    to 3e-7)."""
+    b = K.shape[0]
+    c2w = relative_c2w(c2w_q, c2w_0.expand(b, -1, -1))
+    d = c2w[:, :3, :3] @ pixel_dirs(K, h, w)
+    d = d / d.norm(dim=1, keepdim=True)
+    o = c2w[:, :3, 3][:, :, None].expand(-1, -1, h * w)
+    sh = lambda a: a.reshape(b, 3, h, w).permute(0, 2, 3, 1)  # noqa: E731
+    return sh(o).contiguous(), sh(d).contiguous(), c2w

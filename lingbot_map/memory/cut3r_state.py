@@ -207,6 +207,39 @@ class ProbeHead(nn.Module):
         return out
 
 
+class RayDepthHead(nn.Module):
+    """The read as a depth renderer: one ray distance and one confidence per
+    pixel, reconstructed as `o + s*d` by the caller. Deliberately DPT-free and
+    tiny (~0.8 M): the smallest head that can read the state, so the scene
+    memorisation capacity that lives in the head is minimal. Also collapses
+    the self/world distinction -- a rigid map preserves L2, so one geometry
+    serves both frames (design doc: "The world head is dominated")."""
+
+    def __init__(self, patch_size: int = 14):
+        super().__init__()
+        self.patch_size = patch_size
+        # exp() output head: small-but-nonzero init, the DPT lesson -- zero
+        # weights are a dead path, large ones explode through the exp.
+        self.proj = nn.Linear(DEC_DIM, patch_size * patch_size * 2)
+        nn.init.normal_(self.proj.weight, std=1e-4)
+        nn.init.zeros_(self.proj.bias)
+
+    def forward(self, tokens: torch.Tensor, patch_hw: tuple[int, int],
+                hw: tuple[int, int]):
+        b, _, _ = tokens.shape
+        ph, pw = patch_hw
+        p = self.patch_size
+        with torch.amp.autocast("cuda", enabled=False):
+            x = self.proj(tokens.float())
+            x = x.view(b, ph, pw, p, p, 2).permute(0, 5, 1, 3, 2, 4)
+            x = x.reshape(b, 2, ph * p, pw * p)
+            if x.shape[-2:] != tuple(hw):
+                x = F.interpolate(x, size=hw, mode="bilinear", align_corners=False)
+            s = torch.exp(x[:, 0].clamp(-10.0, 10.0))
+            conf = 1.0 + torch.exp(x[:, 1].clamp(max=10.0))
+        return s, conf
+
+
 class StateMemory(nn.Module):
     """The whole trainable model: write path, probe path, heads.
 
@@ -218,7 +251,8 @@ class StateMemory(nn.Module):
     def __init__(self, patch_size: int = 14, tap_dim: int = TAP_DIM,
                  state_tokens: int = STATE_TOKENS, dec_depth: int = DEC_DEPTH,
                  dec_num_heads: int = 12, state_dec_num_heads: int = 16,
-                 patch_start_idx: int = 6, grad_ckpt: bool = False):
+                 patch_start_idx: int = 6, grad_ckpt: bool = False,
+                 head_type: str = "dpt"):
         super().__init__()
         # Full BPTT over 160 frames is required by the objective (a probe at t
         # must credit the write at q), and 954 decoder passes of activations do
@@ -253,8 +287,13 @@ class StateMemory(nn.Module):
         self.dec_norm_state = norm(DEC_DIM)
 
         self.raymap = RaymapEncoder(patch_size=patch_size)
-        self.head = ProbeHead(patch_size=patch_size, dec_num_heads=dec_num_heads,
-                              rope=self.rope, grad_ckpt=grad_ckpt)
+        self.head_type = head_type
+        if head_type == "raydepth":
+            self.head = RayDepthHead(patch_size=patch_size)
+        else:
+            self.head = ProbeHead(patch_size=patch_size,
+                                  dec_num_heads=dec_num_heads,
+                                  rope=self.rope, grad_ckpt=grad_ckpt)
 
     # -- state ---------------------------------------------------------------
     def init_state(self, batch: int, device) -> tuple[torch.Tensor, torch.Tensor]:
@@ -317,6 +356,11 @@ class StateMemory(nn.Module):
         # [B, D], not [B, 1, D] -- CUT3R slices `x[-1][:, 0]` for the same reason.
         mod = taps[-1][:, 0]
         taps = [t[:, 1:] for t in taps]      # strip the mod token; leaves P patches
+        if self.head_type == "raydepth":
+            h, w = hw
+            s, conf = self.head(taps[-1],
+                                (h // self.patch_size, w // self.patch_size), hw)
+            return {"ray_depth": s, "conf": conf}
         return self.head(taps, mod, pos[:, 1:], hw)
 
 

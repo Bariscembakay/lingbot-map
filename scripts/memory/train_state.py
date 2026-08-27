@@ -34,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 from lingbot_map.memory.cut3r_state import StateMemory, load_cut3r_weights  # noqa: E402
 from lingbot_map.memory.probe_data import (  # noqa: E402
-    build_raymap, gt_pointmaps, relative_c2w)
+    build_raymap, gt_pointmaps, relative_c2w, true_rays)
 from lingbot_map.memory.recall_loss import probe_loss  # noqa: E402
 
 TAP23 = 3   # index into the cache's 4 tap layers (4, 11, 17, 23)
@@ -55,8 +55,10 @@ class Clip:
         self.device = device
         # fp16 on disk; cast on GPU rather than single-threaded on the CPU.
         if taps == "all":
-            # channel-concat the four taps (4/11/17/23) -> 8192-d; sweep axis (b)
-            t4 = torch.from_numpy(np.ascontiguousarray(c.taps[idx])).to(device)
+            # channel-concat the four taps (4/11/17/23) -> 8192-d; sweep axis (b).
+            # CPU-resident: at 32+8 clips this is ~105 GB, which no GPU holds --
+            # consumers move one frame's stack to the device per step (~66 MB).
+            t4 = torch.from_numpy(np.ascontiguousarray(c.taps[idx]))
             self.taps = t4.permute(0, 2, 1, 3).reshape(t4.shape[0], t4.shape[2], -1)
         else:
             self.taps = torch.from_numpy(
@@ -72,7 +74,7 @@ class Clip:
         return len(self.idx)
 
     def tap(self, t):
-        return self.taps[t][None].float()
+        return self.taps[t][None].to(self.device).float()
 
     def probe_inputs(self, qs, convention, anchor: int = 0):
         """qs are ABSOLUTE frame indices; `anchor` is the stream's first frame
@@ -83,6 +85,11 @@ class Clip:
         rm = build_raymap(self.K[q], self.gt_c2w[q], c2w0, self.h, self.w, convention)
         xs, xw, valid = gt_pointmaps(self.gt_depth[q], self.K[q], self.gt_c2w[q], c2w0)
         return rm, xs, xw, valid
+
+    def probe_rays(self, qs, anchor: int = 0):
+        q = torch.tensor(qs, device=self.device)
+        return true_rays(self.K[q], self.gt_c2w[q], self.gt_c2w[anchor][None],
+                         self.h, self.w)
 
 
 def expand_paths(paths):
@@ -96,6 +103,25 @@ def expand_paths(paths):
         else:
             out.append(Path(sp))
     return out
+
+
+def run_probe(model, st, spos_q, rm, hw, rays=None):
+    """Probe with standard output keys for either head type.
+
+    raydepth reconstructs `o + s*d` on TRUE rays and derives the self frame by
+    the (known) query pose -- one geometry serves both loss terms, which is the
+    point: a rigid map preserves L2, so the world term adds registration
+    supervision without a second head to memorise in."""
+    out = model.probe(st, spos_q, rm, hw)
+    if getattr(model, "head_type", "dpt") != "raydepth":
+        return {k: v.float() for k, v in out.items()}
+    o, d, c2w = rays
+    pts_w = o + out["ray_depth"].float().unsqueeze(-1) * d
+    R, t = c2w[:, :3, :3], c2w[:, :3, 3]
+    pts_s = torch.einsum("bji,bhwj->bhwi", R, pts_w - t[:, None, None, :])
+    c = out["conf"].float()
+    return {"pts3d_in_self_view": pts_s, "conf_self": c,
+            "pts3d_in_other_view": pts_w, "conf": c}
 
 
 def sample_queries(rng, t, n_past, probe_current):
@@ -142,6 +168,9 @@ def main() -> int:
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
     # (a) tap 23 only vs (b) all four channel-concat; design doc "Sweep axes".
     ap.add_argument("--taps", default="23", choices=["23", "all"])
+    # dpt = CUT3R's two DPT heads. raydepth = one scalar ray distance on true
+    # rays, ~0.8 M params -- the read-capacity axis at its head end.
+    ap.add_argument("--head", default="dpt", choices=["dpt", "raydepth"])
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
@@ -202,7 +231,7 @@ def main() -> int:
     model = StateMemory(patch_size=clips[0].meta.patch_size if hasattr(
         clips[0].meta, "patch_size") else 14,
         tap_dim=clips[0].taps.shape[-1],
-        grad_ckpt=not args.no_grad_ckpt).to(device)
+        grad_ckpt=not args.no_grad_ckpt, head_type=args.head).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
     if args.init_from:
         sd = torch.load(args.init_from, map_location="cpu", weights_only=False)
@@ -244,7 +273,8 @@ def main() -> int:
         amp = torch.autocast("cuda", dtype=torch.bfloat16,
                              enabled=(args.amp == "bf16" and device.type == "cuda"))
         for t in range(N):
-            tap = torch.stack([c.taps[s0 + t] for c, s0 in zip(sel, starts)]).float()
+            tap = torch.stack([c.taps[s0 + t] for c, s0 in zip(sel, starts)]
+                              ).to(device).float()
             with amp:
                 if not args.no_write:
                     state = model.write(state, spos, tap, clips[0].patch_hw)
@@ -256,21 +286,24 @@ def main() -> int:
                 qs0 = sample_queries(rng, t, args.n_past, args.probe_current == "on")
                 if qs0:
                     nq = len(qs0)
-                    rms, xss, xws, vs = [], [], [], []
+                    rms, xss, xws, vs, rays = [], [], [], [], []
                     for c, s0 in zip(sel, starts):
                         qs = sample_queries(rng, t, args.n_past,
                                             args.probe_current == "on")
+                        aq = [s0 + q for q in qs]
                         rm, xs, xw, valid = c.probe_inputs(
-                            [s0 + q for q in qs], args.raymap_convention, anchor=s0)
+                            aq, args.raymap_convention, anchor=s0)
                         rms.append(rm); xss.append(xs); xws.append(xw); vs.append(valid)
+                        if args.head == "raydepth":
+                            rays.append(c.probe_rays(aq, anchor=s0))
                     rm = torch.cat(rms); xs = torch.cat(xss)
                     xw = torch.cat(xws); valid = torch.cat(vs)
+                    ray3 = tuple(torch.cat(z) for z in zip(*rays)) if rays else None
                     st = torch.zeros_like(state) if args.zero_state else state
                     with amp:
-                        out = model.probe(st.repeat_interleave(nq, 0),
-                                          spos[:1].expand(B * nq, -1, -1), rm, hw)
-                    # Heads already returned fp32; keep the loss there too.
-                    out = {k: v.float() for k, v in out.items()}
+                        out = run_probe(model, st.repeat_interleave(nq, 0),
+                                        spos[:1].expand(B * nq, -1, -1), rm, hw,
+                                        ray3)
                     loss, p = probe_loss(out, xs, xw, valid)
                     window = window + loss
                     for k in parts:
@@ -357,17 +390,17 @@ def evaluate(model, vclips, frames, args, device):
             state, spos = model.init_state(1, device)
             for t in range(n_c):
                 if not args.no_write:
-                    state = model.write(state, spos, c.taps[t][None].float(),
-                                        c.patch_hw)
+                    state = model.write(state, spos, c.tap(t), c.patch_hw)
             T = n_c - 1
             lags = sorted({0, 1, min(2, T), min(4, T), T // 2, T})
             qs = [T - l for l in lags]
             rm, xs, xw, valid = c.probe_inputs(qs, args.raymap_convention, anchor=0)
-            out = model.probe(state.expand(len(qs), -1, -1),
-                              spos.expand(len(qs), -1, -1), rm, (c.h, c.w))
-            es.append(float((out["pts3d_in_self_view"].float() - xs)
+            rays = c.probe_rays(qs, anchor=0) if args.head == "raydepth" else None
+            out = run_probe(model, state.expand(len(qs), -1, -1),
+                            spos.expand(len(qs), -1, -1), rm, (c.h, c.w), rays)
+            es.append(float((out["pts3d_in_self_view"] - xs)
                             .norm(dim=-1)[valid].mean()))
-            ew.append(float((out["pts3d_in_other_view"].float() - xw)
+            ew.append(float((out["pts3d_in_other_view"] - xw)
                             .norm(dim=-1)[valid].mean()))
         res[f"val{tag}_self"] = float(np.mean(es))
         res[f"val{tag}_world"] = float(np.mean(ew))
@@ -392,9 +425,10 @@ def dump_viz(model, clip, args, device, step, tag="train"):
     lags = [l for l in (0, 1, 5, 20, 60, 120, T) if l <= T]
     qs = [T - l for l in lags]
     rm, xs, xw, valid = clip.probe_inputs(qs, args.raymap_convention, anchor=0)
+    rays = clip.probe_rays(qs, anchor=0) if args.head == "raydepth" else None
     st = torch.zeros_like(state) if args.zero_state else state
-    out = model.probe(st.expand(len(qs), -1, -1), spos.expand(len(qs), -1, -1),
-                      rm, (clip.h, clip.w))
+    out = run_probe(model, st.expand(len(qs), -1, -1),
+                    spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w), rays)
     d = args.out / "viz"
     d.mkdir(exist_ok=True)
     np.savez_compressed(
