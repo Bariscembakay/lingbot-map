@@ -76,6 +76,23 @@ def emit(out: Path, tag: str, pred: np.ndarray, gt: np.ndarray,
             "centroid_offset": off}
 
 
+def _exact_pose(gs: np.ndarray, gw: np.ndarray, valid: np.ndarray):
+    """Recover the query camera's exact rigid pose from the GT pair: gt_world
+    IS gt_self under that pose, so Kabsch on them is exact, not an estimate."""
+    m = valid.reshape(-1)
+    A = gs.reshape(-1, 3)[m]
+    B = gw.reshape(-1, 3)[m]
+    idx = np.random.default_rng(0).choice(len(A), min(20000, len(A)), replace=False)
+    A, B = A[idx], B[idx]
+    ca, cb = A.mean(0), B.mean(0)
+    U, _, Vt = np.linalg.svd((A - ca).T @ (B - cb))
+    R = Vt.T @ U.T
+    if np.linalg.det(R) < 0:
+        Vt[-1] *= -1
+        R = Vt.T @ U.T
+    return R, cb - R @ ca
+
+
 def from_viz(viz_dir: Path, out: Path, conf_pct: float, frame: str = "world") -> None:
     files = sorted(viz_dir.glob("probe_*.npz"))
     if not files:
@@ -85,15 +102,28 @@ def from_viz(viz_dir: Path, out: Path, conf_pct: float, frame: str = "world") ->
           f"lags={list(d['lags'])}")
     out.mkdir(parents=True, exist_ok=True)
     rows = []
-    pk, gk, ck = f"pred_{frame}", f"gt_{frame}", (
-        "conf_world" if frame == "world" else "conf_self")
+    if frame == "selfpose":
+        # The dominant world path: self-head geometry carried into frame-0
+        # coords by the query pose, which the probe knows by construction
+        # (the raymap is built from it). A rigid map preserves L2, so this
+        # scores exactly the self error while fusing in one shared frame.
+        preds, gts = [], []
+        for i in range(len(d["lags"])):
+            R, t = _exact_pose(d["gt_self"][i], d["gt_world"][i], d["valid"][i])
+            preds.append(d["pred_self"][i] @ R.T + t)
+            gts.append(d["gt_world"][i])
+        pred_all, gt_all, conf_all = np.stack(preds), np.stack(gts), d["conf_self"]
+    else:
+        pk, gk = f"pred_{frame}", f"gt_{frame}"
+        ck = "conf_world" if frame == "world" else "conf_self"
+        pred_all, gt_all, conf_all = d[pk], d[gk], d[ck]
     for i, lag in enumerate(d["lags"]):
-        r = emit(out, f"lag{int(lag):03d}", d[pk][i], d[gk][i],
-                 d["valid"][i], d[ck][i], conf_pct)
+        r = emit(out, f"lag{int(lag):03d}", pred_all[i], gt_all[i],
+                 d["valid"][i], conf_all[i], conf_pct)
         if r:
             rows.append(r)
     # Fused: every probe unioned into one cloud -- the whole-scene view.
-    r = emit(out, "fused", d[pk], d[gk], d["valid"], d[ck], conf_pct)
+    r = emit(out, "fused", pred_all, gt_all, d["valid"], conf_all, conf_pct)
     if r:
         rows.append(r)
     print(f"\n{'tag':>10s} {'points':>9s} {'err mean':>9s} {'err med':>9s} "
@@ -108,7 +138,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--viz", type=Path, help="a training run's viz/ directory")
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--frame", default="world", choices=["world", "self"],
+    ap.add_argument("--frame", default="selfpose",
+                    choices=["world", "self", "selfpose"],
                     help="self = the queried camera's own frame, so no pose is "
                          "applied; comparing the two separates a pose error from "
                          "a geometry error")

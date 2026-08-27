@@ -325,6 +325,24 @@ taps** — keep four taps through the one-scene run, and decide before building 
 276-scene cache, which is the only point where the storage difference costs
 anything.
 
+### The world head is dominated by self + query pose (found 2026-08-27)
+
+A rigid transform preserves L2, so `pred_self` carried into frame-0 coords by
+the query pose scores **exactly** the self error -- and the probe always knows
+the query pose, because the raymap is built from it. Measured at step 250 of
+the H200 overfit: world head 0.19-0.32 mean vs self-via-pose 0.066-0.137, at
+every lag. Decomposition: the world head both misregisters (rigid-aligning
+recovers 0.32 -> 0.15 at lag 0, misrotations 7-67 deg) and deforms (aligned
+residual still ~2x self; at lag 95 alignment recovers nothing). CUT3R needs a
+world head because its inference does not know the pose; our recall setting
+does, by construction.
+
+Consequences: **render and judge reconstructions via `render_state.py
+--frame selfpose`** (default); `l21_world` stays as auxiliary supervision --
+the only term training pose-conditioning of the read -- and "drop the world
+head / keep it as aux only" is a new sweep axis. Viz dumps now save `c2w_rel`
+so renders need not re-derive poses.
+
 ### Probe at the current camera (lag 0) -- default ON
 
 `--probe-current {on,off}`. One extra probe at `q = t` against `s_t`, alongside

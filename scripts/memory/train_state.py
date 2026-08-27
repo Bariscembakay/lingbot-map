@@ -32,7 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 from lingbot_map.memory.cut3r_state import StateMemory, load_cut3r_weights  # noqa: E402
-from lingbot_map.memory.probe_data import build_raymap, gt_pointmaps  # noqa: E402
+from lingbot_map.memory.probe_data import (  # noqa: E402
+    build_raymap, gt_pointmaps, relative_c2w)
 from lingbot_map.memory.recall_loss import probe_loss  # noqa: E402
 
 TAP23 = 3   # index into the cache's 4 tap layers (4, 11, 17, 23)
@@ -303,6 +304,9 @@ def dump_viz(model, clip, args, device, step):
         conf_self=out["conf_self"].float().cpu().numpy(),
         gt_world=xw.float().cpu().numpy(), gt_self=xs.float().cpu().numpy(),
         valid=valid.cpu().numpy(), ray_o=rm[:, :3].float().cpu().numpy(),
+        c2w_rel=relative_c2w(clip.gt_c2w[torch.tensor(qs, device=clip.device)],
+                             clip.gt_c2w[0][None].expand(len(qs), -1, -1)
+                             ).cpu().numpy(),
         scene=clip.meta.scene, frame_ids=np.array(clip.idx),
     )
     model.train()
