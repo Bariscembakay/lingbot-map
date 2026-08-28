@@ -188,6 +188,13 @@ def main() -> int:
     # in the no-write control it IS the storage. Freezing it removes that
     # memorisation channel (posterior-collapse discussion, 2026-08-28).
     ap.add_argument("--freeze-s0", action="store_true")
+    # Write-only learning: freeze the whole probe path (raymap encoder, read
+    # blocks, head) AND s0. Only meaningful with --init-from a checkpoint whose
+    # read is trained -- a frozen random head is a dead path.
+    ap.add_argument("--freeze-read", action="store_true")
+    # Restore the write stacks to CUT3R init (fresh in_proj) AFTER --init-from,
+    # so the read stays trained while the write starts over.
+    ap.add_argument("--reinit-write", action="store_true")
     ap.add_argument("--no-grad-ckpt", action="store_true")
     # bf16 for the decoder. Checkpointing stores block INPUTS, and in fp32 that
     # is ~65 MB per pass: 576 passes at 96 frames is ~37 GB, which is what
@@ -240,6 +247,28 @@ def main() -> int:
         sd = torch.load(args.init_from, map_location="cpu", weights_only=False)
         model.load_state_dict(sd["model"])
         print(f"[init] warm-started from {args.init_from} (step {sd.get('step')})",
+              flush=True)
+    if args.reinit_write:
+        raw = torch.load(args.cut3r_ckpt, map_location="cpu", weights_only=False)
+        sd = raw["model"] if "model" in raw else raw
+        sd = {k[7:] if k.startswith("module.") else k: v for k, v in sd.items()}
+        own = model.state_dict()
+        w = {k: v for k, v in sd.items()
+             if k.split(".")[0] in ("dec_blocks", "dec_blocks_state",
+                                    "dec_norm_state")
+             and k in own and own[k].shape == v.shape}
+        model.load_state_dict(w, strict=False)
+        model.in_proj.reset_parameters()
+        print(f"[reinit-write] {len(w)} tensors restored to CUT3R; in_proj reset",
+              flush=True)
+    if args.freeze_read:
+        mods = [model.raymap, model.head, model.register_tokens,
+                model.decoder_embed_state]
+        if hasattr(model, "read_blocks"):
+            mods += [model.read_blocks, model.read_norm]
+        for m in mods:
+            m.requires_grad_(False)
+        print("[freeze-read] probe path + s0 frozen; write-only training",
               flush=True)
     if args.freeze_s0:
         model.register_tokens.requires_grad_(False)
