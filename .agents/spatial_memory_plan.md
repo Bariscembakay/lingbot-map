@@ -307,6 +307,28 @@ Still held: small read DECODER (2-4 cross-attn blocks -- needs decoupling the
 probe path from the interconnected write path) and per-window optimizer
 stepping.
 
+### Stage-1 verdict (2026-08-28): the write earns 43-47% on unseen scenes
+
+756322/756323 both COMPLETED (13h20 / 10h08). Mean of the last five val
+passes, 8 unseen scenes:
+
+| | write | no-write | gap |
+|---|---|---|---|
+| valm_self | 0.169 | 0.316 | **47%** |
+| valm_world | 0.192 | 0.338 | 43% |
+| valx_self (96f) | 0.227 | 0.332 | 32% |
+| valx_world | 0.274 | 0.360 | 24% |
+
+First defensible claim of the project: recall on unseen scenes materially
+beats the weights+prior ceiling, so the state is carrying scene content.
+The extrapolation gap (valx < valm) says the advantage shrinks -- not
+vanishes -- at 6x the trained stream length; stage 2 (longer windows,
+--init-from) is the designed answer. Per-lag numbers from the 160-frame
+unseen-scene viz are single-frame samples at 10x the trained horizon --
+jagged (lag1 med 0.93 vs lag159 med 0.13) and not to be over-read; the
+averaged val metrics are the evidence. Clouds:
+`scenes32_16f_b4/ply_val_unseen_final` (browsable).
+
 ### What the runs corrected in this document
 
 - **`--probe-every` is not an optional axis.** The clip's graph is retained by
