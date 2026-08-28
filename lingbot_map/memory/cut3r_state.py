@@ -463,16 +463,17 @@ def load_cut3r_weights(model: StateMemory, ckpt_path: str | Path,
         "dec_norm_state": "dec_norm_state",
         "decoder_embed_state": "decoder_embed_state",
         "register_tokens": "register_tokens",
-        "dec_blocks.0": "read_blocks.0",
-        "dec_blocks.1": "read_blocks.1",
-        "dec_norm": "read_norm",
         "enc_blocks_ray_map": "raymap.enc_blocks_ray_map",
         "enc_norm_ray_map": "raymap.enc_norm_ray_map",
         "decoder_embed": "raymap.decoder_embed",
     }
+    # One source can feed several destinations (dict keys must be unique --
+    # a duplicate "dec_norm" key here once silently UNLOADED dec_norm).
+    extra = [("dec_blocks.0", "read_blocks.0"), ("dec_blocks.1", "read_blocks.1"),
+             ("dec_norm", "read_norm")]
     own = model.state_dict()
     new, loaded, skipped = {}, [], []
-    for src_pre, dst_pre in want.items():
+    for src_pre, dst_pre in list(want.items()) + extra:
         for k, v in sd.items():
             if not (k == src_pre or k.startswith(src_pre + ".")):
                 continue
