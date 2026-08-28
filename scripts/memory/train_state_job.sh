@@ -9,8 +9,11 @@ CLIPS_SPEC="$1"; shift
 # resolving the repo from ${BASH_SOURCE[0]} lands in Slurm's spool, not here.
 # Every other job script in this repo relies on --chdir instead; do the same, and
 # fail loudly rather than silently running from the wrong tree.
-REPO_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
-cd "$REPO_DIR"
+# --chdir already put us in the repo; SLURM_SUBMIT_DIR is only a fallback and
+# is wrong whenever sbatch ran from some other directory.
+if [ ! -f .agents/scratch/insait_cluster_files/setup_cut3r_env.sh ]; then
+    cd "${SLURM_SUBMIT_DIR:-$PWD}"
+fi
 [ -f .agents/scratch/insait_cluster_files/setup_cut3r_env.sh ] || {
     echo "not in the repo root: $PWD (pass --chdir to sbatch)" >&2; exit 1; }
 
