@@ -329,6 +329,14 @@ jagged (lag1 med 0.93 vs lag159 med 0.13) and not to be over-read; the
 averaged val metrics are the evidence. Clouds:
 `scenes32_16f_b4/ply_val_unseen_final` (browsable).
 
+### Render naming convention (2026-08-28)
+
+Render dirs are viser browser labels (`<dir> | <arm>`), so they encode
+split, scene, checkpoint step and stream length:
+`val_<scene>_step<K>_<N>frames` / `train_<scene>_step<K>_<N>frames`,
+one render per (checkpoint, scene) -- no duplicates under second names.
+The arm identity comes from the parent campaign dir.
+
 ### What the runs corrected in this document
 
 - **`--probe-every` is not an optional axis.** The clip's graph is retained by
