@@ -267,10 +267,13 @@ class LingbotFrozenHead(nn.Module):
 
     def forward(self, taps: list[torch.Tensor], hw: tuple[int, int]):
         h, w = hw
-        toks = [a(t.float())[:, None] for a, t in zip(self.adapters, taps)]
         imgs = torch.zeros(taps[0].shape[0], 1, 3, h, w,
                            device=taps[0].device, dtype=torch.float32)
         with torch.amp.autocast("cuda", enabled=False):
+            # Adapters must also run fp32: under the loop's bf16 autocast a
+            # Linear outside this block emits bf16, which the frozen fp32
+            # trunk rejects.
+            toks = [a(t.float())[:, None] for a, t in zip(self.adapters, taps)]
             # The frozen trunk still needs its activations for backprop THROUGH
             # it to the adapters/decoder; checkpoint them instead of storing.
             if torch.is_grad_enabled() and self.training:
