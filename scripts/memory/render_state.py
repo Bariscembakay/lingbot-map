@@ -51,7 +51,8 @@ def write_ply(path: Path, xyz: np.ndarray, rgb: np.ndarray) -> None:
 
 
 def emit(out: Path, tag: str, pred: np.ndarray, gt: np.ndarray,
-        valid: np.ndarray, conf: np.ndarray | None, conf_pct: float) -> dict:
+        valid: np.ndarray, conf: np.ndarray | None, conf_pct: float,
+        hidden: bool = False) -> dict:
     """One probe (or a fused set) -> pred/gt/both PLYs plus its error stats."""
     m = valid.reshape(-1)
     p, g = pred.reshape(-1, 3)[m], gt.reshape(-1, 3)[m]
@@ -67,9 +68,9 @@ def emit(out: Path, tag: str, pred: np.ndarray, gt: np.ndarray,
     # DIRECTORY holding pred_cloud.ply, GT as <scene>-gt.ply beside it), so a
     # render dir dropped under campaigns/<campaign>/<arm>/ is discoverable
     # with no CLI args. Flat pred_/gt_/both_ files were invisible to it.
-    # Per-lag clouds go under _lags/ -- the walker skips "_" names, so the
-    # browser shows only fused (+ overlay + GT); the lag clouds stay on disk.
-    if tag != "fused":
+    # Hidden clouds go under _lags/ -- the walker skips "_" names, so the
+    # browser shows only the named cloud (+ overlay + GT).
+    if hidden:
         out = out / "_lags"
     (out / tag).mkdir(parents=True, exist_ok=True)
     (out / f"{tag}_overlay").mkdir(parents=True, exist_ok=True)
@@ -103,7 +104,8 @@ def _exact_pose(gs: np.ndarray, gw: np.ndarray, valid: np.ndarray):
     return R, cb - R @ ca
 
 
-def from_viz(viz_dir: Path, out: Path, conf_pct: float, frame: str = "world") -> None:
+def from_viz(viz_dir: Path, out: Path, conf_pct: float, frame: str = "world",
+             name: str = "fused") -> None:
     files = sorted(viz_dir.glob("probe_*.npz"))
     if not files:
         raise SystemExit(f"no probe_*.npz in {viz_dir}")
@@ -128,12 +130,14 @@ def from_viz(viz_dir: Path, out: Path, conf_pct: float, frame: str = "world") ->
         ck = "conf_world" if frame == "world" else "conf_self"
         pred_all, gt_all, conf_all = d[pk], d[gk], d[ck]
     for i, lag in enumerate(d["lags"]):
-        r = emit(out, f"lag{int(lag):03d}", pred_all[i], gt_all[i],
-                 d["valid"][i], conf_all[i], conf_pct)
+        r = emit(out, f"{name}_lag{int(lag):03d}", pred_all[i], gt_all[i],
+                 d["valid"][i], conf_all[i], conf_pct, hidden=True)
         if r:
             rows.append(r)
-    # Fused: every probe unioned into one cloud -- the whole-scene view.
-    r = emit(out, "fused", pred_all, gt_all, d["valid"], conf_all, conf_pct)
+    # Fused: every probe unioned into one cloud -- the whole-scene view. Named
+    # after the SCENE so several scenes share one browsable benchmark dir and
+    # appear side by side in the viewer's scene dropdown.
+    r = emit(out, name, pred_all, gt_all, d["valid"], conf_all, conf_pct)
     if r:
         rows.append(r)
     print(f"\n{'tag':>10s} {'points':>9s} {'err mean':>9s} {'err med':>9s} "
