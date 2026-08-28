@@ -44,6 +44,7 @@ def main() -> int:
              for p in paths]
     model = StateMemory(patch_size=14, tap_dim=clips[0].taps.shape[-1],
                         state_tokens=t.get("state_tokens", 768),
+                        dec_depth=int(t.get("dec_depth", 12)),
                         head_type=ns.head, grad_ckpt=False)
     model.load_state_dict(ck["model"])
     model.to(device).eval()

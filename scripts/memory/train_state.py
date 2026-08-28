@@ -174,6 +174,7 @@ def main() -> int:
     # State capacity axis. Multiples of 768 tile the loaded prior (see
     # load_cut3r_weights); the decoders are length-agnostic over state tokens.
     ap.add_argument("--state-tokens", type=int, default=768)
+    ap.add_argument("--dec-depth", type=int, default=12)
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
@@ -241,6 +242,7 @@ def main() -> int:
     model = StateMemory(patch_size=clips[0].meta.patch_size if hasattr(
         clips[0].meta, "patch_size") else 14,
         tap_dim=clips[0].taps.shape[-1], state_tokens=args.state_tokens,
+        dec_depth=args.dec_depth,
         grad_ckpt=not args.no_grad_ckpt, head_type=args.head).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
     if args.init_from:
