@@ -86,10 +86,10 @@ class Clip:
         xs, xw, valid = gt_pointmaps(self.gt_depth[q], self.K[q], self.gt_c2w[q], c2w0)
         return rm, xs, xw, valid
 
-    def probe_rays(self, qs, anchor: int = 0):
+    def probe_rays(self, qs, anchor: int = 0, unit: bool = True):
         q = torch.tensor(qs, device=self.device)
         return true_rays(self.K[q], self.gt_c2w[q], self.gt_c2w[anchor][None],
-                         self.h, self.w)
+                         self.h, self.w, unit=unit)
 
 
 def expand_paths(paths):
@@ -113,7 +113,7 @@ def run_probe(model, st, spos_q, rm, hw, rays=None):
     point: a rigid map preserves L2, so the world term adds registration
     supervision without a second head to memorise in."""
     out = model.probe(st, spos_q, rm, hw)
-    if getattr(model, "head_type", "dpt") != "raydepth":
+    if getattr(model, "head_type", "dpt") not in ("raydepth", "lingbot"):
         return {k: v.float() for k, v in out.items()}
     o, d, c2w = rays
     pts_w = o + out["ray_depth"].float().unsqueeze(-1) * d
@@ -170,7 +170,7 @@ def main() -> int:
     ap.add_argument("--taps", default="23", choices=["23", "all"])
     # dpt = CUT3R's two DPT heads. raydepth = one scalar ray distance on true
     # rays, ~0.8 M params -- the read-capacity axis at its head end.
-    ap.add_argument("--head", default="dpt", choices=["dpt", "raydepth"])
+    ap.add_argument("--head", default="dpt", choices=["dpt", "raydepth", "lingbot"])
     # State capacity axis. Multiples of 768 tile the loaded prior (see
     # load_cut3r_weights); the decoders are length-agnostic over state tokens.
     ap.add_argument("--state-tokens", type=int, default=768)
@@ -297,8 +297,9 @@ def main() -> int:
                         rm, xs, xw, valid = c.probe_inputs(
                             aq, args.raymap_convention, anchor=s0)
                         rms.append(rm); xss.append(xs); xws.append(xw); vs.append(valid)
-                        if args.head == "raydepth":
-                            rays.append(c.probe_rays(aq, anchor=s0))
+                        if args.head in ("raydepth", "lingbot"):
+                            rays.append(c.probe_rays(
+                                aq, anchor=s0, unit=args.head == "raydepth"))
                     rm = torch.cat(rms); xs = torch.cat(xss)
                     xw = torch.cat(xws); valid = torch.cat(vs)
                     ray3 = tuple(torch.cat(z) for z in zip(*rays)) if rays else None
@@ -398,7 +399,8 @@ def evaluate(model, vclips, frames, args, device):
             lags = sorted({0, 1, min(2, T), min(4, T), T // 2, T})
             qs = [T - l for l in lags]
             rm, xs, xw, valid = c.probe_inputs(qs, args.raymap_convention, anchor=0)
-            rays = c.probe_rays(qs, anchor=0) if args.head == "raydepth" else None
+            rays = (c.probe_rays(qs, anchor=0, unit=args.head == "raydepth")
+                    if args.head in ("raydepth", "lingbot") else None)
             out = run_probe(model, state.expand(len(qs), -1, -1),
                             spos.expand(len(qs), -1, -1), rm, (c.h, c.w), rays)
             es.append(float((out["pts3d_in_self_view"] - xs)
@@ -428,7 +430,8 @@ def dump_viz(model, clip, args, device, step, tag="train"):
     lags = [l for l in (0, 1, 5, 20, 60, 120, T) if l <= T]
     qs = [T - l for l in lags]
     rm, xs, xw, valid = clip.probe_inputs(qs, args.raymap_convention, anchor=0)
-    rays = clip.probe_rays(qs, anchor=0) if args.head == "raydepth" else None
+    rays = (clip.probe_rays(qs, anchor=0, unit=args.head == "raydepth")
+            if args.head in ("raydepth", "lingbot") else None)
     st = torch.zeros_like(state) if args.zero_state else state
     out = run_probe(model, st.expand(len(qs), -1, -1),
                     spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w), rays)

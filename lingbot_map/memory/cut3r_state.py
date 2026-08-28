@@ -240,6 +240,49 @@ class RayDepthHead(nn.Module):
         return s, conf
 
 
+class LingbotFrozenHead(nn.Module):
+    """lingbot-map's own trained depth head, FROZEN, behind four trainable
+    Linear(768 -> 2048) adapters. The head decodes exactly one feature
+    language -- aggregator taps -- so the probe is forced to translate the
+    state into "the taps the encoder would have produced for the queried
+    view". Zero trainable capacity in the trunk; the adapters are the whole
+    learnable read interface. Known inherited artifact, accepted by decision
+    2026-08-28: the checkpoint's deepest DPT branch is ReLU-dead
+    (d(depth)/d(tap23) = 0), so hook 3 ignores its adapter."""
+
+    CKPT = "/group/compact-3dmem/checkpoints/lingbot-map/frozen_heads.pt"
+
+    def __init__(self, patch_size: int = 14, ckpt: str | None = None):
+        super().__init__()
+        from lingbot_map.heads.dpt_head import DPTHead
+        self.adapters = nn.ModuleList(
+            [nn.Linear(DEC_DIM, 2 * HALF) for _ in range(4)])
+        # Mirrors gct_base._build_depth_head exactly, so the export loads 1:1.
+        self.dpt = DPTHead(dim_in=2 * HALF, patch_size=patch_size, output_dim=2,
+                           activation="exp", conf_activation="expp1")
+        sd = torch.load(ckpt or self.CKPT, map_location="cpu",
+                        weights_only=False)
+        self.dpt.load_state_dict(sd["depth_head"])
+        self.dpt.requires_grad_(False)
+
+    def forward(self, taps: list[torch.Tensor], hw: tuple[int, int]):
+        h, w = hw
+        toks = [a(t.float())[:, None] for a, t in zip(self.adapters, taps)]
+        imgs = torch.zeros(taps[0].shape[0], 1, 3, h, w,
+                           device=taps[0].device, dtype=torch.float32)
+        with torch.amp.autocast("cuda", enabled=False):
+            # The frozen trunk still needs its activations for backprop THROUGH
+            # it to the adapters/decoder; checkpoint them instead of storing.
+            if torch.is_grad_enabled() and self.training:
+                z, conf = checkpoint(
+                    lambda *ts: self.dpt(list(ts[:-1]), ts[-1], patch_start_idx=0),
+                    *toks, imgs, use_reentrant=False)
+            else:
+                z, conf = self.dpt(toks, imgs, patch_start_idx=0)
+        b = taps[0].shape[0]
+        return z.reshape(b, h, w), conf.reshape(b, h, w)
+
+
 class StateMemory(nn.Module):
     """The whole trainable model: write path, probe path, heads.
 
@@ -290,6 +333,8 @@ class StateMemory(nn.Module):
         self.head_type = head_type
         if head_type == "raydepth":
             self.head = RayDepthHead(patch_size=patch_size)
+        elif head_type == "lingbot":
+            self.head = LingbotFrozenHead(patch_size=patch_size)
         else:
             self.head = ProbeHead(patch_size=patch_size,
                                   dec_num_heads=dec_num_heads,
@@ -361,6 +406,9 @@ class StateMemory(nn.Module):
             s, conf = self.head(taps[-1],
                                 (h // self.patch_size, w // self.patch_size), hw)
             return {"ray_depth": s, "conf": conf}
+        if self.head_type == "lingbot":
+            z, conf = self.head(taps, hw)
+            return {"ray_depth": z, "conf": conf}   # z pairs with unit=False rays
         return self.head(taps, mod, pos[:, 1:], hw)
 
 
