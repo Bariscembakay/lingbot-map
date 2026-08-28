@@ -298,7 +298,7 @@ class StateMemory(nn.Module):
                  state_tokens: int = STATE_TOKENS, dec_depth: int = DEC_DEPTH,
                  dec_num_heads: int = 12, state_dec_num_heads: int = 16,
                  patch_start_idx: int = 6, grad_ckpt: bool = False,
-                 head_type: str = "dpt"):
+                 head_type: str = "dpt", read_depth: int = 2):
         super().__init__()
         # Full BPTT over 160 frames is required by the objective (a probe at t
         # must credit the write at q), and 954 decoder passes of activations do
@@ -334,7 +334,20 @@ class StateMemory(nn.Module):
 
         self.raymap = RaymapEncoder(patch_size=patch_size)
         self.head_type = head_type
-        if head_type == "raydepth":
+        if head_type == "smallread":
+            # Decoupled 2-block read over the RAW stored state + linear
+            # ray-depth head: the smallest read that can query the memory, so
+            # what it recalls measures the WRITE, not the read. The write path
+            # (the interconnected pair) is untouched. Blocks init from
+            # dec_blocks[:2] via load_cut3r_weights.
+            self.read_blocks = nn.ModuleList(
+                [DecoderBlock(DEC_DIM, dec_num_heads, mlp_ratio=4.0,
+                              qkv_bias=True, norm_layer=norm, norm_mem=True,
+                              rope=self.rope) for _ in range(read_depth)]
+            )
+            self.read_norm = norm(DEC_DIM)
+            self.head = RayDepthHead(patch_size=patch_size)
+        elif head_type == "raydepth":
             self.head = RayDepthHead(patch_size=patch_size)
         elif head_type == "lingbot":
             self.head = LingbotFrozenHead(patch_size=patch_size)
@@ -399,6 +412,21 @@ class StateMemory(nn.Module):
     def probe(self, state, state_pos, raymap, hw):
         """Query a past camera. READ ONLY -- the state is never updated here."""
         tokens, pos = self.raymap(raymap)
+        if self.head_type == "smallread":
+            # No state-stack processing at probe time: the state AS STORED must
+            # be readable, or the write did not do its job.
+            h, w = hw
+            x = tokens
+            use_ckpt = self.grad_ckpt and self.training and torch.is_grad_enabled()
+            for blk in self.read_blocks:
+                if use_ckpt:
+                    x = checkpoint(lambda a, b, bk=blk: bk(a, b, pos, state_pos)[0],
+                                   x, state, use_reentrant=False)
+                else:
+                    x, _ = blk(x, state, pos, state_pos)
+            x = self.read_norm(x)[:, 1:]        # strip the mod/pose token
+            sd, conf = self.head(x, (h // self.patch_size, w // self.patch_size), hw)
+            return {"ray_depth": sd, "conf": conf}
         _, taps = self._decode(state, state_pos, tokens, pos)
         # ModLN.modulate does `scale.unsqueeze(1)`, so the conditioning vector is
         # [B, D], not [B, 1, D] -- CUT3R slices `x[-1][:, 0]` for the same reason.
@@ -435,6 +463,9 @@ def load_cut3r_weights(model: StateMemory, ckpt_path: str | Path,
         "dec_norm_state": "dec_norm_state",
         "decoder_embed_state": "decoder_embed_state",
         "register_tokens": "register_tokens",
+        "dec_blocks.0": "read_blocks.0",
+        "dec_blocks.1": "read_blocks.1",
+        "dec_norm": "read_norm",
         "enc_blocks_ray_map": "raymap.enc_blocks_ray_map",
         "enc_norm_ray_map": "raymap.enc_norm_ray_map",
         "decoder_embed": "raymap.decoder_embed",
