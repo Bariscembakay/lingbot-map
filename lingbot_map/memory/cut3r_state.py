@@ -334,19 +334,22 @@ class StateMemory(nn.Module):
 
         self.raymap = RaymapEncoder(patch_size=patch_size)
         self.head_type = head_type
-        if head_type == "smallread":
-            # Decoupled 2-block read over the RAW stored state + linear
-            # ray-depth head: the smallest read that can query the memory, so
-            # what it recalls measures the WRITE, not the read. The write path
-            # (the interconnected pair) is untouched. Blocks init from
-            # dec_blocks[:2] via load_cut3r_weights.
+        if head_type in ("smallread", "smallread_lingbot"):
+            # Decoupled 2-block read over the RAW stored state: the smallest
+            # read that can query the memory, so what it recalls measures the
+            # WRITE, not the read. The write path (the interconnected pair) is
+            # untouched. Blocks init from dec_blocks[:2] via load_cut3r_weights.
+            # smallread ends in the linear ray-depth head; smallread_lingbot
+            # ends in the frozen lingbot depth trunk fed four read-path taps.
             self.read_blocks = nn.ModuleList(
                 [DecoderBlock(DEC_DIM, dec_num_heads, mlp_ratio=4.0,
                               qkv_bias=True, norm_layer=norm, norm_mem=True,
                               rope=self.rope) for _ in range(read_depth)]
             )
             self.read_norm = norm(DEC_DIM)
-            self.head = RayDepthHead(patch_size=patch_size)
+            self.head = (RayDepthHead(patch_size=patch_size)
+                         if head_type == "smallread"
+                         else LingbotFrozenHead(patch_size=patch_size))
         elif head_type == "raydepth":
             self.head = RayDepthHead(patch_size=patch_size)
         elif head_type == "lingbot":
@@ -412,11 +415,12 @@ class StateMemory(nn.Module):
     def probe(self, state, state_pos, raymap, hw):
         """Query a past camera. READ ONLY -- the state is never updated here."""
         tokens, pos = self.raymap(raymap)
-        if self.head_type == "smallread":
+        if self.head_type in ("smallread", "smallread_lingbot"):
             # No state-stack processing at probe time: the state AS STORED must
             # be readable, or the write did not do its job.
             h, w = hw
             x = tokens
+            xs = [x]
             use_ckpt = self.grad_ckpt and self.training and torch.is_grad_enabled()
             for blk in self.read_blocks:
                 if use_ckpt:
@@ -424,7 +428,16 @@ class StateMemory(nn.Module):
                                    x, state, use_reentrant=False)
                 else:
                     x, _ = blk(x, state, pos, state_pos)
-            x = self.read_norm(x)[:, 1:]        # strip the mod/pose token
+                xs.append(x)
+            x = self.read_norm(x)
+            if self.head_type == "smallread_lingbot":
+                # Four read-path taps stand in for the four aggregator taps the
+                # frozen trunk was trained on (input, both block outputs, final
+                # norm); strip the mod token from each.
+                taps_r = [t[:, 1:] for t in (xs[0], xs[1], xs[-1], x)]
+                z, conf = self.head(taps_r, hw)
+                return {"ray_depth": z, "conf": conf}   # pairs with unit=False rays
+            x = x[:, 1:]                        # strip the mod/pose token
             sd, conf = self.head(x, (h // self.patch_size, w // self.patch_size), hw)
             return {"ray_depth": sd, "conf": conf}
         _, taps = self._decode(state, state_pos, tokens, pos)
