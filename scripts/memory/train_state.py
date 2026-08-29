@@ -113,7 +113,8 @@ def run_probe(model, st, spos_q, rm, hw, rays=None):
     point: a rigid map preserves L2, so the world term adds registration
     supervision without a second head to memorise in."""
     out = model.probe(st, spos_q, rm, hw)
-    if getattr(model, "head_type", "dpt") not in ("raydepth", "lingbot", "smallread"):
+    if getattr(model, "head_type", "dpt") not in (
+            "raydepth", "lingbot", "smallread", "smallread_lingbot"):
         return {k: v.float() for k, v in out.items()}
     o, d, c2w = rays
     pts_w = o + out["ray_depth"].float().unsqueeze(-1) * d
@@ -170,7 +171,9 @@ def main() -> int:
     ap.add_argument("--taps", default="23", choices=["23", "all"])
     # dpt = CUT3R's two DPT heads. raydepth = one scalar ray distance on true
     # rays, ~0.8 M params -- the read-capacity axis at its head end.
-    ap.add_argument("--head", default="dpt", choices=["dpt", "raydepth", "lingbot", "smallread"])
+    ap.add_argument("--head", default="dpt",
+                    choices=["dpt", "raydepth", "lingbot", "smallread",
+                             "smallread_lingbot"])
     # State capacity axis. Multiples of 768 tile the loaded prior (see
     # load_cut3r_weights); the decoders are length-agnostic over state tokens.
     ap.add_argument("--state-tokens", type=int, default=768)
@@ -207,6 +210,16 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--log-every", type=int, default=10)
     ap.add_argument("--save-every", type=int, default=250)
+    # Plateau stopping: stop when valm_self has not improved by min-delta in
+    # the last `patience` evals (0 = run to --updates). valm bounces ~+-0.02
+    # between evals, so patience counts evals since the BEST, not consecutive
+    # regressions.
+    ap.add_argument("--patience", type=int, default=0)
+    ap.add_argument("--min-delta", type=float, default=0.002)
+    # auto: continue from --out/last.pt (model+optimizer+step) when it exists.
+    # The job script pre-seeds the work dir from OUT, so a requeued/preempted
+    # job resumes instead of retracing from step 0.
+    ap.add_argument("--resume", default="off", choices=["off", "auto"])
     ap.add_argument("--viz-every", type=int, default=500)
     args = ap.parse_args()
 
@@ -284,11 +297,34 @@ def main() -> int:
         opt, lambda s: min(1.0, (s + 1) / max(1, args.warmup)))
 
     hist = []
+    start_step, best_val, evals_since_best = 0, float("inf"), 0
+    ckpt_path = args.out / "last.pt"
+    if args.resume == "auto" and ckpt_path.exists():
+        sd = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+        model.load_state_dict(sd["model"])
+        if "opt" in sd:
+            opt.load_state_dict(sd["opt"])
+            sched.load_state_dict(sd["sched"])
+        start_step = int(sd.get("step", 0)) + 1
+        best_val = float(sd.get("best_val", float("inf")))
+        evals_since_best = int(sd.get("evals_since_best", 0))
+        hp = args.out / "history.json"
+        if hp.exists():
+            hist = [r for r in json.loads(hp.read_text())
+                    if r.get("step", 0) < start_step]
+        print(f"[resume] {ckpt_path} -> step {start_step} "
+              f"(best_val {best_val:.4f})", flush=True)
     B = min(args.batch, len(clips))
     N = args.frames
     hw = (clips[0].h, clips[0].w)
     t0 = time.time()
-    for step in range(args.updates):
+    def save_ckpt(step):
+        torch.save({"model": model.state_dict(), "opt": opt.state_dict(),
+                    "sched": sched.state_dict(), "step": step,
+                    "best_val": best_val, "evals_since_best": evals_since_best,
+                    "args": vars(args)}, args.out / "last.pt")
+    step = max(0, start_step - 1)
+    for step in range(start_step, args.updates):
         sel = [clips[i] for i in rng.choice(len(clips), size=B, replace=False)]
         starts = [int(rng.integers(0, max(1, len(c) - N + 1))) for c in sel]
         state, spos = model.init_state(B, device)
@@ -328,9 +364,9 @@ def main() -> int:
                         rm, xs, xw, valid = c.probe_inputs(
                             aq, args.raymap_convention, anchor=s0)
                         rms.append(rm); xss.append(xs); xws.append(xw); vs.append(valid)
-                        if args.head in ("raydepth", "lingbot", "smallread"):
+                        if args.head in ("raydepth", "lingbot", "smallread", "smallread_lingbot"):
                             rays.append(c.probe_rays(
-                                aq, anchor=s0, unit=args.head != "lingbot"))
+                                aq, anchor=s0, unit=args.head not in ("lingbot", "smallread_lingbot")))
                     rm = torch.cat(rms); xs = torch.cat(xss)
                     xw = torch.cat(xws); valid = torch.cat(vs)
                     ray3 = tuple(torch.cat(z) for z in zip(*rays)) if rays else None
@@ -376,10 +412,21 @@ def main() -> int:
                "peak_gb": (torch.cuda.max_memory_allocated() / 1e9
                            if device.type == "cuda" else 0.0),
                "sec": time.time() - t0}
+        stop = False
         if val_clips and step % args.val_every == 0:
             rec.update(evaluate(model, val_clips, N, args, device))
             print("[val] " + " ".join(f"{k}={v:.4f}" for k, v in rec.items()
                                       if k.startswith("val")), flush=True)
+            if rec["valm_self"] < best_val - args.min_delta:
+                best_val, evals_since_best = rec["valm_self"], 0
+            else:
+                evals_since_best += 1
+            if args.patience and evals_since_best >= args.patience:
+                print(f"[early-stop] no valm_self improvement > "
+                      f"{args.min_delta} in {args.patience} evals "
+                      f"(best {best_val:.4f}); stopping at step {step}",
+                      flush=True)
+                stop = True
         hist.append(rec)
         if run is not None:
             run.log(rec, step=step)
@@ -390,15 +437,15 @@ def main() -> int:
                   f"{rec['peak_gb']:5.1f}GB | {rec['sec']:6.1f}s", flush=True)
             (args.out / "history.json").write_text(json.dumps(hist))
         if step and step % args.save_every == 0:
-            torch.save({"model": model.state_dict(), "step": step,
-                        "args": vars(args)}, args.out / "last.pt")
+            save_ckpt(step)
         if step % args.viz_every == 0:
             dump_viz(model, clips[0], args, device, step, tag="train")
             if val_clips:
                 dump_viz(model, val_clips[0], args, device, step, tag="val")
+        if stop:
+            break
 
-    torch.save({"model": model.state_dict(), "step": args.updates,
-                "args": vars(args)}, args.out / "last.pt")
+    save_ckpt(step)
     (args.out / "history.json").write_text(json.dumps(hist))
     dump_viz(model, clips[0], args, device, args.updates, tag="train")
     if val_clips:
@@ -430,8 +477,8 @@ def evaluate(model, vclips, frames, args, device):
             lags = sorted({0, 1, min(2, T), min(4, T), T // 2, T})
             qs = [T - l for l in lags]
             rm, xs, xw, valid = c.probe_inputs(qs, args.raymap_convention, anchor=0)
-            rays = (c.probe_rays(qs, anchor=0, unit=args.head != "lingbot")
-                    if args.head in ("raydepth", "lingbot", "smallread") else None)
+            rays = (c.probe_rays(qs, anchor=0, unit=args.head not in ("lingbot", "smallread_lingbot"))
+                    if args.head in ("raydepth", "lingbot", "smallread", "smallread_lingbot") else None)
             out = run_probe(model, state.expand(len(qs), -1, -1),
                             spos.expand(len(qs), -1, -1), rm, (c.h, c.w), rays)
             es.append(float((out["pts3d_in_self_view"] - xs)
@@ -461,8 +508,8 @@ def dump_viz(model, clip, args, device, step, tag="train"):
     lags = [l for l in (0, 1, 5, 20, 60, 120, T) if l <= T]
     qs = [T - l for l in lags]
     rm, xs, xw, valid = clip.probe_inputs(qs, args.raymap_convention, anchor=0)
-    rays = (clip.probe_rays(qs, anchor=0, unit=args.head != "lingbot")
-            if args.head in ("raydepth", "lingbot", "smallread") else None)
+    rays = (clip.probe_rays(qs, anchor=0, unit=args.head not in ("lingbot", "smallread_lingbot"))
+            if args.head in ("raydepth", "lingbot", "smallread", "smallread_lingbot") else None)
     st = torch.zeros_like(state) if args.zero_state else state
     out = run_probe(model, st.expand(len(qs), -1, -1),
                     spos.expand(len(qs), -1, -1), rm, (clip.h, clip.w), rays)
