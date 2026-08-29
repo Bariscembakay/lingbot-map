@@ -41,6 +41,9 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # system of record and /scratch is wiped.
 WORK="/scratch/$USER/train_state/$(basename "$OUT")"
 mkdir -p "$WORK"
+# Pre-seed from OUT so `--resume auto` survives requeues onto fresh nodes
+# (rsync also accepts a remote "sof1:" OUT). No-op for a brand-new run.
+rsync -a "$OUT/" "$WORK/" 2>/dev/null || true
 # OUT may be a remote rsync destination ("sof1:/group/...") when running on
 # msp3: results must ship to sof1's /group, never land on msp3's 300G one.
 case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
