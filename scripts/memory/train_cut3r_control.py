@@ -220,6 +220,11 @@ def main() -> int:
     ap.add_argument("--patience", type=int, default=0)
     ap.add_argument("--min-delta", type=float, default=0.002)
     ap.add_argument("--resume", default="off", choices=["off", "auto"])
+    # Ablation of the pretrained decoder: keep the (frozen, cached) encoder
+    # and optionally the frozen heads, but re-initialise the interconnected
+    # decoder system -- the CUT3R analogue of reinit-write + frozen-head arms.
+    ap.add_argument("--random-decoder", action="store_true")
+    ap.add_argument("--freeze-head", action="store_true")
     ap.add_argument("--equiv-check", action="store_true",
                     help="compare injected-cache vs full-RGB forward on one "
                          "frame pair of the first clip, then exit")
@@ -268,6 +273,36 @@ def main() -> int:
     model.requires_grad_(True)
     for m in (model.patch_embed, model.enc_blocks, model.enc_norm):
         m.requires_grad_(False)
+    if args.random_decoder:
+        torch.manual_seed(args.seed)
+        # Construct an un-loaded twin the same way their load_model does
+        # (eval of the ckpt's own args string, incl. its two compat fixes) --
+        # model.config does not round-trip through the constructor.
+        import dust3r.model as _dm
+        _raw = torch.load(args.cut3r_ckpt, map_location="cpu",
+                          weights_only=False)
+        _a = _raw["args"].model.replace("ManyAR_PatchEmbed", "PatchEmbedDust3R")
+        if "landscape_only" not in _a:
+            _a = _a[:-2] + ", landscape_only=False))"
+        else:
+            _a = _a.replace(" ", "").replace("landscape_only=True",
+                                             "landscape_only=False")
+        del _raw
+        fresh = eval(_a, vars(_dm))   # CPU, fully random init
+        roots = ("decoder_embed", "dec_blocks", "dec_norm",
+                 "decoder_embed_state", "dec_blocks_state", "dec_norm_state",
+                 "register_tokens")
+        sd = {k: v for k, v in fresh.state_dict().items()
+              if k.split(".")[0] in roots}
+        model.load_state_dict(sd, strict=False)
+        # pose_retriever/pose_token stay pretrained: they feed the (frozen)
+        # pose branch and are auxiliary memory, not the decoder under test.
+        print(f"[random-decoder] re-initialised {len(sd)} tensors under "
+              f"{roots}", flush=True)
+        del fresh
+    if args.freeze_head:
+        model.downstream_head.requires_grad_(False)
+        print("[freeze-head] downstream_head frozen", flush=True)
     model.gradient_checkpointing = not args.no_grad_ckpt
     model.train()
     n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
