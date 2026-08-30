@@ -32,6 +32,8 @@ for _tok in $CLIPS_SPEC; do
         /data/*) dataset pull "$(echo "$_tok" | cut -d/ -f3)" >/dev/null ;;
     esac
 done
+# The control also needs the frozen-encoder token cache in-zone.
+dataset pull cut3r-enc-cache-v1 >/dev/null
 
 # NO gpu_keep_alive here, deliberately. It exists for inference jobs that are
 # bursty on the GPU and read as idle to the deallocation reaper. This loop is the
@@ -59,7 +61,7 @@ SYNC_PID=$!
 trap 'kill "$SYNC_PID" 2>/dev/null || true' EXIT
 
 # shellcheck disable=SC2086
-"$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@"
+"$PY_ENV" scripts/memory/train_cut3r_control.py --clips $CLIPS_SPEC --out "$WORK" "$@"
 
 rsync -a "$WORK/" "$OUT/"
 echo "[train_state_job] shipped $WORK -> $OUT"
