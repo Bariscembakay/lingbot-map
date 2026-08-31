@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import glob as globmod
 import json
+import re
 import os
 import sys
 import time
@@ -238,7 +239,11 @@ def main() -> int:
             wdir = Path("/group/compact-3dmem/wandb")
             if not (wdir.is_dir() and os.access(wdir, os.W_OK)):
                 wdir = args.out
+            # Deterministic id + resume: a requeued/preempted job appends to
+            # the SAME wandb run instead of fragmenting one training into many.
+            rid = re.sub(r"[^a-z0-9_-]", "-", args.out.name.lower())[:120]
             run = wandb.init(project="spatial_memory", name=args.out.name,
+                             id=rid, resume="allow",
                              mode=args.wandb, config=vars(args), dir=str(wdir))
         except Exception as e:  # e.g. no ~/.netrc on msp3 -- never kill the run
             print(f"[wandb] disabled: {e}", flush=True)
