@@ -179,6 +179,9 @@ def main() -> int:
     # load_cut3r_weights); the decoders are length-agnostic over state tokens.
     ap.add_argument("--state-tokens", type=int, default=768)
     ap.add_argument("--dec-depth", type=int, default=12)
+    # Unfreeze the lingbot DPT trunk inside LingbotFrozenHead (both lingbot
+    # head types); meaningful with --init-from a trained sibling.
+    ap.add_argument("--unfreeze-head", action="store_true")
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
@@ -267,6 +270,12 @@ def main() -> int:
         sd = torch.load(args.init_from, map_location="cpu", weights_only=False)
         model.load_state_dict(sd["model"])
         print(f"[init] warm-started from {args.init_from} (step {sd.get('step')})",
+              flush=True)
+    if args.unfreeze_head:
+        assert hasattr(model.head, "dpt"), "--unfreeze-head needs a lingbot head"
+        model.head.dpt.requires_grad_(True)
+        n = sum(p.numel() for p in model.head.dpt.parameters())
+        print(f"[unfreeze-head] lingbot DPT trunk trainable ({n/1e6:.1f} M)",
               flush=True)
     if args.reinit_write:
         raw = torch.load(args.cut3r_ckpt, map_location="cpu", weights_only=False)
