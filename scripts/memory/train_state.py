@@ -185,6 +185,11 @@ def main() -> int:
     # One-way write: drop the interconnected image stack; state cross-attends
     # to fixed projected patch tokens at every layer. smallread-family only.
     ap.add_argument("--write-oneway", action="store_true")
+    # Overfit tail: halve the LR whenever the 250-step mean train L21 stops
+    # improving (>0.5% required), down to --min-lr. Collapses the constant-LR
+    # noise ball; off by default.
+    ap.add_argument("--train-plateau-decay", action="store_true")
+    ap.add_argument("--min-lr", type=float, default=1e-6)
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
@@ -453,6 +458,23 @@ def main() -> int:
                   f"|g| {gnorm:7.3f} | |s| {rec['state_norm']:8.1f} | "
                   f"{rec['peak_gb']:5.1f}GB | {rec['sec']:6.1f}s", flush=True)
             (args.out / "history.json").write_text(json.dumps(hist))
+        if (args.train_plateau_decay and step and step % 250 == 0
+                and len(hist) >= 250):
+            cur = float(np.mean([r["l21_self"] for r in hist[-250:]]))
+            prev = getattr(main, "_pl_best", float("inf"))
+            if cur < prev * 0.995:
+                main._pl_best = cur
+            else:
+                lr0 = opt.param_groups[0]["lr"]
+                if lr0 > args.min_lr:
+                    for g in opt.param_groups:
+                        g["lr"] = max(args.min_lr, g["lr"] * 0.5)
+                    sched.base_lrs = [max(args.min_lr, b * 0.5)
+                                      for b in sched.base_lrs]
+                    main._pl_best = cur
+                    print(f"[lr-decay] train L21 flat at {cur:.4f}; "
+                          f"lr {lr0:.2e} -> {opt.param_groups[0]['lr']:.2e}",
+                          flush=True)
         if step and step % args.save_every == 0:
             save_ckpt(step)
         if step % args.viz_every == 0:
