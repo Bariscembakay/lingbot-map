@@ -298,7 +298,8 @@ class StateMemory(nn.Module):
                  state_tokens: int = STATE_TOKENS, dec_depth: int = DEC_DEPTH,
                  dec_num_heads: int = 12, state_dec_num_heads: int = 16,
                  patch_start_idx: int = 6, grad_ckpt: bool = False,
-                 head_type: str = "dpt", read_depth: int = 2):
+                 head_type: str = "dpt", read_depth: int = 2,
+                 write_oneway: bool = False):
         super().__init__()
         # Full BPTT over 160 frames is required by the objective (a probe at t
         # must credit the write at q), and 954 decoder passes of activations do
@@ -318,7 +319,15 @@ class StateMemory(nn.Module):
         self.register_tokens = nn.Embedding(state_tokens, HALF)
         self.decoder_embed_state = nn.Linear(HALF, DEC_DIM, bias=True)
 
-        self.dec_blocks = nn.ModuleList(
+        # One-way write: only the state stack exists; patch tokens act as
+        # FIXED keys/values at every layer instead of being refined by an
+        # interconnected image stack. Cuts >half the write compute; the state
+        # stack still warm-starts from CUT3R.
+        self.write_oneway = write_oneway
+        if write_oneway:
+            assert head_type in ("smallread", "smallread_lingbot"), \
+                "one-way write has no img taps; needs a decoupled read"
+        self.dec_blocks = None if write_oneway else nn.ModuleList(
             [DecoderBlock(DEC_DIM, dec_num_heads, mlp_ratio=4.0, qkv_bias=True,
                           norm_layer=norm, norm_mem=True, rope=self.rope)
              for _ in range(dec_depth)]
@@ -378,8 +387,18 @@ class StateMemory(nn.Module):
         Both stacks consume layer l-1's pair, so neither sees the other's layer-l
         output. Returns (new_state, taps) where taps are the four the head reads.
         """
-        pairs = [(state, tokens)]
         use_ckpt = self.grad_ckpt and self.training and torch.is_grad_enabled()
+        if self.write_oneway:
+            s = state
+            for blk_s in self.dec_blocks_state:
+                if use_ckpt:
+                    s = checkpoint(lambda a, b, bs=blk_s:
+                                   bs(a, b, state_pos, tok_pos)[0],
+                                   s, tokens, use_reentrant=False)
+                else:
+                    s, _ = blk_s(s, tokens, state_pos, tok_pos)
+            return self.dec_norm_state(s), None
+        pairs = [(state, tokens)]
         for blk_s, blk_i in zip(self.dec_blocks_state, self.dec_blocks):
             s_prev, i_prev = pairs[-1]
             if use_ckpt:

@@ -182,6 +182,9 @@ def main() -> int:
     # Unfreeze the lingbot DPT trunk inside LingbotFrozenHead (both lingbot
     # head types); meaningful with --init-from a trained sibling.
     ap.add_argument("--unfreeze-head", action="store_true")
+    # One-way write: drop the interconnected image stack; state cross-attends
+    # to fixed projected patch tokens at every layer. smallread-family only.
+    ap.add_argument("--write-oneway", action="store_true")
     # Controls. no-write is the decisive one: if the probe still works with the
     # state pinned to s0, the scene is in the weights and not in the memory.
     ap.add_argument("--no-write", action="store_true")
@@ -263,7 +266,7 @@ def main() -> int:
     model = StateMemory(patch_size=clips[0].meta.patch_size if hasattr(
         clips[0].meta, "patch_size") else 14,
         tap_dim=clips[0].taps.shape[-1], state_tokens=args.state_tokens,
-        dec_depth=args.dec_depth,
+        dec_depth=args.dec_depth, write_oneway=args.write_oneway,
         grad_ckpt=not args.no_grad_ckpt, head_type=args.head).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
     if args.init_from:
