@@ -349,6 +349,14 @@ def main() -> int:
                     "sched": sched.state_dict(), "step": step,
                     "best_val": best_val, "evals_since_best": evals_since_best,
                     "args": vars(args)}, args.out / "last.pt")
+    def save_best(step, val):
+        # Early stopping ends a run `patience` evals PAST its best, so last.pt
+        # is never the run's result -- best.pt is. Atomic rename so a
+        # preemption mid-write can't leave a truncated file.
+        tmp = args.out / "best.pt.tmp"
+        torch.save({"model": model.state_dict(), "step": step,
+                    "valm_self": val, "args": vars(args)}, tmp)
+        tmp.replace(args.out / "best.pt")
 
     step = max(0, start_step - 1)
     for step in range(start_step, args.updates):
@@ -441,6 +449,7 @@ def main() -> int:
                                       if k.startswith("val")), flush=True)
             if rec["valm_self"] < best_val - args.min_delta:
                 best_val, evals_since_best = rec["valm_self"], 0
+                save_best(step, best_val)
             else:
                 evals_since_best += 1
             if args.patience and evals_since_best >= args.patience:
