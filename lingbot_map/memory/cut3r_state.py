@@ -501,8 +501,9 @@ def load_cut3r_weights(model: StateMemory, ckpt_path: str | Path,
     }
     # One source can feed several destinations (dict keys must be unique --
     # a duplicate "dec_norm" key here once silently UNLOADED dec_norm).
-    extra = [("dec_blocks.0", "read_blocks.0"), ("dec_blocks.1", "read_blocks.1"),
-             ("dec_norm", "read_norm")]
+    extra = [(f"dec_blocks.{k}", f"read_blocks.{k}")
+             for k in range(len(getattr(model, "read_blocks", [])))]
+    extra += [("dec_norm", "read_norm")]
     own = model.state_dict()
     new, loaded, skipped = {}, [], []
     for src_pre, dst_pre in list(want.items()) + extra:

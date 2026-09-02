@@ -170,6 +170,7 @@ def main() -> int:
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
     # (a) tap 23 only vs (b) all four channel-concat; design doc "Sweep axes".
     ap.add_argument("--taps", default="23", choices=["23", "all"])
+    ap.add_argument("--read-depth", type=int, default=2)
     # dpt = CUT3R's two DPT heads. raydepth = one scalar ray distance on true
     # rays, ~0.8 M params -- the read-capacity axis at its head end.
     ap.add_argument("--head", default="dpt",
@@ -272,7 +273,8 @@ def main() -> int:
         clips[0].meta, "patch_size") else 14,
         tap_dim=clips[0].taps.shape[-1], state_tokens=args.state_tokens,
         dec_depth=args.dec_depth, write_oneway=args.write_oneway,
-        grad_ckpt=not args.no_grad_ckpt, head_type=args.head).to(device)
+        grad_ckpt=not args.no_grad_ckpt, head_type=args.head,
+        read_depth=args.read_depth).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
     if args.init_from:
         sd = torch.load(args.init_from, map_location="cpu", weights_only=False)
