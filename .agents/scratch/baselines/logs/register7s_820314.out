@@ -1,0 +1,4 @@
+/var/lib/slurm/slurmd/job820314/slurm_script: 4: source: not found
+[Parallel(n_jobs=13)]: Using backend LokyBackend with 13 concurrent workers.
+[Parallel(n_jobs=13)]: Done   3 out of  13 | elapsed:  8.8min remaining: 29.5min
+[2026-09-04T08:10:49.725] error: *** JOB 820314 ON sof1-h200-3 CANCELLED AT 2026-09-04T08:10:49 DUE to SIGNAL Terminated ***

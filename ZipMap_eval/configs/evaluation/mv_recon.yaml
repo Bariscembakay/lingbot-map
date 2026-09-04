@@ -6,19 +6,18 @@ defaults:
 name: mv_recon
 
 eval_models:
-  - pi3
-  - vggt
+  # LOCAL PATCH (lingbot-map): only the recall-benchmark baselines; pi3/vggt
+  # rows are not reproduction targets here.
   - ZipMap
   - ttt3r
   - cut3r
 
 eval_datasets:
-  # - 7scenes-sparse
-  # - 7scenes-dense
-  # - NRGBD-sparse
-  # - NRGBD-dense
-  - DTU
-  # - ETH3D
+  # LOCAL PATCH (lingbot-map): paper Table 3 = 7-Scenes + NRGBD, both settings.
+  - 7scenes-sparse
+  - 7scenes-dense
+  - NRGBD-sparse
+  - NRGBD-dense
 
 
 no_crop: True

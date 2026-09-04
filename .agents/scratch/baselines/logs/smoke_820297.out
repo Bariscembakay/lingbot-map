@@ -1,0 +1,606 @@
+=== node gcp-eu1-a100-80g-qrfh, gpu: NVIDIA A100-SXM4-80GB ===
+=== 1. TTT3R (cut3r env) ===
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/smoke_ttt3r.py", line 11, in <module>
+    from demo import prepare_input
+  File "/home/baris_bakay/lingbot-map/TTT3R/demo.py", line 31, in <module>
+    import imageio.v2 as iio
+ModuleNotFoundError: No module named 'imageio'
+=== TTT3R exit: 1 ===
+=== 2. ZipMap (zipmap env) ===
+[setup_zipmap_env] Building zipmap env on gcp-eu1-a100-80g-qrfh ...
+Using Cached Shard Index for conda-forge/linux-64                                                   ✔ Done
+Using Cached Shard Index for conda-forge/noarch                                                     ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.2 sec)
+
+Resolving Environment                                                                           ⧖ Starting
+Resolving Environment                                                                     ✔ Done (0.2 sec)
+
+Transaction
+
+  Prefix: /scratch/baris_bakay/micromamba/envs/zipmap
+
+  Updating specs:
+
+   - python=3.11
+   - pip
+
+
+  Package               Version  Build                 Channel           Size
+───────────────────────────────────────────────────────────────────────────────
+  Install:
+───────────────────────────────────────────────────────────────────────────────
+
+  + _openmp_mutex           4.5  20_gnu                conda-forge     Cached
+  + bzip2                 1.0.8  hda65f42_10           conda-forge     Cached
+  + ca-certificates   2026.7.22  hbd8a1cb_0            conda-forge     Cached
+  + ld_impl_linux-64     2.46.1  default_hbd61a6d_102  conda-forge     Cached
+  + libexpat              2.8.1  hecca717_1            conda-forge     Cached
+  + libffi                3.7.0  h81df57d_1            conda-forge     Cached
+  + libgcc               16.2.0  ha9f2e26_4            conda-forge     Cached
+  + libgomp              16.2.0  he0feb66_4            conda-forge     Cached
+  + liblzma               5.8.3  hb03c661_1            conda-forge     Cached
+  + libnsl                2.0.1  hb9d3cd8_1            conda-forge     Cached
+  + libpython           3.11.16  h0c77377_2_cpython    conda-forge     Cached
+  + libsqlite            3.53.4  h0737f62_1            conda-forge     Cached
+  + libstdcxx            16.2.0  h934c35e_4            conda-forge     Cached
+  + libuuid              2.42.3  hcfc3c73_0            conda-forge     Cached
+  + libxcrypt            4.4.38  h280c20c_0            conda-forge     Cached
+  + libzlib               1.3.2  h25fd6f3_3            conda-forge     Cached
+  + ncurses                 6.6  hdb14827_1            conda-forge     Cached
+  + openssl               3.6.4  h781a0a9_0            conda-forge     Cached
+  + packaging              26.3  pyhc364b38_0          conda-forge     Cached
+  + pip                  26.2.1  pyh8b19718_0          conda-forge     Cached
+  + python              3.11.16  h5f976f7_2_cpython    conda-forge     Cached
+  + readline                8.3  hd6e31c0_1            conda-forge     Cached
+  + setuptools           84.0.0  pyh332efcf_0          conda-forge     Cached
+  + tk                   8.6.13  noxft_h1df4ec4_4      conda-forge     Cached
+  + tzdata                2026c  h151e31d_0            conda-forge     Cached
+  + wheel                0.48.0  pyhd8ed1ab_0          conda-forge     Cached
+  + zstd                  1.5.7  hb78ec9c_7            conda-forge     Cached
+
+  Summary:
+
+  Install: 27 packages
+
+  Total download: 0 B
+
+───────────────────────────────────────────────────────────────────────────────
+
+
+warning  libmamba Security Warning: This transaction includes executing package scripts (pre/post-link/unlink) if present. These scripts can contain arbitrary code. Please ensure you trust the package sources.
+
+Transaction starting
+Linking libzlib-1.3.2-h25fd6f3_3
+Linking libgomp-16.2.0-he0feb66_4
+Linking zstd-1.5.7-hb78ec9c_7
+Linking _openmp_mutex-4.5-20_gnu
+Linking ld_impl_linux-64-2.46.1-default_hbd61a6d_102
+Linking libgcc-16.2.0-ha9f2e26_4
+Linking bzip2-1.0.8-hda65f42_10
+Linking libnsl-2.0.1-hb9d3cd8_1
+Linking libexpat-2.8.1-hecca717_1
+Linking libffi-3.7.0-h81df57d_1
+Linking libsqlite-3.53.4-h0737f62_1
+Linking liblzma-5.8.3-hb03c661_1
+Linking ncurses-6.6-hdb14827_1
+Linking tk-8.6.13-noxft_h1df4ec4_4
+Linking libstdcxx-16.2.0-h934c35e_4
+Linking libuuid-2.42.3-hcfc3c73_0
+Linking libxcrypt-4.4.38-h280c20c_0
+Linking readline-8.3-hd6e31c0_1
+Linking libpython-3.11.16-h0c77377_2_cpython
+Linking tzdata-2026c-h151e31d_0
+Linking ca-certificates-2026.7.22-hbd8a1cb_0
+Linking openssl-3.6.4-h781a0a9_0
+Linking python-3.11.16-h5f976f7_2_cpython
+Linking packaging-26.3-pyhc364b38_0
+Linking setuptools-84.0.0-pyh332efcf_0
+Linking wheel-0.48.0-pyhd8ed1ab_0
+Linking pip-26.2.1-pyh8b19718_0
+
+Transaction finished
+
+
+To activate this environment, use:
+
+    micromamba activate zipmap
+
+Or to execute a single command in this environment, use:
+
+    micromamba run -n zipmap mycommand
+
+Obtaining file:///home/baris_bakay/lingbot-map/ZipMap
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Collecting torch==2.6.0 (from zipmap==0.0.1)
+  Downloading torch-2.6.0-cp311-cp311-manylinux1_x86_64.whl.metadata (28 kB)
+Collecting torchvision==0.21.0 (from zipmap==0.0.1)
+  Downloading torchvision-0.21.0-cp311-cp311-manylinux1_x86_64.whl.metadata (6.1 kB)
+Collecting numpy>=1.26.4 (from zipmap==0.0.1)
+  Using cached numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+Collecting Pillow (from zipmap==0.0.1)
+  Using cached pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Collecting opencv-python-headless (from zipmap==0.0.1)
+  Downloading opencv_python_headless-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl.metadata (19 kB)
+Collecting hydra-core (from zipmap==0.0.1)
+  Using cached hydra_core-1.3.6-py3-none-any.whl.metadata (5.7 kB)
+Collecting omegaconf (from zipmap==0.0.1)
+  Using cached omegaconf-2.3.1-py3-none-any.whl.metadata (4.5 kB)
+Collecting huggingface_hub (from zipmap==0.0.1)
+  Using cached huggingface_hub-1.30.0-py3-none-any.whl.metadata (16 kB)
+Collecting einops (from zipmap==0.0.1)
+  Using cached einops-0.8.2-py3-none-any.whl.metadata (13 kB)
+Collecting safetensors (from zipmap==0.0.1)
+  Using cached safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+Collecting gradio<6,>=5 (from zipmap==0.0.1)
+  Downloading gradio-5.50.0-py3-none-any.whl.metadata (16 kB)
+Collecting trimesh (from zipmap==0.0.1)
+  Using cached trimesh-5.1.0-py3-none-any.whl.metadata (13 kB)
+Collecting matplotlib (from zipmap==0.0.1)
+  Using cached matplotlib-3.11.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (80 kB)
+Collecting scipy (from zipmap==0.0.1)
+  Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting requests (from zipmap==0.0.1)
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting einx (from zipmap==0.0.1)
+  Downloading einx-0.4.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting iopath (from zipmap==0.0.1)
+  Downloading iopath-0.1.10.tar.gz (42 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting onnxruntime-gpu (from zipmap==0.0.1)
+  Downloading onnxruntime_gpu-1.29.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (5.9 kB)
+Collecting wcmatch (from zipmap==0.0.1)
+  Downloading wcmatch-11.0.1-py3-none-any.whl.metadata (6.0 kB)
+Collecting pydantic==2.10.6 (from zipmap==0.0.1)
+  Downloading pydantic-2.10.6-py3-none-any.whl.metadata (30 kB)
+Collecting viser==0.2.23 (from zipmap==0.0.1)
+  Downloading viser-0.2.23-py3-none-any.whl.metadata (4.8 kB)
+Collecting wandb (from zipmap==0.0.1)
+  Using cached wandb-0.29.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+Collecting easydict (from zipmap==0.0.1)
+  Downloading easydict-1.13-py3-none-any.whl.metadata (4.2 kB)
+Collecting lpips (from zipmap==0.0.1)
+  Downloading lpips-0.1.4-py3-none-any.whl.metadata (10 kB)
+Collecting fvcore (from zipmap==0.0.1)
+  Downloading fvcore-0.1.5.post20221221.tar.gz (50 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting annotated-types>=0.6.0 (from pydantic==2.10.6->zipmap==0.0.1)
+  Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.27.2 (from pydantic==2.10.6->zipmap==0.0.1)
+  Downloading pydantic_core-2.27.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting typing-extensions>=4.12.2 (from pydantic==2.10.6->zipmap==0.0.1)
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting filelock (from torch==2.6.0->zipmap==0.0.1)
+  Downloading filelock-3.32.5-py3-none-any.whl.metadata (2.0 kB)
+Collecting networkx (from torch==2.6.0->zipmap==0.0.1)
+  Using cached networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting jinja2 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting fsspec (from torch==2.6.0->zipmap==0.0.1)
+  Using cached fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+Collecting nvidia-cuda-nvrtc-cu12==12.4.127 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cuda-runtime-cu12==12.4.127 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cuda-cupti-cu12==12.4.127 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cudnn-cu12==9.1.0.70 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cublas-cu12==12.4.5.8 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cufft-cu12==11.2.1.3 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-curand-cu12==10.3.5.147 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cusolver-cu12==11.6.1.9 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cusparse-cu12==12.3.1.170 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cusparselt-cu12==0.6.2 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_cusparselt_cu12-0.6.2-py3-none-manylinux2014_x86_64.whl.metadata (6.8 kB)
+Collecting nvidia-nccl-cu12==2.21.5 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_nccl_cu12-2.21.5-py3-none-manylinux2014_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvtx-cu12==12.4.127 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-nvjitlink-cu12==12.4.127 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting triton==3.2.0 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading triton-3.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.4 kB)
+Collecting sympy==1.13.1 (from torch==2.6.0->zipmap==0.0.1)
+  Downloading sympy-1.13.1-py3-none-any.whl.metadata (12 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy==1.13.1->torch==2.6.0->zipmap==0.0.1)
+  Using cached mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting imageio>=2.0.0 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading imageio-2.37.4-py3-none-any.whl.metadata (9.6 kB)
+Collecting msgspec>=0.18.6 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading msgspec-0.21.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.8 kB)
+Collecting nodeenv>=1.8.0 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading nodeenv-1.10.0-py2.py3-none-any.whl.metadata (24 kB)
+Collecting plyfile>=1.0.2 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading plyfile-1.1.5-py3-none-any.whl.metadata (43 kB)
+Collecting psutil>=5.9.5 (from viser==0.2.23->zipmap==0.0.1)
+  Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+Collecting rich>=13.3.3 (from viser==0.2.23->zipmap==0.0.1)
+  Using cached rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+Collecting scikit-image>=0.18.0 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (15 kB)
+Collecting tqdm>=4.0.0 (from viser==0.2.23->zipmap==0.0.1)
+  Using cached tqdm-4.70.0-py3-none-any.whl.metadata (57 kB)
+Collecting tyro>=0.2.0 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading tyro-1.0.16-py3-none-any.whl.metadata (12 kB)
+Collecting websockets>=13.1 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading websockets-17.1-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.3 kB)
+Collecting yourdfpy>=0.0.53 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading yourdfpy-0.0.60-py3-none-any.whl.metadata (9.0 kB)
+Collecting aiofiles<25.0,>=22.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading aiofiles-24.1.0-py3-none-any.whl.metadata (10 kB)
+Collecting anyio<5.0,>=3.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Using cached anyio-4.15.0-py3-none-any.whl.metadata (4.7 kB)
+Collecting brotli>=1.1.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading brotli-1.2.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.1 kB)
+Collecting fastapi<1.0,>=0.115.2 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading fastapi-0.141.1-py3-none-any.whl.metadata (27 kB)
+Collecting ffmpy (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading ffmpy-1.0.0-py3-none-any.whl.metadata (3.0 kB)
+Collecting gradio-client==1.14.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading gradio_client-1.14.0-py3-none-any.whl.metadata (7.1 kB)
+Collecting groovy~=0.1 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading groovy-0.1.2-py3-none-any.whl.metadata (6.1 kB)
+Collecting httpx<1.0,>=0.24.1 (from gradio<6,>=5->zipmap==0.0.1)
+  Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting markupsafe<4.0,>=2.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting orjson~=3.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading orjson-3.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (41 kB)
+Requirement already satisfied: packaging in /scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages (from gradio<6,>=5->zipmap==0.0.1) (26.3)
+Collecting pandas<3.0,>=1.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading pandas-2.3.3-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (91 kB)
+Collecting Pillow (from zipmap==0.0.1)
+  Downloading pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.0 kB)
+Collecting pydub (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading pydub-0.25.1-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting python-multipart>=0.0.18 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading python_multipart-0.0.32-py3-none-any.whl.metadata (2.1 kB)
+Collecting pyyaml<7.0,>=5.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Collecting ruff>=0.9.3 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading ruff-0.16.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+Collecting safehttpx<0.2.0,>=0.1.6 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading safehttpx-0.1.7-py3-none-any.whl.metadata (4.2 kB)
+Collecting semantic-version~=2.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)
+Collecting starlette<1.0,>=0.40.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading starlette-0.52.1-py3-none-any.whl.metadata (6.3 kB)
+Collecting tomlkit<0.14.0,>=0.12.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading tomlkit-0.13.3-py3-none-any.whl.metadata (2.8 kB)
+Collecting typer<1.0,>=0.12 (from gradio<6,>=5->zipmap==0.0.1)
+  Using cached typer-0.27.2-py3-none-any.whl.metadata (16 kB)
+Collecting uvicorn>=0.14.0 (from gradio<6,>=5->zipmap==0.0.1)
+  Downloading uvicorn-0.52.4-py3-none-any.whl.metadata (6.6 kB)
+Collecting websockets>=13.1 (from viser==0.2.23->zipmap==0.0.1)
+  Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Collecting idna>=2.8 (from anyio<5.0,>=3.0->gradio<6,>=5->zipmap==0.0.1)
+  Using cached idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Collecting typing-inspection>=0.4.2 (from fastapi<1.0,>=0.115.2->gradio<6,>=5->zipmap==0.0.1)
+  Using cached typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting annotated-doc>=0.0.2 (from fastapi<1.0,>=0.115.2->gradio<6,>=5->zipmap==0.0.1)
+  Using cached annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+Collecting certifi (from httpx<1.0,>=0.24.1->gradio<6,>=5->zipmap==0.0.1)
+  Using cached certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx<1.0,>=0.24.1->gradio<6,>=5->zipmap==0.0.1)
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx<1.0,>=0.24.1->gradio<6,>=5->zipmap==0.0.1)
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting click<9.0.0,>=8.4.2 (from huggingface_hub->zipmap==0.0.1)
+  Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting hf-xet<2.0.0,>=1.5.2 (from huggingface_hub->zipmap==0.0.1)
+  Using cached hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting python-dateutil>=2.8.2 (from pandas<3.0,>=1.0->gradio<6,>=5->zipmap==0.0.1)
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting pytz>=2020.1 (from pandas<3.0,>=1.0->gradio<6,>=5->zipmap==0.0.1)
+  Downloading pytz-2026.3.post1-py2.py3-none-any.whl.metadata (22 kB)
+Collecting tzdata>=2022.7 (from pandas<3.0,>=1.0->gradio<6,>=5->zipmap==0.0.1)
+  Downloading tzdata-2026.3-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting shellingham>=1.3.0 (from typer<1.0,>=0.12->gradio<6,>=5->zipmap==0.0.1)
+  Using cached shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+Collecting six>=1.5 (from python-dateutil>=2.8.2->pandas<3.0,>=1.0->gradio<6,>=5->zipmap==0.0.1)
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting markdown-it-py>=2.2.0 (from rich>=13.3.3->viser==0.2.23->zipmap==0.0.1)
+  Using cached markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting pygments<3.0.0,>=2.13.0 (from rich>=13.3.3->viser==0.2.23->zipmap==0.0.1)
+  Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=13.3.3->viser==0.2.23->zipmap==0.0.1)
+  Using cached mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Collecting tifffile>=2022.8.12 (from scikit-image>=0.18.0->viser==0.2.23->zipmap==0.0.1)
+  Downloading tifffile-2026.3.3-py3-none-any.whl.metadata (31 kB)
+Collecting lazy-loader>=0.4 (from scikit-image>=0.18.0->viser==0.2.23->zipmap==0.0.1)
+  Downloading lazy_loader-0.5-py3-none-any.whl.metadata (5.9 kB)
+Collecting docstring-parser>=0.16 (from tyro>=0.2.0->viser==0.2.23->zipmap==0.0.1)
+  Downloading docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+Collecting typeguard>=4.0.0 (from tyro>=0.2.0->viser==0.2.23->zipmap==0.0.1)
+  Downloading typeguard-4.6.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting lxml (from yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading lxml-6.1.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl.metadata (3.3 kB)
+Collecting colorlog (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading colorlog-6.12.0-py3-none-any.whl.metadata (11 kB)
+Collecting manifold3d>=2.3.0 (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading manifold3d-3.5.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (20 kB)
+Collecting charset-normalizer (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
+Collecting jsonschema (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting svg.path (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading svg_path-7.1-py2.py3-none-any.whl.metadata (14 kB)
+Collecting pycollada (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading pycollada-0.9.3-py3-none-any.whl.metadata (1.7 kB)
+Collecting shapely (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading shapely-2.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.8 kB)
+Collecting xxhash (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached xxhash-4.0.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (17 kB)
+Collecting rtree (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading rtree-1.4.1-py3-none-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (2.1 kB)
+Collecting embreex (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading embreex-4.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+Collecting vhacdx (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading vhacdx-0.0.10-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.1 kB)
+Collecting mapbox_earcut>=1.0.2 (from trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Downloading mapbox_earcut-2.0.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (2.5 kB)
+Collecting frozendict (from einx->zipmap==0.0.1)
+  Downloading frozendict-2.4.7-py3-none-any.whl.metadata (23 kB)
+Collecting yacs>=0.1.6 (from fvcore->zipmap==0.0.1)
+  Downloading yacs-0.1.8-py3-none-any.whl.metadata (639 bytes)
+Collecting termcolor>=1.1 (from fvcore->zipmap==0.0.1)
+  Downloading termcolor-3.3.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting tabulate (from fvcore->zipmap==0.0.1)
+  Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+Collecting portalocker (from iopath->zipmap==0.0.1)
+  Downloading portalocker-4.3.0-py3-none-any.whl.metadata (11 kB)
+Collecting antlr4-python3-runtime==4.9.* (from hydra-core->zipmap==0.0.1)
+  Using cached antlr4_python3_runtime-4.9.3-py3-none-any.whl
+Collecting attrs>=22.2.0 (from jsonschema->trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema->trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema->trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema->trimesh[easy]>=3.11.2->yourdfpy>=0.0.53->viser==0.2.23->zipmap==0.0.1)
+  Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+Collecting contourpy>=1.0.1 (from matplotlib->zipmap==0.0.1)
+  Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting cycler>=0.10 (from matplotlib->zipmap==0.0.1)
+  Using cached cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.28.2 (from matplotlib->zipmap==0.0.1)
+  Using cached fonttools-4.64.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (123 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib->zipmap==0.0.1)
+  Using cached kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.2 kB)
+Collecting pyparsing>=3 (from matplotlib->zipmap==0.0.1)
+  Using cached pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+Collecting flatbuffers (from onnxruntime-gpu->zipmap==0.0.1)
+  Downloading flatbuffers-25.12.19-py2.py3-none-any.whl.metadata (1.0 kB)
+Collecting protobuf>=4.25.8 (from onnxruntime-gpu->zipmap==0.0.1)
+  Using cached protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+Collecting urllib3<3,>=1.26 (from requests->zipmap==0.0.1)
+  Using cached urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting opentelemetry-api>=1.43.0 (from wandb->zipmap==0.0.1)
+  Using cached opentelemetry_api-1.44.0-py3-none-any.whl.metadata (1.4 kB)
+Collecting platformdirs (from wandb->zipmap==0.0.1)
+  Using cached platformdirs-4.11.7-py3-none-any.whl.metadata (5.5 kB)
+Collecting sentry-sdk>=2.0.0 (from wandb->zipmap==0.0.1)
+  Using cached sentry_sdk-2.68.1-py3-none-any.whl.metadata (11 kB)
+Collecting bracex>=3.0 (from wcmatch->zipmap==0.0.1)
+  Downloading bracex-3.0.1-py3-none-any.whl.metadata (3.3 kB)
+Downloading pydantic-2.10.6-py3-none-any.whl (431 kB)
+Downloading pydantic_core-2.27.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 241.0 MB/s  0:00:00
+Downloading torch-2.6.0-cp311-cp311-manylinux1_x86_64.whl (766.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 766.7/766.7 MB 159.5 MB/s  0:00:03
+Downloading nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl (363.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 363.4/363.4 MB 234.3 MB/s  0:00:01
+Downloading nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (13.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.8/13.8 MB 254.6 MB/s  0:00:00
+Downloading nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (24.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.6/24.6 MB 292.1 MB/s  0:00:00
+Downloading nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (883 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 883.7/883.7 kB 170.5 MB/s  0:00:00
+Downloading nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl (664.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 664.8/664.8 MB 162.9 MB/s  0:00:02
+Downloading nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl (211.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 211.5/211.5 MB 226.5 MB/s  0:00:00
+Downloading nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl (56.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.3/56.3 MB 248.5 MB/s  0:00:00
+Downloading nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl (127.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 127.9/127.9 MB 243.8 MB/s  0:00:00
+Downloading nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl (207.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 207.5/207.5 MB 214.2 MB/s  0:00:00
+Downloading nvidia_cusparselt_cu12-0.6.2-py3-none-manylinux2014_x86_64.whl (150.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 150.1/150.1 MB 206.9 MB/s  0:00:00
+Downloading nvidia_nccl_cu12-2.21.5-py3-none-manylinux2014_x86_64.whl (188.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 188.7/188.7 MB 226.1 MB/s  0:00:00
+Downloading nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (21.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 21.1/21.1 MB 236.9 MB/s  0:00:00
+Downloading nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (99 kB)
+Downloading sympy-1.13.1-py3-none-any.whl (6.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.2/6.2 MB 308.2 MB/s  0:00:00
+Downloading torchvision-0.21.0-cp311-cp311-manylinux1_x86_64.whl (7.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 298.3 MB/s  0:00:00
+Downloading triton-3.2.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (253.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 253.2/253.2 MB 184.5 MB/s  0:00:01
+Downloading viser-0.2.23-py3-none-any.whl (28.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 28.9/28.9 MB 204.6 MB/s  0:00:00
+Downloading gradio-5.50.0-py3-none-any.whl (63.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.5/63.5 MB 202.4 MB/s  0:00:00
+Downloading gradio_client-1.14.0-py3-none-any.whl (325 kB)
+Downloading aiofiles-24.1.0-py3-none-any.whl (15 kB)
+Using cached anyio-4.15.0-py3-none-any.whl (131 kB)
+Downloading fastapi-0.141.1-py3-none-any.whl (131 kB)
+Downloading groovy-0.1.2-py3-none-any.whl (14 kB)
+Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached huggingface_hub-1.30.0-py3-none-any.whl (796 kB)
+Using cached click-8.5.0-py3-none-any.whl (125 kB)
+Using cached hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Using cached mpmath-1.3.0-py3-none-any.whl (536 kB)
+Using cached numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+Downloading orjson-3.12.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (131 kB)
+Downloading pandas-2.3.3-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.8/12.8 MB 233.9 MB/s  0:00:00
+Downloading pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 253.4 MB/s  0:00:00
+Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+Downloading safehttpx-0.1.7-py3-none-any.whl (9.0 kB)
+Downloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)
+Downloading starlette-0.52.1-py3-none-any.whl (74 kB)
+Downloading tomlkit-0.13.3-py3-none-any.whl (38 kB)
+Using cached typer-0.27.2-py3-none-any.whl (123 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (182 kB)
+Using cached annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Using cached annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Downloading brotli-1.2.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 224.8 MB/s  0:00:00
+Downloading filelock-3.32.5-py3-none-any.whl (100 kB)
+Using cached fsspec-2026.7.0-py3-none-any.whl (206 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached idna-3.19-py3-none-any.whl (68 kB)
+Using cached imageio-2.37.4-py3-none-any.whl (318 kB)
+Downloading msgspec-0.21.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (219 kB)
+Downloading nodeenv-1.10.0-py2.py3-none-any.whl (23 kB)
+Downloading plyfile-1.1.5-py3-none-any.whl (36 kB)
+Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+Downloading pytz-2026.3.post1-py2.py3-none-any.whl (508 kB)
+Using cached rich-15.0.0-py3-none-any.whl (310 kB)
+Using cached pygments-2.21.0-py3-none-any.whl (1.3 MB)
+Using cached markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+Using cached mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading ruff-0.16.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.3/10.3 MB 238.3 MB/s  0:00:00
+Downloading scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (13.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13.7/13.7 MB 244.3 MB/s  0:00:00
+Downloading lazy_loader-0.5-py3-none-any.whl (8.0 kB)
+Using cached networkx-3.6.1-py3-none-any.whl (2.1 MB)
+Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+Using cached shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading tifffile-2026.3.3-py3-none-any.whl (243 kB)
+Using cached tqdm-4.70.0-py3-none-any.whl (80 kB)
+Using cached trimesh-5.1.0-py3-none-any.whl (750 kB)
+Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Downloading tyro-1.0.16-py3-none-any.whl (216 kB)
+Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+Downloading typeguard-4.6.0-py3-none-any.whl (36 kB)
+Downloading tzdata-2026.3-py2.py3-none-any.whl (348 kB)
+Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+Downloading yourdfpy-0.0.60-py3-none-any.whl (22 kB)
+Downloading manifold3d-3.5.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 191.0 MB/s  0:00:00
+Downloading mapbox_earcut-2.0.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (59 kB)
+Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (262 kB)
+Downloading colorlog-6.12.0-py3-none-any.whl (12 kB)
+Downloading easydict-1.13-py3-none-any.whl (6.8 kB)
+Using cached einops-0.8.2-py3-none-any.whl (65 kB)
+Downloading einx-0.4.3-py3-none-any.whl (163 kB)
+Downloading embreex-4.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (14.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 14.5/14.5 MB 237.5 MB/s  0:00:00
+Downloading ffmpy-1.0.0-py3-none-any.whl (5.6 kB)
+Downloading frozendict-2.4.7-py3-none-any.whl (16 kB)
+Downloading termcolor-3.3.0-py3-none-any.whl (7.7 kB)
+Downloading yacs-0.1.8-py3-none-any.whl (14 kB)
+Using cached hydra_core-1.3.6-py3-none-any.whl (163 kB)
+Using cached omegaconf-2.3.1-py3-none-any.whl (79 kB)
+Using cached jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Using cached referencing-0.37.0-py3-none-any.whl (26 kB)
+Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (371 kB)
+Downloading lpips-0.1.4-py3-none-any.whl (53 kB)
+Downloading lxml-6.1.3-cp311-cp311-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.2/5.2 MB 69.2 MB/s  0:00:00
+Using cached matplotlib-3.11.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.0 MB)
+Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+Using cached cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Using cached fonttools-4.64.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.5 MB)
+Using cached kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+Using cached pyparsing-3.3.2-py3-none-any.whl (122 kB)
+Downloading onnxruntime_gpu-1.29.0-cp311-cp311-manylinux_2_28_x86_64.whl (202.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 202.2/202.2 MB 211.4 MB/s  0:00:00
+Using cached protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+Downloading flatbuffers-25.12.19-py2.py3-none-any.whl (26 kB)
+Downloading opencv_python_headless-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl (61.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.2/61.2 MB 223.2 MB/s  0:00:00
+Downloading portalocker-4.3.0-py3-none-any.whl (129 kB)
+Downloading pycollada-0.9.3-py3-none-any.whl (129 kB)
+Downloading pydub-0.25.1-py2.py3-none-any.whl (32 kB)
+Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+Using cached urllib3-2.7.0-py3-none-any.whl (131 kB)
+Downloading rtree-1.4.1-py3-none-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (507 kB)
+Using cached safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+Downloading shapely-2.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (3.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 297.4 MB/s  0:00:00
+Downloading svg_path-7.1-py2.py3-none-any.whl (18 kB)
+Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+Downloading vhacdx-0.0.10-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (251 kB)
+Using cached wandb-0.29.0-py3-none-manylinux_2_28_x86_64.whl (29.8 MB)
+Using cached opentelemetry_api-1.44.0-py3-none-any.whl (60 kB)
+Using cached sentry_sdk-2.68.1-py3-none-any.whl (520 kB)
+Using cached xxhash-4.0.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (261 kB)
+Using cached platformdirs-4.11.7-py3-none-any.whl (23 kB)
+Downloading wcmatch-11.0.1-py3-none-any.whl (43 kB)
+Downloading bracex-3.0.1-py3-none-any.whl (11 kB)
+Building wheels for collected packages: zipmap, fvcore, iopath
+  Building editable for zipmap (pyproject.toml): started
+  Building editable for zipmap (pyproject.toml): finished with status 'done'
+  Created wheel for zipmap: filename=zipmap-0.0.1-0.editable-py3-none-any.whl size=7372 sha256=b65f2bf3c74cedd1144ca2e3f3517236bb668e8108dd57f2c68c84d6bc9d1463
+  Stored in directory: /tmp/pip-ephem-wheel-cache-hfwt7yi4/wheels/b8/db/c7/fb0ea8124a034755f91793290832c4e76a798ac74c0b5c5cd8
+  Building wheel for fvcore (pyproject.toml): started
+  Building wheel for fvcore (pyproject.toml): finished with status 'done'
+  Created wheel for fvcore: filename=fvcore-0.1.5.post20221221-py3-none-any.whl size=61443 sha256=5a159f43ed0f77cb7f323723927dc0914a5c77c830876bb874bf8c1d16ed1999
+  Stored in directory: /scratch/baris_bakay/.cache/pip/wheels/65/71/95/3b8fde5c65c6e4a806e0867c1651dcc71a1cb2f3430e8f355f
+  Building wheel for iopath (pyproject.toml): started
+  Building wheel for iopath (pyproject.toml): finished with status 'done'
+  Created wheel for iopath: filename=iopath-0.1.10-py3-none-any.whl size=31598 sha256=f97256ab41121394fe1e0744fca51dfac6052c5ae3a0063400e685901f2e5d8c
+  Stored in directory: /scratch/baris_bakay/.cache/pip/wheels/ba/5e/16/6117f8fe7e9c0c161a795e10d94645ebcf301ccbd01f66d8ec
+Successfully built zipmap fvcore iopath
+Installing collected packages: triton, pytz, pydub, nvidia-cusparselt-cu12, mpmath, flatbuffers, easydict, brotli, antlr4-python3-runtime, xxhash, websockets, urllib3, tzdata, typing-extensions, tqdm, tomlkit, termcolor, tabulate, sympy, svg.path, six, shellingham, semantic-version, safetensors, ruff, rtree, rpds-py, pyyaml, python-multipart, pyparsing, pygments, psutil, protobuf, portalocker, platformdirs, Pillow, orjson, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, nodeenv, networkx, msgspec, mdurl, markupsafe, lxml, lazy-loader, kiwisolver, idna, hf-xet, h11, groovy, fsspec, frozendict, fonttools, filelock, ffmpy, einops, docstring-parser, cycler, colorlog, click, charset-normalizer, certifi, bracex, attrs, annotated-types, annotated-doc, aiofiles, yacs, wcmatch, vhacdx, uvicorn, typing-inspection, typeguard, trimesh, tifffile, shapely, sentry-sdk, scipy, requests, referencing, python-dateutil, pydantic-core, plyfile, opentelemetry-api, opencv-python-headless, onnxruntime-gpu, omegaconf, nvidia-cusparse-cu12, nvidia-cudnn-cu12, markdown-it-py, mapbox_earcut, manifold3d, jinja2, iopath, imageio, httpcore, embreex, einx, contourpy, anyio, tyro, starlette, scikit-image, rich, pydantic, pycollada, pandas, nvidia-cusolver-cu12, matplotlib, jsonschema-specifications, hydra-core, httpx, fvcore, wandb, typer, torch, safehttpx, jsonschema, huggingface_hub, fastapi, torchvision, gradio-client, yourdfpy, lpips, gradio, viser, zipmap
+
+Successfully installed Pillow-11.3.0 aiofiles-24.1.0 annotated-doc-0.0.5 annotated-types-0.8.0 antlr4-python3-runtime-4.9.3 anyio-4.15.0 attrs-26.1.0 bracex-3.0.1 brotli-1.2.0 certifi-2026.7.22 charset-normalizer-3.5.1 click-8.5.0 colorlog-6.12.0 contourpy-1.3.3 cycler-0.12.1 docstring-parser-0.18.0 easydict-1.13 einops-0.8.2 einx-0.4.3 embreex-4.4.0 fastapi-0.141.1 ffmpy-1.0.0 filelock-3.32.5 flatbuffers-25.12.19 fonttools-4.64.0 frozendict-2.4.7 fsspec-2026.7.0 fvcore-0.1.5.post20221221 gradio-5.50.0 gradio-client-1.14.0 groovy-0.1.2 h11-0.16.0 hf-xet-1.6.0 httpcore-1.0.9 httpx-0.28.1 huggingface_hub-1.30.0 hydra-core-1.3.6 idna-3.19 imageio-2.37.4 iopath-0.1.10 jinja2-3.1.6 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 kiwisolver-1.5.1 lazy-loader-0.5 lpips-0.1.4 lxml-6.1.3 manifold3d-3.5.2 mapbox_earcut-2.0.0 markdown-it-py-4.2.0 markupsafe-3.0.3 matplotlib-3.11.1 mdurl-0.1.2 mpmath-1.3.0 msgspec-0.21.1 networkx-3.6.1 nodeenv-1.10.0 numpy-2.4.6 nvidia-cublas-cu12-12.4.5.8 nvidia-cuda-cupti-cu12-12.4.127 nvidia-cuda-nvrtc-cu12-12.4.127 nvidia-cuda-runtime-cu12-12.4.127 nvidia-cudnn-cu12-9.1.0.70 nvidia-cufft-cu12-11.2.1.3 nvidia-curand-cu12-10.3.5.147 nvidia-cusolver-cu12-11.6.1.9 nvidia-cusparse-cu12-12.3.1.170 nvidia-cusparselt-cu12-0.6.2 nvidia-nccl-cu12-2.21.5 nvidia-nvjitlink-cu12-12.4.127 nvidia-nvtx-cu12-12.4.127 omegaconf-2.3.1 onnxruntime-gpu-1.29.0 opencv-python-headless-5.0.0.93 opentelemetry-api-1.44.0 orjson-3.12.0 pandas-2.3.3 platformdirs-4.11.7 plyfile-1.1.5 portalocker-4.3.0 protobuf-7.36.1 psutil-7.2.2 pycollada-0.9.3 pydantic-2.10.6 pydantic-core-2.27.2 pydub-0.25.1 pygments-2.21.0 pyparsing-3.3.2 python-dateutil-2.9.0.post0 python-multipart-0.0.32 pytz-2026.3.post1 pyyaml-6.0.3 referencing-0.37.0 requests-2.34.2 rich-15.0.0 rpds-py-2026.6.3 rtree-1.4.1 ruff-0.16.6 safehttpx-0.1.7 safetensors-0.8.0 scikit-image-0.26.0 scipy-1.17.1 semantic-version-2.10.0 sentry-sdk-2.68.1 shapely-2.1.2 shellingham-1.5.4 six-1.17.0 starlette-0.52.1 svg.path-7.1 sympy-1.13.1 tabulate-0.10.0 termcolor-3.3.0 tifffile-2026.3.3 tomlkit-0.13.3 torch-2.6.0 torchvision-0.21.0 tqdm-4.70.0 trimesh-5.1.0 triton-3.2.0 typeguard-4.6.0 typer-0.27.2 typing-extensions-4.16.0 typing-inspection-0.4.4 tyro-1.0.16 tzdata-2026.3 urllib3-2.7.0 uvicorn-0.52.4 vhacdx-0.0.10 viser-0.2.23 wandb-0.29.0 wcmatch-11.0.1 websockets-15.0.1 xxhash-4.0.1 yacs-0.1.8 yourdfpy-0.0.60 zipmap-0.0.1
+[setup_zipmap_env] Install done.
+[setup_zipmap_env] Done.
+[smoke] 8 frames
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/smoke_zipmap.py", line 10, in <module>
+    ckpt = torch.load("checkpoints/checkpoint_online.pt", map_location="cpu", weights_only=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/serialization.py", line 1432, in load
+    with _open_zipfile_reader(opened_file) as opened_zipfile:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/serialization.py", line 763, in __init__
+    super().__init__(torch._C.PyTorchFileReader(name_or_buffer))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory
+=== ZipMap exit: 1 ===

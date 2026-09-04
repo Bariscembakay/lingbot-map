@@ -58,7 +58,7 @@ def main(args):
     datasets_all = {
         "7scenes": SevenScenes(
             split="test",
-            ROOT="/home/share/Dataset/3D_scene/7scenes/", # "./data/7scenes",
+            ROOT="./data/7scenes",  # LOCAL PATCH (lingbot-map): upstream hardcoded their cluster path
             resolution=resolution,
             num_seq=1,
             full_video=True,

@@ -20,8 +20,7 @@ moge:
 ZipMap:
   cfg:
     _target_: models.fastmodel.ZipMap
-    pretrained_model_name_or_path: /path/to/zipmap_pretrained_model.pt
-    # pretrained_model_name_or_path: checkpoints/checkpoint_aff_inv.pt
+    pretrained_model_name_or_path: checkpoints/checkpoint_aff_inv.pt
     affine_invariant: True
 
 

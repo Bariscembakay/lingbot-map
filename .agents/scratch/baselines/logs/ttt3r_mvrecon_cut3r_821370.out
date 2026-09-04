@@ -1,0 +1,45 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--num_machines` was set to a value of `1`
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13232x13232 matmul (~246 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+Found 18 sequences in split test
+
+=== number of views for each scene ===
+
+7scenes dataset:
+  pumpkin/seq-01: 200 views (original: 500, limit: 200)
+  pumpkin/seq-07: 200 views (original: 500, limit: 200)
+  stairs/seq-01: 200 views (original: 250, limit: 200)
+  stairs/seq-04: 200 views (original: 250, limit: 200)
+  fire/seq-03: 200 views (original: 500, limit: 200)
+  fire/seq-04: 200 views (original: 500, limit: 200)
+  heads/seq-01: 200 views (original: 500, limit: 200)
+  office/seq-02: 200 views (original: 500, limit: 200)
+  office/seq-06: 200 views (original: 500, limit: 200)
+  office/seq-07: 200 views (original: 500, limit: 200)
+  office/seq-09: 200 views (original: 500, limit: 200)
+  redkitchen/seq-03: 200 views (original: 500, limit: 200)
+  redkitchen/seq-04: 200 views (original: 500, limit: 200)
+  redkitchen/seq-06: 200 views (original: 500, limit: 200)
+  redkitchen/seq-12: 200 views (original: 500, limit: 200)
+  redkitchen/seq-14: 200 views (original: 500, limit: 200)
+  chess/seq-03: 200 views (original: 500, limit: 200)
+  chess/seq-05: 200 views (original: 500, limit: 200)
+================================
+
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+... loading model from src/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+  0%|          | 0/18 [00:00<?, ?it/s]/home/baris_bakay/lingbot-map/TTT3R/eval/mv_recon/launch.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+  6%|▌         | 1/18 [19:29<5:31:22, 1169.58s/it] 11%|█         | 2/18 [37:52<5:01:26, 1130.40s/it] 17%|█▋        | 3/18 [1:12:42<6:32:06, 1568.42s/it] 22%|██▏       | 4/18 [1:34:19<5:41:01, 1461.54s/it] 28%|██▊       | 5/18 [1:53:22<4:51:45, 1346.60s/it] 33%|███▎      | 6/18 [2:11:40<4:12:25, 1262.15s/it] 39%|███▉      | 7/18 [2:39:03<4:14:12, 1386.63s/it] 44%|████▍     | 8/18 [2:54:07<3:25:27, 1232.73s/it] 50%|█████     | 9/18 [3:22:19<3:26:27, 1376.40s/it] 56%|█████▌    | 10/18 [3:37:28<2:44:18, 1232.29s/it] 61%|██████    | 11/18 [4:00:55<2:29:59, 1285.65s/it] 67%|██████▋   | 12/18 [4:18:03<2:00:43, 1207.30s/it] 72%|███████▏  | 13/18 [4:32:02<1:31:18, 1095.62s/it]

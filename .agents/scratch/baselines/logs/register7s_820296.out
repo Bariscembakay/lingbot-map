@@ -1,0 +1,22 @@
+/var/lib/slurm/slurmd/job820296/slurm_script: 4: source: not found
+[Parallel(n_jobs=13)]: Using backend LokyBackend with 13 concurrent workers.
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/register_7scenes_depth.py", line 157, in <module>
+    Parallel(n_jobs=13, verbose=5)(
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 2072, in __call__
+    return output if self.return_generator else list(output)
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 1682, in _get_outputs
+    yield from self._retrieve()
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 1784, in _retrieve
+    self._raise_error_fast()
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 1859, in _raise_error_fast
+    error_job.get_result(self.timeout)
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 758, in get_result
+    return self._return_or_raise()
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 773, in _return_or_raise
+    raise self._result
+  File "/scratch/baris_bakay/micromamba/envs/lingbot_map/lib/python3.10/site-packages/joblib/parallel.py", line 1493, in dispatch_one_batch
+    islice = list(itertools.islice(iterator, big_batch_size))
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/register_7scenes_depth.py", line 158, in <genexpr>
+    delayed(process_seq)(os.path.join(src_folder, s.split('/')[0]), s.split('/')[1])
+NameError: name 'process_seq' is not defined. Did you mean: 'process_scene'?

@@ -1,0 +1,65 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+The following values were not passed to `accelerate launch` and had defaults used instead:
+	`--num_machines` was set to a value of `1`
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+Found 18 sequences in split test
+
+=== number of views for each scene ===
+
+7scenes dataset:
+  pumpkin/seq-01: 200 views (original: 500, limit: 200)
+  pumpkin/seq-07: 200 views (original: 500, limit: 200)
+  stairs/seq-01: 200 views (original: 250, limit: 200)
+  stairs/seq-04: 200 views (original: 250, limit: 200)
+  fire/seq-03: 200 views (original: 500, limit: 200)
+  fire/seq-04: 200 views (original: 500, limit: 200)
+  heads/seq-01: 200 views (original: 500, limit: 200)
+  office/seq-02: 200 views (original: 500, limit: 200)
+  office/seq-06: 200 views (original: 500, limit: 200)
+  office/seq-07: 200 views (original: 500, limit: 200)
+  office/seq-09: 200 views (original: 500, limit: 200)
+  redkitchen/seq-03: 200 views (original: 500, limit: 200)
+  redkitchen/seq-04: 200 views (original: 500, limit: 200)
+  redkitchen/seq-06: 200 views (original: 500, limit: 200)
+  redkitchen/seq-12: 200 views (original: 500, limit: 200)
+  redkitchen/seq-14: 200 views (original: 500, limit: 200)
+  chess/seq-03: 200 views (original: 500, limit: 200)
+  chess/seq-05: 200 views (original: 500, limit: 200)
+================================
+
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+... loading model from src/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+  0%|          | 0/18 [00:00<?, ?it/s][ WARN:0@21.175] global loadsave.cpp:278 findDecoder imread_('./data/7scenes/pumpkin/seq-01/frame-000000.depth.proj.png'): can't open/read file: check file path/integrity
+  0%|          | 0/18 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/TTT3R/eval/mv_recon/launch.py", line 419, in <module>
+    main(args)
+  File "/home/baris_bakay/lingbot-map/TTT3R/eval/mv_recon/launch.py", line 134, in main
+    batch = default_collate([dataset[data_idx]])
+                             ~~~~~~~^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/TTT3R/eval/mv_recon/base.py", line 90, in __getitem__
+    views = self._get_views(idx, resolution, self._rng)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/TTT3R/eval/mv_recon/data.py", line 155, in _get_views
+    depthmap = imread_cv2(depthpath, cv2.IMREAD_UNCHANGED)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/utils/image.py", line 40, in imread_cv2
+    raise IOError(f"Could not load image={path} with {options=}")
+OSError: Could not load image=./data/7scenes/pumpkin/seq-01/frame-000000.depth.proj.png with options=-1
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1417, in <module>
+    main()
+  File "/scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1413, in main
+    launch_command(args)
+  File "/scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages/accelerate/commands/launch.py", line 1407, in launch_command
+    simple_launcher(args)
+  File "/scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages/accelerate/commands/launch.py", line 993, in simple_launcher
+    raise subprocess.CalledProcessError(returncode=process.returncode, cmd=cmd)
+subprocess.CalledProcessError: Command '['/scratch/baris_bakay/micromamba/envs/cut3r/bin/python', 'eval/mv_recon/launch.py', '--weights', 'src/cut3r_512_dpt_4_64.pth', '--output_dir', 'eval_results/video_recon/7scenes_200/ttt3r', '--model_name', 'ttt3r', '--model_update_type', 'ttt3r', '--max_frames', '200']' returned non-zero exit status 1.

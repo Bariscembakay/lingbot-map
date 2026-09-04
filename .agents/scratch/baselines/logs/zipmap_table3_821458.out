@@ -1,0 +1,617 @@
+[setup_zipmap_eval_env] Building on gcp-eu1-a100-80g-qrfh ...
+Using Cached Shard Index for conda-forge/linux-64                                                   ✔ Done
+Using Cached Shard Index for conda-forge/noarch                                                     ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.2 sec)
+
+Resolving Environment                                                                           ⧖ Starting
+Resolving Environment                                                                     ✔ Done (0.2 sec)
+
+Transaction
+
+  Prefix: /scratch/baris_bakay/micromamba/envs/zipmap_eval
+
+  Updating specs:
+
+   - python=3.11
+   - pip
+
+
+  Package               Version  Build                 Channel           Size
+───────────────────────────────────────────────────────────────────────────────
+  Install:
+───────────────────────────────────────────────────────────────────────────────
+
+  + _openmp_mutex           4.5  20_gnu                conda-forge     Cached
+  + bzip2                 1.0.8  hda65f42_10           conda-forge     Cached
+  + ca-certificates   2026.7.22  hbd8a1cb_0            conda-forge     Cached
+  + ld_impl_linux-64     2.46.1  default_hbd61a6d_102  conda-forge     Cached
+  + libexpat              2.8.1  hecca717_1            conda-forge     Cached
+  + libffi                3.7.0  h81df57d_1            conda-forge     Cached
+  + libgcc               16.2.0  ha9f2e26_4            conda-forge     Cached
+  + libgomp              16.2.0  he0feb66_4            conda-forge     Cached
+  + liblzma               5.8.3  hb03c661_1            conda-forge     Cached
+  + libnsl                2.0.1  hb9d3cd8_1            conda-forge     Cached
+  + libpython           3.11.16  h0c77377_2_cpython    conda-forge     Cached
+  + libsqlite            3.53.4  h0737f62_1            conda-forge     Cached
+  + libstdcxx            16.2.0  h934c35e_4            conda-forge     Cached
+  + libuuid              2.42.3  hcfc3c73_0            conda-forge     Cached
+  + libxcrypt            4.4.38  h280c20c_0            conda-forge     Cached
+  + libzlib               1.3.2  h25fd6f3_3            conda-forge     Cached
+  + ncurses                 6.6  hdb14827_1            conda-forge     Cached
+  + openssl               3.6.4  h781a0a9_0            conda-forge     Cached
+  + packaging              26.3  pyhc364b38_0          conda-forge     Cached
+  + pip                  26.2.1  pyh8b19718_0          conda-forge     Cached
+  + python              3.11.16  h5f976f7_2_cpython    conda-forge     Cached
+  + readline                8.3  hd6e31c0_1            conda-forge     Cached
+  + setuptools           84.0.0  pyh332efcf_0          conda-forge     Cached
+  + tk                   8.6.13  noxft_h1df4ec4_4      conda-forge     Cached
+  + tzdata                2026c  h151e31d_0            conda-forge     Cached
+  + wheel                0.48.0  pyhd8ed1ab_0          conda-forge     Cached
+  + zstd                  1.5.7  hb78ec9c_7            conda-forge     Cached
+
+  Summary:
+
+  Install: 27 packages
+
+  Total download: 0 B
+
+───────────────────────────────────────────────────────────────────────────────
+
+
+warning  libmamba Security Warning: This transaction includes executing package scripts (pre/post-link/unlink) if present. These scripts can contain arbitrary code. Please ensure you trust the package sources.
+
+Transaction starting
+Linking libzlib-1.3.2-h25fd6f3_3
+Linking libgomp-16.2.0-he0feb66_4
+Linking zstd-1.5.7-hb78ec9c_7
+Linking _openmp_mutex-4.5-20_gnu
+Linking ld_impl_linux-64-2.46.1-default_hbd61a6d_102
+Linking libgcc-16.2.0-ha9f2e26_4
+Linking bzip2-1.0.8-hda65f42_10
+Linking libnsl-2.0.1-hb9d3cd8_1
+Linking libexpat-2.8.1-hecca717_1
+Linking libffi-3.7.0-h81df57d_1
+Linking libsqlite-3.53.4-h0737f62_1
+Linking liblzma-5.8.3-hb03c661_1
+Linking ncurses-6.6-hdb14827_1
+Linking tk-8.6.13-noxft_h1df4ec4_4
+Linking libstdcxx-16.2.0-h934c35e_4
+Linking libuuid-2.42.3-hcfc3c73_0
+Linking libxcrypt-4.4.38-h280c20c_0
+Linking readline-8.3-hd6e31c0_1
+Linking libpython-3.11.16-h0c77377_2_cpython
+Linking tzdata-2026c-h151e31d_0
+Linking ca-certificates-2026.7.22-hbd8a1cb_0
+Linking openssl-3.6.4-h781a0a9_0
+Linking python-3.11.16-h5f976f7_2_cpython
+Linking packaging-26.3-pyhc364b38_0
+Linking setuptools-84.0.0-pyh332efcf_0
+Linking wheel-0.48.0-pyhd8ed1ab_0
+Linking pip-26.2.1-pyh8b19718_0
+
+Transaction finished
+
+
+To activate this environment, use:
+
+    micromamba activate zipmap_eval
+
+Or to execute a single command in this environment, use:
+
+    micromamba run -n zipmap_eval mycommand
+
+Collecting torch==2.5.1 (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Downloading torch-2.5.1-cp311-cp311-manylinux1_x86_64.whl.metadata (28 kB)
+Collecting torchvision==0.20.1 (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 2))
+  Downloading torchvision-0.20.1-cp311-cp311-manylinux1_x86_64.whl.metadata (6.1 kB)
+Collecting numpy==1.26.4 (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 3))
+  Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (61 kB)
+Collecting einops (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 4))
+  Using cached einops-0.8.2-py3-none-any.whl.metadata (13 kB)
+Collecting pillow (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 5))
+  Using cached pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Collecting imageio-ffmpeg (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 6))
+  Using cached imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting scikit-image (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 7))
+  Using cached scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (15 kB)
+Collecting opencv-python (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 8))
+  Using cached opencv_python-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl.metadata (19 kB)
+Collecting plyfile (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 9))
+  Using cached plyfile-1.1.5-py3-none-any.whl.metadata (43 kB)
+Collecting huggingface_hub (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached huggingface_hub-1.30.0-py3-none-any.whl.metadata (16 kB)
+Collecting safetensors (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 11))
+  Using cached safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+Collecting matplotlib (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached matplotlib-3.11.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (80 kB)
+Collecting tqdm (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 13))
+  Using cached tqdm-4.70.0-py3-none-any.whl.metadata (57 kB)
+Collecting pandas (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 14))
+  Using cached pandas-3.0.5-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (79 kB)
+Collecting rootutils (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 15))
+  Downloading rootutils-1.0.7-py3-none-any.whl.metadata (4.7 kB)
+Collecting hydra-core==1.3.2 (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 16))
+  Downloading hydra_core-1.3.2-py3-none-any.whl.metadata (5.5 kB)
+Collecting hydra-colorlog (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 17))
+  Downloading hydra_colorlog-1.2.0-py3-none-any.whl.metadata (949 bytes)
+Collecting open3d (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached open3d-0.19.0-cp311-cp311-manylinux_2_31_x86_64.whl.metadata (4.3 kB)
+Collecting evo==1.31.0 (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading evo-1.31.0-py3-none-any.whl.metadata (13 kB)
+Collecting pytubefix (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading pytubefix-10.11.0-py3-none-any.whl.metadata (9.3 kB)
+Collecting h5py (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 21))
+  Using cached h5py-3.16.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+Collecting filelock (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached filelock-3.32.5-py3-none-any.whl.metadata (2.0 kB)
+Collecting typing-extensions>=4.8.0 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting networkx (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting jinja2 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting fsspec (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+Collecting nvidia-cuda-nvrtc-cu12==12.4.127 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cuda-runtime-cu12==12.4.127 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cuda-cupti-cu12==12.4.127 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cudnn-cu12==9.1.0.70 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cublas-cu12==12.4.5.8 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cufft-cu12==11.2.1.3 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-curand-cu12==10.3.5.147 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting nvidia-cusolver-cu12==11.6.1.9 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-cusparse-cu12==12.3.1.170 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl.metadata (1.6 kB)
+Collecting nvidia-nccl-cu12==2.21.5 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_nccl_cu12-2.21.5-py3-none-manylinux2014_x86_64.whl.metadata (1.8 kB)
+Collecting nvidia-nvtx-cu12==12.4.127 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.7 kB)
+Collecting nvidia-nvjitlink-cu12==12.4.127 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting triton==3.1.0 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Downloading triton-3.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.3 kB)
+Collecting sympy==1.13.1 (from torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached sympy-1.13.1-py3-none-any.whl.metadata (12 kB)
+Collecting omegaconf<2.4,>=2.2 (from hydra-core==1.3.2->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 16))
+  Using cached omegaconf-2.3.1-py3-none-any.whl.metadata (4.5 kB)
+Collecting antlr4-python3-runtime==4.9.* (from hydra-core==1.3.2->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 16))
+  Using cached antlr4_python3_runtime-4.9.3-py3-none-any.whl
+Requirement already satisfied: packaging in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from hydra-core==1.3.2->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 16)) (26.3)
+Collecting argcomplete (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading argcomplete-3.7.2-py3-none-any.whl.metadata (16 kB)
+Collecting colorama>=0.3 (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
+Collecting natsort (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading natsort-8.4.0-py3-none-any.whl.metadata (21 kB)
+Collecting numexpr>=2.7.3 (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading numexpr-2.14.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.0 kB)
+Collecting pygments (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting pyyaml (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Collecting rosbags>=0.9.20 (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading rosbags-0.11.5-py3-none-any.whl.metadata (5.0 kB)
+Collecting scipy>=1.2 (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting seaborn>=0.9 (from evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading seaborn-0.13.2-py3-none-any.whl.metadata (5.4 kB)
+Collecting mpmath<1.4,>=1.1.0 (from sympy==1.13.1->torch==2.5.1->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 1))
+  Using cached mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting imageio!=2.35.0,>=2.33 (from scikit-image->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 7))
+  Using cached imageio-2.37.4-py3-none-any.whl.metadata (9.6 kB)
+Collecting tifffile>=2022.8.12 (from scikit-image->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 7))
+  Using cached tifffile-2026.3.3-py3-none-any.whl.metadata (31 kB)
+Collecting lazy-loader>=0.4 (from scikit-image->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 7))
+  Using cached lazy_loader-0.5-py3-none-any.whl.metadata (5.9 kB)
+INFO: pip is looking at multiple versions of opencv-python to determine which version is compatible with other requirements. This could take a while.
+Collecting opencv-python (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 8))
+  Downloading opencv_python-4.14.0.94-cp37-abi3-manylinux_2_28_x86_64.whl.metadata (19 kB)
+  Downloading opencv_python-4.13.0.92-cp37-abi3-manylinux_2_28_x86_64.whl.metadata (19 kB)
+  Downloading opencv_python-4.13.0.90-cp37-abi3-manylinux_2_28_x86_64.whl.metadata (19 kB)
+  Downloading opencv_python-4.12.0.88-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (19 kB)
+  Downloading opencv_python-4.11.0.86-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (20 kB)
+INFO: pip is looking at multiple versions of plyfile to determine which version is compatible with other requirements. This could take a while.
+Collecting plyfile (from -r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 9))
+  Downloading plyfile-1.1.4-py3-none-any.whl.metadata (43 kB)
+  Downloading plyfile-1.1.3-py3-none-any.whl.metadata (43 kB)
+Collecting click<9.0.0,>=8.4.2 (from huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting hf-xet<2.0.0,>=1.5.2 (from huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting httpx<1,>=0.23.0 (from huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting anyio (from httpx<1,>=0.23.0->huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached anyio-4.15.0-py3-none-any.whl.metadata (4.7 kB)
+Collecting certifi (from httpx<1,>=0.23.0->huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx<1,>=0.23.0->huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting idna (from httpx<1,>=0.23.0->huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.23.0->huggingface_hub->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 10))
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting contourpy>=1.0.1 (from matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting cycler>=0.10 (from matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.28.2 (from matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached fonttools-4.64.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (123 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.2 kB)
+Collecting pyparsing>=3 (from matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+Collecting python-dateutil>=2.7 (from matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting python-dotenv>=0.20.0 (from rootutils->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 15))
+  Downloading python_dotenv-1.2.3-py3-none-any.whl.metadata (29 kB)
+Collecting colorlog (from hydra-colorlog->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 17))
+  Using cached colorlog-6.12.0-py3-none-any.whl.metadata (11 kB)
+Collecting dash>=2.6.0 (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached dash-4.4.1-py3-none-any.whl.metadata (11 kB)
+Collecting werkzeug>=3.0.0 (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached werkzeug-3.1.8-py3-none-any.whl.metadata (4.0 kB)
+Collecting flask>=3.0.0 (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached flask-3.1.3-py3-none-any.whl.metadata (3.2 kB)
+Collecting nbformat>=5.7.0 (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached nbformat-5.11.1-py3-none-any.whl.metadata (3.7 kB)
+Collecting configargparse (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached configargparse-1.7.5-py3-none-any.whl.metadata (23 kB)
+Collecting ipywidgets>=8.0.4 (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached ipywidgets-8.1.9-py3-none-any.whl.metadata (2.4 kB)
+Collecting addict (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached addict-2.4.0-py3-none-any.whl.metadata (1.0 kB)
+Collecting scikit-learn>=0.21 (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (11 kB)
+Collecting pyquaternion (from open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached pyquaternion-0.9.9-py3-none-any.whl.metadata (1.4 kB)
+Collecting aiohttp>=3.12.13 (from pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+Collecting nodejs-wheel-binaries>=22.20.0 (from pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading nodejs_wheel_binaries-24.19.0-py2.py3-none-manylinux_2_28_x86_64.whl.metadata (4.6 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting attrs>=17.3.0 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading propcache-0.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (16 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.12.13->pytubefix->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 20))
+  Downloading yarl-1.24.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (103 kB)
+Collecting plotly>=5.0.0 (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached plotly-7.0.0-py3-none-any.whl.metadata (8.7 kB)
+Collecting importlib-metadata (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached importlib_metadata-9.0.1-py3-none-any.whl.metadata (4.5 kB)
+Collecting requests (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting retrying (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached retrying-1.4.2-py3-none-any.whl.metadata (5.5 kB)
+Collecting nest-asyncio (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached nest_asyncio-1.6.0-py3-none-any.whl.metadata (2.8 kB)
+Requirement already satisfied: setuptools in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18)) (84.0.0)
+Collecting janus>=1.0.0 (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached janus-2.0.0-py3-none-any.whl.metadata (5.3 kB)
+Collecting pydantic>=2.10 (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+Collecting comm (from dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached comm-0.2.3-py3-none-any.whl.metadata (3.7 kB)
+Collecting blinker>=1.9.0 (from flask>=3.0.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting itsdangerous>=2.2.0 (from flask>=3.0.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting markupsafe>=2.1.1 (from flask>=3.0.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting ipython>=6.1.0 (from ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached ipython-9.17.1-py3-none-any.whl.metadata (4.6 kB)
+Collecting traitlets>=4.3.1 (from ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached traitlets-5.16.1-py3-none-any.whl.metadata (10 kB)
+Collecting widgetsnbextension~=4.0.16 (from ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached widgetsnbextension-4.0.16-py3-none-any.whl.metadata (1.6 kB)
+Collecting jupyterlab_widgets~=3.0.17 (from ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached jupyterlab_widgets-3.0.17-py3-none-any.whl.metadata (20 kB)
+Collecting ipython-pygments-lexers>=1.0.0 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached ipython_pygments_lexers-1.1.1-py3-none-any.whl.metadata (1.1 kB)
+Collecting jedi>=0.18.2 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached jedi-0.20.0-py2.py3-none-any.whl.metadata (23 kB)
+Collecting matplotlib-inline>=0.1.6 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached matplotlib_inline-0.2.2-py3-none-any.whl.metadata (2.4 kB)
+Collecting pexpect>4.6 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached pexpect-4.9.0-py2.py3-none-any.whl.metadata (2.5 kB)
+Collecting prompt_toolkit<3.1.0,>=3.0.41 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached prompt_toolkit-3.0.53-py3-none-any.whl.metadata (6.4 kB)
+Collecting psutil>=7 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+Collecting stack_data>=0.6.0 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached stack_data-0.6.3-py3-none-any.whl.metadata (18 kB)
+Collecting wcwidth>=0.1.4 (from prompt_toolkit<3.1.0,>=3.0.41->ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached wcwidth-0.8.3-py3-none-any.whl.metadata (43 kB)
+Collecting parso<0.9.0,>=0.8.6 (from jedi>=0.18.2->ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached parso-0.8.7-py2.py3-none-any.whl.metadata (8.2 kB)
+Collecting fastjsonschema>=2.15 (from nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached fastjsonschema-2.22.2-py3-none-any.whl.metadata (2.1 kB)
+Collecting jsonschema>=2.6 (from nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting jupyter-core!=5.0.*,>=4.12 (from nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached jupyter_core-5.9.1-py3-none-any.whl.metadata (1.5 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=2.6->nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema>=2.6->nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema>=2.6->nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+Collecting platformdirs>=2.5 (from jupyter-core!=5.0.*,>=4.12->nbformat>=5.7.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached platformdirs-4.11.7-py3-none-any.whl.metadata (5.5 kB)
+Collecting ptyprocess>=0.5 (from pexpect>4.6->ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached ptyprocess-0.7.0-py2.py3-none-any.whl.metadata (1.3 kB)
+Collecting narwhals>=1.15.1 (from plotly>=5.0.0->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached narwhals-2.25.0-py3-none-any.whl.metadata (15 kB)
+Collecting annotated-types>=0.6.0 (from pydantic>=2.10->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.46.5 (from pydantic>=2.10->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic>=2.10->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting six>=1.5 (from python-dateutil>=2.7->matplotlib->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 12))
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting apsw (from rosbags>=0.9.20->evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading apsw-3.53.4.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (4.4 kB)
+Collecting lz4 (from rosbags>=0.9.20->evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading lz4-4.4.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+Collecting ruamel.yaml (from rosbags>=0.9.20->evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading ruamel_yaml-0.19.1-py3-none-any.whl.metadata (16 kB)
+Collecting zstandard (from rosbags>=0.9.20->evo==1.31.0->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 19))
+  Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+Collecting joblib>=1.4.0 (from scikit-learn>=0.21->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached joblib-1.6.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting threadpoolctl>=3.5.0 (from scikit-learn>=0.21->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+Collecting cloudpickle>=3.0 (from joblib>=1.4.0->scikit-learn>=0.21->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached cloudpickle-3.1.2-py3-none-any.whl.metadata (7.1 kB)
+Collecting executing>=1.2.0 (from stack_data>=0.6.0->ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached executing-2.2.1-py2.py3-none-any.whl.metadata (8.9 kB)
+Collecting asttokens>=2.1.0 (from stack_data>=0.6.0->ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached asttokens-3.0.2-py3-none-any.whl.metadata (5.7 kB)
+Collecting pure-eval (from stack_data>=0.6.0->ipython>=6.1.0->ipywidgets>=8.0.4->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached pure_eval-0.2.3-py3-none-any.whl.metadata (6.3 kB)
+Collecting zipp>=3.20 (from importlib-metadata->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached zipp-4.1.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting charset_normalizer<4,>=2 (from requests->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
+Collecting urllib3<3,>=1.26 (from requests->dash>=2.6.0->open3d->-r /home/baris_bakay/lingbot-map/ZipMap_eval/requirements.txt (line 18))
+  Using cached urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Downloading torch-2.5.1-cp311-cp311-manylinux1_x86_64.whl (906.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 906.5/906.5 MB 145.4 MB/s  0:00:04
+Downloading torchvision-0.20.1-cp311-cp311-manylinux1_x86_64.whl (7.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.2/7.2 MB 76.3 MB/s  0:00:00
+Downloading numpy-1.26.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (18.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 18.3/18.3 MB 235.3 MB/s  0:00:00
+Downloading hydra_core-1.3.2-py3-none-any.whl (154 kB)
+Downloading evo-1.31.0-py3-none-any.whl (146 kB)
+Using cached nvidia_cublas_cu12-12.4.5.8-py3-none-manylinux2014_x86_64.whl (363.4 MB)
+Using cached nvidia_cuda_cupti_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (13.8 MB)
+Using cached nvidia_cuda_nvrtc_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (24.6 MB)
+Using cached nvidia_cuda_runtime_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (883 kB)
+Using cached nvidia_cudnn_cu12-9.1.0.70-py3-none-manylinux2014_x86_64.whl (664.8 MB)
+Using cached nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl (211.5 MB)
+Using cached nvidia_curand_cu12-10.3.5.147-py3-none-manylinux2014_x86_64.whl (56.3 MB)
+Using cached nvidia_cusolver_cu12-11.6.1.9-py3-none-manylinux2014_x86_64.whl (127.9 MB)
+Using cached nvidia_cusparse_cu12-12.3.1.170-py3-none-manylinux2014_x86_64.whl (207.5 MB)
+Using cached nvidia_nccl_cu12-2.21.5-py3-none-manylinux2014_x86_64.whl (188.7 MB)
+Using cached nvidia_nvjitlink_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (21.1 MB)
+Using cached nvidia_nvtx_cu12-12.4.127-py3-none-manylinux2014_x86_64.whl (99 kB)
+Using cached sympy-1.13.1-py3-none-any.whl (6.2 MB)
+Downloading triton-3.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (209.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 209.5/209.5 MB 238.9 MB/s  0:00:00
+Using cached mpmath-1.3.0-py3-none-any.whl (536 kB)
+Using cached omegaconf-2.3.1-py3-none-any.whl (79 kB)
+Using cached einops-0.8.2-py3-none-any.whl (65 kB)
+Using cached pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+Using cached imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl (29.5 MB)
+Using cached scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (13.7 MB)
+Downloading opencv_python-4.11.0.86-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (63.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.0/63.0 MB 251.3 MB/s  0:00:00
+Downloading plyfile-1.1.3-py3-none-any.whl (36 kB)
+Using cached huggingface_hub-1.30.0-py3-none-any.whl (796 kB)
+Using cached click-8.5.0-py3-none-any.whl (125 kB)
+Using cached hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+Using cached matplotlib-3.11.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.0 MB)
+Using cached tqdm-4.70.0-py3-none-any.whl (80 kB)
+Using cached pandas-3.0.5-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.3 MB)
+Downloading rootutils-1.0.7-py3-none-any.whl (6.4 kB)
+Downloading hydra_colorlog-1.2.0-py3-none-any.whl (3.6 kB)
+Using cached open3d-0.19.0-cp311-cp311-manylinux_2_31_x86_64.whl (447.7 MB)
+Downloading pytubefix-10.11.0-py3-none-any.whl (1.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.5/1.5 MB 154.0 MB/s  0:00:00
+Using cached h5py-3.16.0-cp311-cp311-manylinux_2_28_x86_64.whl (5.0 MB)
+Downloading aiohttp-3.14.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 208.0 MB/s  0:00:00
+Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+Downloading yarl-1.24.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (111 kB)
+Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+Downloading colorama-0.4.6-py2.py3-none-any.whl (25 kB)
+Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+Using cached cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Using cached dash-4.4.1-py3-none-any.whl (8.9 MB)
+Using cached flask-3.1.3-py3-none-any.whl (103 kB)
+Using cached werkzeug-3.1.8-py3-none-any.whl (226 kB)
+Using cached blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Using cached filelock-3.32.5-py3-none-any.whl (100 kB)
+Using cached fonttools-4.64.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.5 MB)
+Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+Using cached fsspec-2026.7.0-py3-none-any.whl (206 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached idna-3.19-py3-none-any.whl (68 kB)
+Using cached imageio-2.37.4-py3-none-any.whl (318 kB)
+Using cached ipywidgets-8.1.9-py3-none-any.whl (140 kB)
+Using cached jupyterlab_widgets-3.0.17-py3-none-any.whl (217 kB)
+Using cached widgetsnbextension-4.0.16-py3-none-any.whl (2.2 MB)
+Using cached comm-0.2.3-py3-none-any.whl (7.3 kB)
+Using cached ipython-9.17.1-py3-none-any.whl (639 kB)
+Using cached prompt_toolkit-3.0.53-py3-none-any.whl (392 kB)
+Using cached ipython_pygments_lexers-1.1.1-py3-none-any.whl (8.1 kB)
+Using cached itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Using cached janus-2.0.0-py3-none-any.whl (12 kB)
+Using cached jedi-0.20.0-py2.py3-none-any.whl (4.9 MB)
+Using cached parso-0.8.7-py2.py3-none-any.whl (107 kB)
+Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+Using cached kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+Using cached lazy_loader-0.5-py3-none-any.whl (8.0 kB)
+Using cached markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Using cached matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
+Using cached nbformat-5.11.1-py3-none-any.whl (79 kB)
+Using cached fastjsonschema-2.22.2-py3-none-any.whl (27 kB)
+Using cached jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Using cached jupyter_core-5.9.1-py3-none-any.whl (29 kB)
+Using cached networkx-3.6.1-py3-none-any.whl (2.1 MB)
+Downloading nodejs_wheel_binaries-24.19.0-py2.py3-none-manylinux_2_28_x86_64.whl (61.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.1/61.1 MB 251.6 MB/s  0:00:00
+Downloading numexpr-2.14.2-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (443 kB)
+Using cached pexpect-4.9.0-py2.py3-none-any.whl (63 kB)
+Using cached platformdirs-4.11.7-py3-none-any.whl (23 kB)
+Using cached plotly-7.0.0-py3-none-any.whl (9.1 MB)
+Using cached narwhals-2.25.0-py3-none-any.whl (467 kB)
+Downloading propcache-0.5.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (58 kB)
+Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+Using cached ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
+Using cached pydantic-2.13.5-py3-none-any.whl (472 kB)
+Using cached pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+Using cached annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Using cached pygments-2.21.0-py3-none-any.whl (1.3 MB)
+Using cached pyparsing-3.3.2-py3-none-any.whl (122 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+Using cached referencing-0.37.0-py3-none-any.whl (26 kB)
+Downloading rosbags-0.11.5-py3-none-any.whl (144 kB)
+Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (371 kB)
+Using cached scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (9.3 MB)
+Using cached joblib-1.6.0-py3-none-any.whl (306 kB)
+Using cached cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+Downloading seaborn-0.13.2-py3-none-any.whl (294 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached stack_data-0.6.3-py3-none-any.whl (24 kB)
+Using cached asttokens-3.0.2-py3-none-any.whl (28 kB)
+Using cached executing-2.2.1-py2.py3-none-any.whl (28 kB)
+Using cached threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Using cached tifffile-2026.3.3-py3-none-any.whl (243 kB)
+Using cached traitlets-5.16.1-py3-none-any.whl (86 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Using cached wcwidth-0.8.3-py3-none-any.whl (331 kB)
+Using cached addict-2.4.0-py3-none-any.whl (3.8 kB)
+Using cached anyio-4.15.0-py3-none-any.whl (131 kB)
+Downloading apsw-3.53.4.0-cp311-cp311-manylinux_2_28_x86_64.whl (3.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.7/3.7 MB 175.5 MB/s  0:00:00
+Downloading argcomplete-3.7.2-py3-none-any.whl (43 kB)
+Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+Using cached colorlog-6.12.0-py3-none-any.whl (12 kB)
+Using cached configargparse-1.7.5-py3-none-any.whl (27 kB)
+Using cached importlib_metadata-9.0.1-py3-none-any.whl (27 kB)
+Using cached zipp-4.1.0-py3-none-any.whl (10 kB)
+Downloading lz4-4.4.5-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 159.4 MB/s  0:00:00
+Downloading natsort-8.4.0-py3-none-any.whl (38 kB)
+Using cached nest_asyncio-1.6.0-py3-none-any.whl (5.2 kB)
+Using cached pure_eval-0.2.3-py3-none-any.whl (11 kB)
+Using cached pyquaternion-0.9.9-py3-none-any.whl (14 kB)
+Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (262 kB)
+Using cached urllib3-2.7.0-py3-none-any.whl (131 kB)
+Using cached retrying-1.4.2-py3-none-any.whl (10 kB)
+Downloading ruamel_yaml-0.19.1-py3-none-any.whl (118 kB)
+Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 239.7 MB/s  0:00:00
+Installing collected packages: pure-eval, ptyprocess, mpmath, antlr4-python3-runtime, addict, zstandard, zipp, widgetsnbextension, wcwidth, urllib3, typing-extensions, traitlets, tqdm, threadpoolctl, sympy, six, safetensors, ruamel.yaml, rpds-py, retrying, pyyaml, python-dotenv, pyparsing, pygments, psutil, propcache, platformdirs, pillow, pexpect, parso, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufft-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, nodejs-wheel-binaries, networkx, nest-asyncio, natsort, narwhals, multidict, markupsafe, lz4, lazy-loader, kiwisolver, jupyterlab_widgets, janus, itsdangerous, imageio-ffmpeg, idna, hf-xet, h11, fsspec, frozenlist, fonttools, filelock, fastjsonschema, executing, einops, cycler, configargparse, comm, colorlog, colorama, cloudpickle, click, charset_normalizer, certifi, blinker, attrs, asttokens, argcomplete, apsw, annotated-types, aiohappyeyeballs, yarl, werkzeug, typing-inspection, triton, tifffile, stack_data, scipy, rosbags, rootutils, requests, referencing, python-dateutil, pyquaternion, pydantic-core, prompt_toolkit, plyfile, plotly, opencv-python, omegaconf, nvidia-cusparse-cu12, nvidia-cudnn-cu12, numexpr, matplotlib-inline, jupyter-core, joblib, jinja2, jedi, ipython-pygments-lexers, importlib-metadata, imageio, httpcore, h5py, contourpy, anyio, aiosignal, scikit-learn, scikit-image, pydantic, pandas, nvidia-cusolver-cu12, matplotlib, jsonschema-specifications, ipython, hydra-core, httpx, flask, aiohttp, torch, seaborn, pytubefix, jsonschema, ipywidgets, hydra-colorlog, huggingface_hub, dash, torchvision, nbformat, evo, open3d
+
+Successfully installed addict-2.4.0 aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 annotated-types-0.8.0 antlr4-python3-runtime-4.9.3 anyio-4.15.0 apsw-3.53.4.0 argcomplete-3.7.2 asttokens-3.0.2 attrs-26.1.0 blinker-1.9.0 certifi-2026.7.22 charset_normalizer-3.5.1 click-8.5.0 cloudpickle-3.1.2 colorama-0.4.6 colorlog-6.12.0 comm-0.2.3 configargparse-1.7.5 contourpy-1.3.3 cycler-0.12.1 dash-4.4.1 einops-0.8.2 evo-1.31.0 executing-2.2.1 fastjsonschema-2.22.2 filelock-3.32.5 flask-3.1.3 fonttools-4.64.0 frozenlist-1.8.0 fsspec-2026.7.0 h11-0.16.0 h5py-3.16.0 hf-xet-1.6.0 httpcore-1.0.9 httpx-0.28.1 huggingface_hub-1.30.0 hydra-colorlog-1.2.0 hydra-core-1.3.2 idna-3.19 imageio-2.37.4 imageio-ffmpeg-0.6.0 importlib-metadata-9.0.1 ipython-9.17.1 ipython-pygments-lexers-1.1.1 ipywidgets-8.1.9 itsdangerous-2.2.0 janus-2.0.0 jedi-0.20.0 jinja2-3.1.6 joblib-1.6.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 jupyter-core-5.9.1 jupyterlab_widgets-3.0.17 kiwisolver-1.5.1 lazy-loader-0.5 lz4-4.4.5 markupsafe-3.0.3 matplotlib-3.11.1 matplotlib-inline-0.2.2 mpmath-1.3.0 multidict-6.7.1 narwhals-2.25.0 natsort-8.4.0 nbformat-5.11.1 nest-asyncio-1.6.0 networkx-3.6.1 nodejs-wheel-binaries-24.19.0 numexpr-2.14.2 numpy-1.26.4 nvidia-cublas-cu12-12.4.5.8 nvidia-cuda-cupti-cu12-12.4.127 nvidia-cuda-nvrtc-cu12-12.4.127 nvidia-cuda-runtime-cu12-12.4.127 nvidia-cudnn-cu12-9.1.0.70 nvidia-cufft-cu12-11.2.1.3 nvidia-curand-cu12-10.3.5.147 nvidia-cusolver-cu12-11.6.1.9 nvidia-cusparse-cu12-12.3.1.170 nvidia-nccl-cu12-2.21.5 nvidia-nvjitlink-cu12-12.4.127 nvidia-nvtx-cu12-12.4.127 omegaconf-2.3.1 open3d-0.19.0 opencv-python-4.11.0.86 pandas-3.0.5 parso-0.8.7 pexpect-4.9.0 pillow-12.3.0 platformdirs-4.11.7 plotly-7.0.0 plyfile-1.1.3 prompt_toolkit-3.0.53 propcache-0.5.2 psutil-7.2.2 ptyprocess-0.7.0 pure-eval-0.2.3 pydantic-2.13.5 pydantic-core-2.46.5 pygments-2.21.0 pyparsing-3.3.2 pyquaternion-0.9.9 python-dateutil-2.9.0.post0 python-dotenv-1.2.3 pytubefix-10.11.0 pyyaml-6.0.3 referencing-0.37.0 requests-2.34.2 retrying-1.4.2 rootutils-1.0.7 rosbags-0.11.5 rpds-py-2026.6.3 ruamel.yaml-0.19.1 safetensors-0.8.0 scikit-image-0.26.0 scikit-learn-1.9.0 scipy-1.17.1 seaborn-0.13.2 six-1.17.0 stack_data-0.6.3 sympy-1.13.1 threadpoolctl-3.6.0 tifffile-2026.3.3 torch-2.5.1 torchvision-0.20.1 tqdm-4.70.0 traitlets-5.16.1 triton-3.1.0 typing-extensions-4.16.0 typing-inspection-0.4.4 urllib3-2.7.0 wcwidth-0.8.3 werkzeug-3.1.8 widgetsnbextension-4.0.16 yarl-1.24.5 zipp-4.1.0 zstandard-0.25.0
+Collecting einx
+  Using cached einx-0.4.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting easydict
+  Using cached easydict-1.13-py3-none-any.whl.metadata (4.2 kB)
+Requirement already satisfied: numpy in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from einx) (1.26.4)
+Requirement already satisfied: sympy in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from einx) (1.13.1)
+Collecting frozendict (from einx)
+  Using cached frozendict-2.4.7-py3-none-any.whl.metadata (23 kB)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from sympy->einx) (1.3.0)
+Using cached einx-0.4.3-py3-none-any.whl (163 kB)
+Using cached easydict-1.13-py3-none-any.whl (6.8 kB)
+Using cached frozendict-2.4.7-py3-none-any.whl (16 kB)
+Installing collected packages: easydict, frozendict, einx
+
+Successfully installed easydict-1.13 einx-0.4.3 frozendict-2.4.7
+[setup_zipmap_eval_env] done.
+[setup_zipmap_eval_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14126x14126 matmul (~300 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+Error executing job with overrides: ['evaluation=mv_recon']
+Traceback (most recent call last):
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 92, in _call_target
+    return _target_(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py", line 110, in __init__
+    from models.zipmap.models.ZipMap import ZipMap
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/zipmap/models/ZipMap.py", line 6, in <module>
+    from zipmap.models.aggregator_ttt import Aggregator
+ModuleNotFoundError: No module named 'zipmap'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/mv_recon/eval.py", line 233, in <module>
+    main()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+           ^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+            ^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+        ^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/mv_recon/eval.py", line 39, in main
+    model = hydra.utils.instantiate(model_info.cfg).to(hydra_cfg.device)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 226, in instantiate
+    return instantiate_node(
+           ^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 347, in instantiate_node
+    return _call_target(_target_, partial, args, kwargs, full_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 97, in _call_target
+    raise InstantiationException(msg) from e
+hydra.errors.InstantiationException: Error in call to target 'models.fastmodel.ZipMap':
+ModuleNotFoundError("No module named 'zipmap'")
+full_key: model.ZipMap.cfg

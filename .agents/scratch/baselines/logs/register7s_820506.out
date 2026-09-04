@@ -1,0 +1,7 @@
+[setup_lingbot_map_env] lingbot_map env already exists, skipping base install.
+[setup_lingbot_map_env] nvcc already present, skipping.
+[setup_lingbot_map_env] cuda-driver-dev already present, skipping.
+[setup_lingbot_map_env] Done.
+[Parallel(n_jobs=13)]: Using backend LokyBackend with 13 concurrent workers.
+[Parallel(n_jobs=13)]: Done   3 out of  13 | elapsed:  6.4min remaining: 21.2min
+[2026-09-04T08:10:49.724] error: *** JOB 820506 ON sof1-h200-3 CANCELLED AT 2026-09-04T08:10:49 DUE to SIGNAL Terminated ***

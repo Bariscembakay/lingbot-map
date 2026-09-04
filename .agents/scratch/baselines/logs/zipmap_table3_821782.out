@@ -1,0 +1,188 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Compiling curope (torch 2.5.1 / cu124) ...
+Using Cached Shard Index for nvidia/linux-64                                                        ✔ Done
+Using Cached Shard Index for nvidia/noarch                                                          ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.0 sec)
+Using Cached Shard Index for conda-forge/linux-64                                                   ✔ Done
+Using Cached Shard Index for conda-forge/noarch                                                     ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.2 sec)
+Using Cached Shard Index for nvidia/linux-64                                                        ✔ Done
+Using Cached Shard Index for nvidia/noarch                                                          ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.0 sec)
+Using Cached Shard Index for conda-forge/linux-64                                                   ✔ Done
+Using Cached Shard Index for conda-forge/noarch                                                     ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.2 sec)
+
+Pinned packages:
+
+  - python=3.11
+
+Resolving Environment                                                                           ⧖ Starting
+Resolving Environment                                                                     ✔ Done (0.3 sec)
+
+Transaction
+
+  Prefix: /scratch/baris_bakay/micromamba/envs/zipmap_eval
+
+  Updating specs:
+
+   - cuda-nvcc=12.4
+   - cuda-cudart-dev=12.4
+   - cuda-cccl=12.4
+   - cuda-libraries-dev=12.4
+   - gxx_linux-64=13
+   - gcc_linux-64=13
+
+
+  Package                     Version  Build                 Channel         Size
+───────────────────────────────────────────────────────────────────────────────────
+  Install:
+───────────────────────────────────────────────────────────────────────────────────
+
+  + binutils_impl_linux-64     2.46.1  default_hfdba357_102  conda-forge      4MB
+  + binutils_linux-64          2.46.1  default_h4852527_102  conda-forge     36kB
+  + gcc_impl_linux-64          13.4.0  h649a46b_20           conda-forge     70MB
+  + gcc_linux-64               13.4.0  h5174b15_28           conda-forge     29kB
+  + gxx_impl_linux-64          13.4.0  h5415f34_20           conda-forge     14MB
+  + gxx_linux-64               13.4.0  hb11295d_28           conda-forge     28kB
+  + kernel-headers_linux-64    6.12.0  he073ed8_6            conda-forge      2MB
+  + libgcc-devel_linux-64      13.4.0  hd1d28cc_120          conda-forge      3MB
+  + libsanitizer               13.4.0  hf18ac3d_20           conda-forge      6MB
+  + libstdcxx-devel_linux-64   13.4.0  h6963c3b_120          conda-forge     19MB
+  + sysroot_linux-64             2.39  hc4b9eeb_6            conda-forge     42MB
+
+  Summary:
+
+  Install: 11 packages
+
+  Total download: 160MB
+
+───────────────────────────────────────────────────────────────────────────────────
+
+
+warning  libmamba Security Warning: This transaction includes executing package scripts (pre/post-link/unlink) if present. These scripts can contain arbitrary code. Please ensure you trust the package sources.
+
+Transaction starting
+Linking kernel-headers_linux-64-6.12.0-he073ed8_6
+Linking libstdcxx-devel_linux-64-13.4.0-h6963c3b_120
+Linking libgcc-devel_linux-64-13.4.0-hd1d28cc_120
+Linking sysroot_linux-64-2.39-hc4b9eeb_6
+Linking libsanitizer-13.4.0-hf18ac3d_20
+Linking binutils_impl_linux-64-2.46.1-default_hfdba357_102
+Linking gcc_impl_linux-64-13.4.0-h649a46b_20
+Linking binutils_linux-64-2.46.1-default_h4852527_102
+Linking gxx_impl_linux-64-13.4.0-h5415f34_20
+Linking gcc_linux-64-13.4.0-h5174b15_28
+Linking gxx_linux-64-13.4.0-hb11295d_28
+
+Transaction finished
+
+running build_ext
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py:426: UserWarning: There are no /scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/x86_64-conda-linux-gnu-g++ version bounds defined for CUDA version 12.4
+  warnings.warn(f'There are no {compiler_name} version bounds defined for CUDA version {cuda_str_version}')
+building 'curope' extension
+Emitting ninja build file /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/build.ninja...
+Compiling objects...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/2] /scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/x86_64-conda-linux-gnu-g++ -MMD -MF /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/curope.o.d -DNDEBUG -fwrapv -O2 -Wall -fPIC -O2 -fno-merge-constants -isystem /scratch/baris_bakay/micromamba/envs/zipmap_eval/include -fdebug-prefix-map=/home/conda/feedstock_root/build_artifacts/python-split_1788391675171/work=/usr/local/src/conda/python-split-3.11.16 -fPIC -O2 -fno-merge-constants -isystem /scratch/baris_bakay/micromamba/envs/zipmap_eval/include -fdebug-prefix-map=/home/conda/feedstock_root/build_artifacts/python-split_1788391675171/work=/usr/local/src/conda/python-split-3.11.16 -fPIC -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/TH -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/THC -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include/python3.11 -c -c /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/curope.cpp -o /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/curope.o -O3 -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=curope -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++17
+[2/2] /scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/nvcc --generate-dependencies-with-compile --dependency-output /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o.d -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/TH -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/THC -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include/python3.11 -c -c /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/kernels.cu -o /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -O3 --ptxas-options=-v --use_fast_math -gencode arch=compute_50,code=sm_50 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_90,code=sm_90 -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=curope -D_GLIBCXX_USE_CXX11_ABI=0 -ccbin /scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/x86_64-conda-linux-gnu-gcc -std=c++17
+nvcc warning : incompatible redefinition for option 'compiler-bindir', the last value of this option was used
+ptxas info    : 3 bytes gmem, 24 bytes cmem[4]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_50'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 28 registers, 376 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_50'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 29 registers, 376 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_50'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 376 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : 3 bytes gmem, 24 bytes cmem[4]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_60'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 28 registers, 376 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_60'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 29 registers, 376 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_60'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 28 registers, 376 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : 3 bytes gmem, 24 bytes cmem[4]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_70'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_70'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 32 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_70'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 408 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : 3 bytes gmem, 24 bytes cmem[4]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_75'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 32 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_75'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_75'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 32 registers, 408 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : 3 bytes gmem, 24 bytes cmem[4]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_80'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 26 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_80'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_80'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 408 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : 3 bytes gmem, 24 bytes cmem[4]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_86'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 27 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_86'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers, 408 bytes cmem[0]
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_86'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 32 registers, 408 bytes cmem[0], 8 bytes cmem[2]
+ptxas info    : 3 bytes gmem
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff' for 'sm_90'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIN3c104HalfEEvN2at27GenericPackedTensorAccessorIT_Lm4ENS2_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 26 registers
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_90'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIfEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 32 registers
+ptxas info    : Compiling entry function '_Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff' for 'sm_90'
+ptxas info    : Function properties for _Z19rope_2d_cuda_kernelIdEvN2at27GenericPackedTensorAccessorIT_Lm4ENS0_17RestrictPtrTraitsEiEEPKlff
+    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads
+ptxas info    : Used 30 registers
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/x86_64-conda-linux-gnu-g++ -DNDEBUG -fwrapv -O2 -Wall -fPIC -O2 -fno-merge-constants -isystem /scratch/baris_bakay/micromamba/envs/zipmap_eval/include -fdebug-prefix-map=/home/conda/feedstock_root/build_artifacts/python-split_1788391675171/work=/usr/local/src/conda/python-split-3.11.16 -fPIC -O2 -fno-merge-constants -isystem /scratch/baris_bakay/micromamba/envs/zipmap_eval/include -fdebug-prefix-map=/home/conda/feedstock_root/build_artifacts/python-split_1788391675171/work=/usr/local/src/conda/python-split-3.11.16 -pthread -B /scratch/baris_bakay/micromamba/envs/zipmap_eval/compiler_compat -shared /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/curope.o /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o -L/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/lib -L/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib -lc10 -ltorch -ltorch_cpu -ltorch_python -lcudart -lc10_cuda -ltorch_cuda -o build/lib.linux-x86_64-cpython-311/curope.cpython-311-x86_64-linux-gnu.so
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/x86_64-conda-linux-gnu-ld: cannot find -lcudart: No such file or directory
+collect2: error: ld returned 1 exit status
+error: Command '['/scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/x86_64-conda-linux-gnu-g++', '-DNDEBUG', '-fwrapv', '-O2', '-Wall', '-fPIC', '-O2', '-fno-merge-constants', '-isystem', '/scratch/baris_bakay/micromamba/envs/zipmap_eval/include', '-fdebug-prefix-map=/home/conda/feedstock_root/build_artifacts/python-split_1788391675171/work=/usr/local/src/conda/python-split-3.11.16', '-fPIC', '-O2', '-fno-merge-constants', '-isystem', '/scratch/baris_bakay/micromamba/envs/zipmap_eval/include', '-fdebug-prefix-map=/home/conda/feedstock_root/build_artifacts/python-split_1788391675171/work=/usr/local/src/conda/python-split-3.11.16', '-pthread', '-B', '/scratch/baris_bakay/micromamba/envs/zipmap_eval/compiler_compat', '-shared', '/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/curope.o', '/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o', '-L/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/lib', '-L/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib', '-lc10', '-ltorch', '-ltorch_cpu', '-ltorch_python', '-lcudart', '-lc10_cuda', '-ltorch_cuda', '-o', 'build/lib.linux-x86_64-cpython-311/curope.cpython-311-x86_64-linux-gnu.so']' returned non-zero exit status 1.

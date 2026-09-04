@@ -1,0 +1,172 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Compiling curope (torch 2.5.1 / cu124) ...
+Using Cached Shard Index for nvidia/linux-64                                                        ✔ Done
+Using Cached Shard Index for nvidia/noarch                                                          ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.0 sec)
+Using Cached Shard Index for conda-forge/linux-64                                                   ✔ Done
+Using Cached Shard Index for conda-forge/noarch                                                     ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.2 sec)
+Using Cached Shard Index for nvidia/linux-64                                                        ✔ Done
+Using Cached Shard Index for nvidia/noarch                                                          ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.0 sec)
+Using Cached Shard Index for conda-forge/linux-64                                                   ✔ Done
+Using Cached Shard Index for conda-forge/noarch                                                     ✔ Done
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (0.2 sec)
+
+Pinned packages:
+
+  - python=3.11
+
+Resolving Environment                                                                           ⧖ Starting
+Resolving Environment                                                                     ✔ Done (0.3 sec)
+
+Transaction
+
+  Prefix: /scratch/baris_bakay/micromamba/envs/zipmap_eval
+
+  Updating specs:
+
+   - cuda-nvcc=12.4
+   - cuda-cudart-dev=12.4
+
+
+  Package                    Version  Build       Channel      Size
+─────────────────────────────────────────────────────────────────────
+  Install:
+─────────────────────────────────────────────────────────────────────
+
+  + cuda-cccl             13.3.3.4.1  h75ba20b_0  nvidia       10kB
+  + cuda-cccl_linux-64    13.3.3.4.1  0           nvidia        1MB
+  + cuda-cudart              13.3.29  h159e8ec_0  nvidia       19kB
+  + cuda-cudart-dev         12.4.127  0           nvidia      423kB
+  + cuda-cudart_linux-64     13.3.29  h32d0467_0  nvidia      201kB
+  + cuda-version                13.3  hcbadf70_4  nvidia       22kB
+
+  Summary:
+
+  Install: 6 packages
+
+  Total download: 2MB
+
+─────────────────────────────────────────────────────────────────────
+
+
+warning  libmamba Security Warning: This transaction includes executing package scripts (pre/post-link/unlink) if present. These scripts can contain arbitrary code. Please ensure you trust the package sources.
+
+Transaction starting
+Linking cuda-version-13.3-hcbadf70_4
+warning  libmamba Executing post-link script for package 'cuda-version'.
+
+============================================================
+NOTICE: NVIDIA conda channel update
+============================================================
+These NVIDIA packages stop receiving updates on the `nvidia`
+channel after Aug 7, 2026:
+
+    cuda, cublasmp, cudnn, cudss, cuest, cufftmp, cuquantum,
+    cusolvermp, cusparselt, cutensor, nccl, nvpl, nvshmem,
+    cuda-python, numbast.
+
+Existing packages and environments keep working. Get future
+updates from Anaconda main (defaults) channel or conda-forge.
+
+Migration steps:
+    anaconda.com/guides/nvidia-channel-migration?utm_source=channel_notices
+============================================================
+
+
+Linking cuda-cccl_linux-64-13.3.3.4.1-0
+Linking cuda-cudart_linux-64-13.3.29-h32d0467_0
+Linking cuda-cccl-13.3.3.4.1-h75ba20b_0
+Linking cuda-cudart-13.3.29-h159e8ec_0
+Linking cuda-cudart-dev-12.4.127-0
+
+Transaction finished
+
+running build_ext
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py:426: UserWarning: There are no g++ version bounds defined for CUDA version 12.4
+  warnings.warn(f'There are no {compiler_name} version bounds defined for CUDA version {cuda_str_version}')
+building 'curope' extension
+Emitting ninja build file /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/build.ninja...
+Compiling objects...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/1] /scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/nvcc --generate-dependencies-with-compile --dependency-output /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o.d -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/TH -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/THC -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include/python3.11 -c -c /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/kernels.cu -o /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -O3 --ptxas-options=-v --use_fast_math -gencode arch=compute_50,code=sm_50 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_90,code=sm_90 -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=curope -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++17
+FAILED: /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o 
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/bin/nvcc --generate-dependencies-with-compile --dependency-output /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o.d -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/api/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/TH -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/THC -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include -I/scratch/baris_bakay/micromamba/envs/zipmap_eval/include/python3.11 -c -c /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/kernels.cu -o /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/build/temp.linux-x86_64-cpython-311/kernels.o -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -O3 --ptxas-options=-v --use_fast_math -gencode arch=compute_50,code=sm_50 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_75,code=sm_75 -gencode arch=compute_80,code=sm_80 -gencode arch=compute_86,code=sm_86 -gencode arch=compute_90,code=sm_90 -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=curope -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++17
+In file included from /scratch/baris_bakay/micromamba/envs/zipmap_eval/include/cuda_runtime.h:82,
+                 from <command-line>:
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/include/crt/host_config.h:143:2: error: #error -- unsupported GNU version! gcc versions later than 13 are not supported! The nvcc flag '-allow-unsupported-compiler' can be used to override this version check; however, using an unsupported host compiler may cause compilation failure or incorrect run time execution. Use at your own risk.
+  143 | #error -- unsupported GNU version! gcc versions later than 13 are not supported! The nvcc flag '-allow-unsupported-compiler' can be used to override this version check; however, using an unsupported host compiler may cause compilation failure or incorrect run time execution. Use at your own risk.
+      |  ^~~~~
+In file included from /scratch/baris_bakay/micromamba/envs/zipmap_eval/include/cuda_bf16.h:133,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/c10/util/BFloat16.h:14,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/c10/core/ScalarType.h:3,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/c10/core/Scalar.h:9,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/ATen/core/TensorBody.h:16,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/ATen/core/Tensor.h:3,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/ATen/Tensor.h:3,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/autograd/function_hook.h:3,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/autograd/cpp_hook.h:2,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/autograd/variable.h:6,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/autograd/autograd.h:3,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/api/include/torch/autograd.h:3,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/csrc/api/include/torch/all.h:7,
+                 from /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/include/torch/extension.h:5,
+                 from /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/kernels.cu:6:
+/scratch/baris_bakay/micromamba/envs/zipmap_eval/include/cuda_fp16.h:4100:10: fatal error: nv/target: No such file or directory
+ 4100 | #include <nv/target>
+      |          ^~~~~~~~~~~
+compilation terminated.
+ninja: build stopped: subcommand failed.
+Traceback (most recent call last):
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 2104, in _run_ninja_build
+    subprocess.run(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['ninja', '-v']' returned non-zero exit status 1.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/setup.py", line 18, in <module>
+    setup(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/__init__.py", line 117, in setup
+    return distutils.core.setup(**attrs)  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/core.py", line 168, in setup
+    return run_commands(dist)
+           ^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/core.py", line 184, in run_commands
+    dist.run_commands()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/dist.py", line 1028, in run_commands
+    self.run_command(cmd)
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/dist.py", line 1106, in run_command
+    super().run_command(command)
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/dist.py", line 1047, in run_command
+    cmd_obj.run()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/command/build_ext.py", line 95, in run
+    _build_ext.run(self)
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/command/build_ext.py", line 382, in run
+    self.build_extensions()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 868, in build_extensions
+    build_ext.build_extensions(self)
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/command/build_ext.py", line 498, in build_extensions
+    self._build_extensions_serial()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/command/build_ext.py", line 524, in _build_extensions_serial
+    self.build_extension(ext)
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/command/build_ext.py", line 260, in build_extension
+    _build_ext.build_extension(self, ext)
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/setuptools/_distutils/command/build_ext.py", line 585, in build_extension
+    objects = self.compiler.compile(
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 681, in unix_wrap_ninja_compile
+    _write_ninja_file_and_compile_objects(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 1784, in _write_ninja_file_and_compile_objects
+    _run_ninja_build(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/torch/utils/cpp_extension.py", line 2120, in _run_ninja_build
+    raise RuntimeError(message) from e
+RuntimeError: Error compiling objects for extension

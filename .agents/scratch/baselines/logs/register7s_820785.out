@@ -1,0 +1,22 @@
+[setup_lingbot_map_env] lingbot_map env already exists, skipping base install.
+[setup_lingbot_map_env] nvcc already present, skipping.
+[setup_lingbot_map_env] cuda-driver-dev already present, skipping.
+[setup_lingbot_map_env] Done.
+[Parallel(n_jobs=13)]: Using backend LokyBackend with 13 concurrent workers.
+[Parallel(n_jobs=13)]: Done   3 out of  13 | elapsed: 10.7min remaining: 35.6min
+0 /group/compact-3dmem/datasets/7-scenes/stairs seq-06
+[Parallel(n_jobs=13)]: Done   6 out of  13 | elapsed: 11.7min remaining: 13.7min
+[Parallel(n_jobs=13)]: Done   9 out of  13 | elapsed: 11.9min remaining:  5.3min
+[Parallel(n_jobs=13)]: Done  13 out of  13 | elapsed: 12.3min finished
+0 /group/compact-3dmem/datasets/7-scenes/stairs seq-02
+0 /group/compact-3dmem/datasets/7-scenes/chess seq-01
+0 /group/compact-3dmem/datasets/7-scenes/chess seq-02
+0 /group/compact-3dmem/datasets/7-scenes/office seq-01
+0 /group/compact-3dmem/datasets/7-scenes/redkitchen seq-07
+0 /group/compact-3dmem/datasets/7-scenes/redkitchen seq-01
+0 /group/compact-3dmem/datasets/7-scenes/fire seq-02
+0 /group/compact-3dmem/datasets/7-scenes/fire seq-01
+0 /group/compact-3dmem/datasets/7-scenes/heads seq-02
+0 /group/compact-3dmem/datasets/7-scenes/pumpkin seq-06
+0 /group/compact-3dmem/datasets/7-scenes/pumpkin seq-03
+0 /group/compact-3dmem/datasets/7-scenes/office seq-03

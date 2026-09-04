@@ -1,0 +1,53 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Installing TTT3R extras (imageio, scikit-image) ...
+Requirement already satisfied: imageio in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (2.37.4)
+Requirement already satisfied: imageio-ffmpeg in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (0.6.0)
+Collecting scikit-image
+  Using cached scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (15 kB)
+Requirement already satisfied: numpy in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from imageio) (2.4.6)
+Requirement already satisfied: pillow>=8.3.2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from imageio) (10.3.0)
+Requirement already satisfied: scipy>=1.11.4 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-image) (1.17.1)
+Requirement already satisfied: networkx>=3.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-image) (3.6.1)
+Collecting tifffile>=2022.8.12 (from scikit-image)
+  Using cached tifffile-2026.3.3-py3-none-any.whl.metadata (31 kB)
+Requirement already satisfied: packaging>=21 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-image) (26.3)
+Collecting lazy-loader>=0.4 (from scikit-image)
+  Using cached lazy_loader-0.5-py3-none-any.whl.metadata (5.9 kB)
+Using cached scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (13.7 MB)
+Using cached lazy_loader-0.5-py3-none-any.whl (8.0 kB)
+Using cached tifffile-2026.3.3-py3-none-any.whl (243 kB)
+Installing collected packages: tifffile, lazy-loader, scikit-image
+
+Successfully installed lazy-loader-0.5 scikit-image-0.26.0 tifffile-2026.3.3
+[setup_cut3r_env] Done.
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[smoke] 8 frames
+>> Loading a list of 8 images
+ - adding /data/NRGBD/breakfast_room/images/img0.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img1.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img2.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img3.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img4.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img5.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img6.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img7.png with resolution 640x480 --> 512x384
+ (Found 8 images)
+... loading model from src/cut3r_512_dpt_4_64.pth
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/smoke_ttt3r.py", line 18, in <module>
+    model = ARCroco3DStereo.from_pretrained(CKPT).to("cuda")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/model.py", line 317, in from_pretrained
+    return load_model(pretrained_model_name_or_path, device="cpu")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/model.py", line 77, in load_model
+    ckpt = torch.load(model_path, map_location="cpu")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages/torch/serialization.py", line 1529, in load
+    raise pickle.UnpicklingError(_get_wo_message(str(e))) from None
+_pickle.UnpicklingError: Weights only load failed. This file can still be loaded, to do so you have two options, [1mdo those steps only if you trust the source of the checkpoint[0m. 
+	(1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
+	(2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.
+	WeightsUnpickler error: Unsupported global: GLOBAL omegaconf.dictconfig.DictConfig was not an allowed global by default. Please use `torch.serialization.add_safe_globals([omegaconf.dictconfig.DictConfig])` or the `torch.serialization.safe_globals([omegaconf.dictconfig.DictConfig])` context manager to allowlist this global if you trust this class/function.
+
+Check the documentation of torch.load to learn more about types accepted by default with weights_only https://pytorch.org/docs/stable/generated/torch.load.html.

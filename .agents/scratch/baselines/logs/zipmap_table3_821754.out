@@ -1,0 +1,81 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14062x14062 matmul (~294 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+Error executing job with overrides: ['eval_models=[ttt3r,cut3r]', 'evaluation=mv_recon']
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/curope2d.py", line 7, in <module>
+    import curope as _kernels  # run `python setup.py install`
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'curope'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/pos_embed.py", line 118, in <module>
+    from models.ttt3r.croco.models.curope import cuRoPE2D
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/__init__.py", line 4, in <module>
+    from .curope2d import cuRoPE2D
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/curope2d.py", line 9, in <module>
+    from . import curope as _kernels  # run `python setup.py build_ext --inplace`
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: cannot import name 'curope' from partially initialized module 'models.ttt3r.croco.models.curope' (most likely due to a circular import) (/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/curope/__init__.py)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 92, in _call_target
+    return _target_(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py", line 172, in __init__
+    from models.ttt3r.dust3r.model import ARCroco3DStereo
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/model.py", line 30, in <module>
+    from croco.models.croco import CroCoNet, CrocoConfig  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/croco.py", line 17, in <module>
+    from .pos_embed import get_2d_sincos_pos_embed, RoPE2D
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/croco/models/pos_embed.py", line 122, in <module>
+    raise RuntimeError("cuda-compiled RoPE2D is required for CUT3R.")
+RuntimeError: cuda-compiled RoPE2D is required for CUT3R.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/mv_recon/eval.py", line 233, in <module>
+    main()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+           ^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+            ^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+        ^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/mv_recon/eval.py", line 39, in main
+    model = hydra.utils.instantiate(model_info.cfg).to(hydra_cfg.device)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 226, in instantiate
+    return instantiate_node(
+           ^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 347, in instantiate_node
+    return _call_target(_target_, partial, args, kwargs, full_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 97, in _call_target
+    raise InstantiationException(msg) from e
+hydra.errors.InstantiationException: Error in call to target 'models.fastmodel.TTT3R':
+RuntimeError('cuda-compiled RoPE2D is required for CUT3R.')
+full_key: model.ttt3r.cfg

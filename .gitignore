@@ -40,3 +40,6 @@ CUT3R/cut3r.pdf
 TTT3R/examples/
 ZipMap/examples/
 !TTT3R/docs/
+TTT3R/eval_results/
+ZipMap_eval/outputs/
+ZipMap_eval/models/ttt3r/croco/models/curope/build/

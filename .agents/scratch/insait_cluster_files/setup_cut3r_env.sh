@@ -60,6 +60,12 @@ mkdir -p "$MAMBA_ROOT"
         echo "[setup_cut3r_env] Installing wandb ..."
         "$PY" -m pip install wandb
     fi
+    # TTT3R (vendored 2026-09-04) shares this env; its demo utils additionally
+    # import imageio and skimage.
+    if ! "$PY" -c "import imageio, skimage" >/dev/null 2>&1; then
+        echo "[setup_cut3r_env] Installing TTT3R extras (imageio, scikit-image) ..."
+        "$PY" -m pip install imageio imageio-ffmpeg scikit-image
+    fi
 )
 
 # curope is NOT built, and this is a considered decision rather than a shortcut.

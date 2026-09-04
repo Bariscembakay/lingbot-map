@@ -74,7 +74,11 @@ def strip_module(state_dict):
 def load_model(model_path, device, verbose=True):
     if verbose:
         print("... loading model from", model_path)
-    ckpt = torch.load(model_path, map_location="cpu")
+    # LOCAL PATCH (lingbot-map): torch >= 2.6 defaults weights_only=True, and
+    # this checkpoint pickles an omegaconf DictConfig in `args`, which the
+    # restricted unpickler rejects. Upstream predates that default change.
+    # Compatibility only -- no change to model, protocol or metrics.
+    ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
     args = ckpt["args"].model.replace(
         "ManyAR_PatchEmbed", "PatchEmbedDust3R"
     )  # ManyAR only for aspect ratio not consistent

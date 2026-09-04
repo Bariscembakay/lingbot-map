@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/register_7scenes_depth.py", line 7, in <module>
+    from skimage import io
+ModuleNotFoundError: No module named 'skimage'

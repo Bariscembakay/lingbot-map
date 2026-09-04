@@ -1,0 +1,483 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Installing zipmap package (--no-deps) ...
+Obtaining file:///home/baris_bakay/lingbot-map/ZipMap
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: zipmap
+  Building editable for zipmap (pyproject.toml): started
+  Building editable for zipmap (pyproject.toml): finished with status 'done'
+  Created wheel for zipmap: filename=zipmap-0.0.1-0.editable-py3-none-any.whl size=7372 sha256=67e9dd4e359db565b00d8b103d9f5b816197fd374baf0c3574909b96769f4e78
+  Stored in directory: /tmp/pip-ephem-wheel-cache-7136j6wm/wheels/b8/db/c7/fb0ea8124a034755f91793290832c4e76a798ac74c0b5c5cd8
+Successfully built zipmap
+Installing collected packages: zipmap
+Successfully installed zipmap-0.0.1
+[setup_zipmap_eval_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14156x14156 matmul (~301 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[[36m2026-09-04 12:44:17,220[0m][[34mdinov2[0m][[32mINFO[0m] - [37musing MLP layer as FFN[0m
+[[36m2026-09-04 12:44:33,763[0m][[34mroot[0m][[32mINFO[0m] - [37mAggregator initialized with affine_invariant=True[0m
+Unexpected keys in state_dict: ['local_point_head.norm.weight', 'local_point_head.norm.bias', 'local_point_head.projects.0.weight', 'local_point_head.projects.0.bias', 'local_point_head.projects.1.weight', 'local_point_head.projects.1.bias', 'local_point_head.projects.2.weight', 'local_point_head.projects.2.bias', 'local_point_head.projects.3.weight', 'local_point_head.projects.3.bias', 'local_point_head.resize_layers.0.weight', 'local_point_head.resize_layers.0.bias', 'local_point_head.resize_layers.1.weight', 'local_point_head.resize_layers.1.bias', 'local_point_head.resize_layers.3.weight', 'local_point_head.resize_layers.3.bias', 'local_point_head.scratch.layer1_rn.weight', 'local_point_head.scratch.layer2_rn.weight', 'local_point_head.scratch.layer3_rn.weight', 'local_point_head.scratch.layer4_rn.weight', 'local_point_head.scratch.refinenet1.out_conv.weight', 'local_point_head.scratch.refinenet1.out_conv.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet2.out_conv.weight', 'local_point_head.scratch.refinenet2.out_conv.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet3.out_conv.weight', 'local_point_head.scratch.refinenet3.out_conv.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet4.out_conv.weight', 'local_point_head.scratch.refinenet4.out_conv.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.bias', 'local_point_head.scratch.output_conv1.weight', 'local_point_head.scratch.output_conv1.bias', 'local_point_head.scratch.output_conv2.0.weight', 'local_point_head.scratch.output_conv2.0.bias', 'local_point_head.scratch.output_conv2.2.weight', 'local_point_head.scratch.output_conv2.2.bias']
+[[36m2026-09-04 12:45:50,097[0m][[34mmv_recon-eval[0m][[32mINFO[0m] - [37m[1/3] Loaded Model ZipMap from checkpoints/checkpoint_aff_inv.pt[0m
+SEVENSCENES_DIR is data/7scenes
+[7Scenes] Cache file not found, loading from data/7scenes
+  0%|          | 0/18 [00:00<?, ?it/s] 78%|███████▊  | 14/18 [00:00<00:00, 139.91it/s]100%|██████████| 18/18 [00:00<00:00, 87.23it/s] 
+[7Scenes] Data size: 18
+[[36m2026-09-04 12:45:54,264[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[1/4] Evaluating Multi-View Pointcloud Reconstruction on dataset 7scenes-sparse...[0m
+[[36m2026-09-04 12:45:54,403[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mSampling strategy: stride[0m
+[[36m2026-09-04 12:45:54,607[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mEvaluating 7scenes-sparse with ZipMap...[0m
+[[36m2026-09-04 12:45:55,711[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence chess/seq-03: 0.97 seconds.[0m
+[[36m2026-09-04 12:46:24,251[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence chess/seq-03: 28.40 seconds.[0m
+[[36m2026-09-04 12:46:24,586[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence chess/seq-03: 0.16 seconds.[0m
+[[36m2026-09-04 12:46:31,946[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence chess/seq-03: 6.05 seconds.[0m
+[[36m2026-09-04 12:46:33,628[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence chess/seq-03: 1.55 seconds.[0m
+[[36m2026-09-04 12:46:34,974[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence chess/seq-03: 1.21 seconds.[0m
+[[36m2026-09-04 12:46:35,113[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 1/18] Seq: chess/seq-03, Acc: 0.01914704743898474, Comp: 0.030321268736644577, NC1: 0.7176724827891954, NC2: 0.7429280271189554 - Acc_med: 0.010650784438163752, Compc_med: 0.015532573582246578, NC1c_med: 0.8338825906571983, NC2c_med: 0.865356946034393[0m
+[[36m2026-09-04 12:46:36,372[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence chess/seq-05: 0.96 seconds.[0m
+[[36m2026-09-04 12:46:37,497[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence chess/seq-05: 0.99 seconds.[0m
+[[36m2026-09-04 12:46:37,812[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence chess/seq-05: 0.15 seconds.[0m
+[[36m2026-09-04 12:46:44,483[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence chess/seq-05: 5.44 seconds.[0m
+[[36m2026-09-04 12:46:45,961[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence chess/seq-05: 1.34 seconds.[0m
+[[36m2026-09-04 12:46:47,379[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence chess/seq-05: 1.28 seconds.[0m
+[[36m2026-09-04 12:46:47,517[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 2/18] Seq: chess/seq-05, Acc: 0.025064756377975887, Comp: 0.04231018222151381, NC1: 0.7527744990239634, NC2: 0.7444775960332406 - Acc_med: 0.015696187182580947, Compc_med: 0.0215976615964203, NC1c_med: 0.8945748149896982, NC2c_med: 0.8726750540532318[0m
+[[36m2026-09-04 12:46:49,947[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence fire/seq-03: 2.20 seconds.[0m
+[[36m2026-09-04 12:46:51,101[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence fire/seq-03: 1.02 seconds.[0m
+[[36m2026-09-04 12:46:51,423[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence fire/seq-03: 0.16 seconds.[0m
+[[36m2026-09-04 12:46:58,192[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence fire/seq-03: 5.50 seconds.[0m
+[[36m2026-09-04 12:46:59,676[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence fire/seq-03: 1.39 seconds.[0m
+[[36m2026-09-04 12:47:00,964[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence fire/seq-03: 1.15 seconds.[0m
+[[36m2026-09-04 12:47:01,100[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 3/18] Seq: fire/seq-03, Acc: 0.014887534041460536, Comp: 0.020608478113004647, NC1: 0.7474843978473028, NC2: 0.7573181662215156 - Acc_med: 0.007720566469373401, Compc_med: 0.013186841997412511, NC1c_med: 0.8717756534697831, NC2c_med: 0.8747313058921504[0m
+[[36m2026-09-04 12:47:02,620[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence fire/seq-04: 1.29 seconds.[0m
+[[36m2026-09-04 12:47:03,782[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence fire/seq-04: 1.03 seconds.[0m
+[[36m2026-09-04 12:47:04,091[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence fire/seq-04: 0.15 seconds.[0m
+[[36m2026-09-04 12:47:10,935[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence fire/seq-04: 5.57 seconds.[0m
+[[36m2026-09-04 12:47:12,438[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence fire/seq-04: 1.37 seconds.[0m
+[[36m2026-09-04 12:47:13,750[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence fire/seq-04: 1.17 seconds.[0m
+[[36m2026-09-04 12:47:13,888[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 4/18] Seq: fire/seq-04, Acc: 0.01984532084804941, Comp: 0.022108017319789106, NC1: 0.7769438227700077, NC2: 0.7727547365241157 - Acc_med: 0.0074164010764966705, Compc_med: 0.009318177248853855, NC1c_med: 0.9020175447866849, NC2c_med: 0.8967034627246546[0m
+[[36m2026-09-04 12:47:15,906[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence heads/seq-01: 1.76 seconds.[0m
+[[36m2026-09-04 12:47:17,031[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence heads/seq-01: 0.99 seconds.[0m
+[[36m2026-09-04 12:47:17,351[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence heads/seq-01: 0.15 seconds.[0m
+[[36m2026-09-04 12:47:23,202[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence heads/seq-01: 4.59 seconds.[0m
+[[36m2026-09-04 12:47:24,734[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence heads/seq-01: 1.40 seconds.[0m
+[[36m2026-09-04 12:47:26,415[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence heads/seq-01: 1.55 seconds.[0m
+[[36m2026-09-04 12:47:26,551[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 5/18] Seq: heads/seq-01, Acc: 0.020180622486149193, Comp: 0.021447708631964893, NC1: 0.8127340135208827, NC2: 0.7972953677699016 - Acc_med: 0.010628597040068494, Compc_med: 0.011443432933151318, NC1c_med: 0.9273226595848958, NC2c_med: 0.9208121350004633[0m
+[[36m2026-09-04 12:47:28,449[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-02: 1.67 seconds.[0m
+[[36m2026-09-04 12:47:29,587[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-02: 0.99 seconds.[0m
+[[36m2026-09-04 12:47:29,912[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-02: 0.16 seconds.[0m
+[[36m2026-09-04 12:47:38,327[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-02: 7.11 seconds.[0m
+[[36m2026-09-04 12:47:39,920[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-02: 1.46 seconds.[0m
+[[36m2026-09-04 12:47:42,641[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-02: 2.58 seconds.[0m
+[[36m2026-09-04 12:47:42,777[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 6/18] Seq: office/seq-02, Acc: 0.07714756000590144, Comp: 0.07935779877544072, NC1: 0.6600189107298277, NC2: 0.6592768650941416 - Acc_med: 0.042505713236053386, Compc_med: 0.05177935928266113, NC1c_med: 0.7603837618850011, NC2c_med: 0.7576497296621073[0m
+[[36m2026-09-04 12:47:43,756[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-06: 0.76 seconds.[0m
+[[36m2026-09-04 12:47:44,881[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-06: 0.99 seconds.[0m
+[[36m2026-09-04 12:47:45,198[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-06: 0.15 seconds.[0m
+[[36m2026-09-04 12:47:55,966[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-06: 9.49 seconds.[0m
+[[36m2026-09-04 12:47:57,424[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-06: 1.32 seconds.[0m
+[[36m2026-09-04 12:48:00,816[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-06: 3.25 seconds.[0m
+[[36m2026-09-04 12:48:00,952[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 7/18] Seq: office/seq-06, Acc: 0.10162911816129215, Comp: 0.11197614682820392, NC1: 0.6573059611127637, NC2: 0.6640949800888908 - Acc_med: 0.04629517800805224, Compc_med: 0.062104182378421496, NC1c_med: 0.7516389133898486, NC2c_med: 0.74800103485488[0m
+[[36m2026-09-04 12:48:02,888[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-07: 1.71 seconds.[0m
+[[36m2026-09-04 12:48:04,064[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-07: 1.04 seconds.[0m
+[[36m2026-09-04 12:48:04,387[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-07: 0.16 seconds.[0m
+[[36m2026-09-04 12:48:14,512[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-07: 8.84 seconds.[0m
+[[36m2026-09-04 12:48:16,162[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-07: 1.51 seconds.[0m
+[[36m2026-09-04 12:48:25,383[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-07: 9.06 seconds.[0m
+[[36m2026-09-04 12:48:25,520[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 8/18] Seq: office/seq-07, Acc: 0.1542877973087711, Comp: 0.2702783714471433, NC1: 0.6048342707106474, NC2: 0.614313740071402 - Acc_med: 0.10590192981243311, Compc_med: 0.19267557109233777, NC1c_med: 0.6793056321503986, NC2c_med: 0.6954592904520402[0m
+[[36m2026-09-04 12:48:27,447[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-09: 1.70 seconds.[0m
+[[36m2026-09-04 12:48:28,566[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-09: 0.98 seconds.[0m
+[[36m2026-09-04 12:48:28,847[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-09: 0.16 seconds.[0m
+[[36m2026-09-04 12:48:37,627[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-09: 7.48 seconds.[0m
+[[36m2026-09-04 12:48:39,118[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-09: 1.35 seconds.[0m
+[[36m2026-09-04 12:48:42,659[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-09: 3.41 seconds.[0m
+[[36m2026-09-04 12:48:42,874[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 9/18] Seq: office/seq-09, Acc: 0.09192786933728322, Comp: 0.13897981331933992, NC1: 0.6327641213791354, NC2: 0.658151852109222 - Acc_med: 0.06665808696984149, Compc_med: 0.1017332140479516, NC1c_med: 0.7182271335547123, NC2c_med: 0.7533318766595793[0m
+[[36m2026-09-04 12:48:45,136[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence pumpkin/seq-01: 1.17 seconds.[0m
+[[36m2026-09-04 12:48:46,227[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence pumpkin/seq-01: 0.96 seconds.[0m
+[[36m2026-09-04 12:48:46,539[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence pumpkin/seq-01: 0.15 seconds.[0m
+[[36m2026-09-04 12:48:53,442[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence pumpkin/seq-01: 5.65 seconds.[0m
+[[36m2026-09-04 12:48:54,956[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence pumpkin/seq-01: 1.38 seconds.[0m
+[[36m2026-09-04 12:48:56,268[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence pumpkin/seq-01: 1.17 seconds.[0m
+[[36m2026-09-04 12:48:56,404[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 10/18] Seq: pumpkin/seq-01, Acc: 0.021146520686104564, Comp: 0.02973993439626053, NC1: 0.8608850044485563, NC2: 0.8511271993954619 - Acc_med: 0.014706556387651174, Compc_med: 0.019855900931732458, NC1c_med: 0.9422592995716865, NC2c_med: 0.9331403702886312[0m
+[[36m2026-09-04 12:48:57,589[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence pumpkin/seq-07: 1.03 seconds.[0m
+[[36m2026-09-04 12:48:58,664[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence pumpkin/seq-07: 0.98 seconds.[0m
+[[36m2026-09-04 12:48:58,973[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence pumpkin/seq-07: 0.16 seconds.[0m
+[[36m2026-09-04 12:49:05,537[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence pumpkin/seq-07: 5.29 seconds.[0m
+[[36m2026-09-04 12:49:07,145[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence pumpkin/seq-07: 1.47 seconds.[0m
+[[36m2026-09-04 12:49:08,401[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence pumpkin/seq-07: 1.17 seconds.[0m
+[[36m2026-09-04 12:49:08,538[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 11/18] Seq: pumpkin/seq-07, Acc: 0.019216124298563595, Comp: 0.023153002512202207, NC1: 0.7647364643191298, NC2: 0.7948061244840116 - Acc_med: 0.008816599182798562, Compc_med: 0.015147082349853937, NC1c_med: 0.8719441269510464, NC2c_med: 0.8953900058023376[0m
+[[36m2026-09-04 12:49:10,006[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-03: 1.24 seconds.[0m
+[[36m2026-09-04 12:49:11,138[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-03: 1.00 seconds.[0m
+[[36m2026-09-04 12:49:11,445[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-03: 0.15 seconds.[0m
+[[36m2026-09-04 12:49:18,058[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-03: 5.41 seconds.[0m
+[[36m2026-09-04 12:49:19,484[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-03: 1.29 seconds.[0m
+[[36m2026-09-04 12:49:20,701[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-03: 1.08 seconds.[0m
+[[36m2026-09-04 12:49:20,837[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 12/18] Seq: redkitchen/seq-03, Acc: 0.022077138291981786, Comp: 0.026849182647349642, NC1: 0.8107776481047156, NC2: 0.81563769850284 - Acc_med: 0.012856803361196954, Compc_med: 0.017016057483366927, NC1c_med: 0.9266916945682753, NC2c_med: 0.9286662091369329[0m
+[[36m2026-09-04 12:49:22,561[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-04: 1.47 seconds.[0m
+[[36m2026-09-04 12:49:23,690[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-04: 0.99 seconds.[0m
+[[36m2026-09-04 12:49:24,013[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-04: 0.15 seconds.[0m
+[[36m2026-09-04 12:49:30,639[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-04: 5.39 seconds.[0m
+[[36m2026-09-04 12:49:32,144[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-04: 1.37 seconds.[0m
+[[36m2026-09-04 12:49:33,486[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-04: 1.21 seconds.[0m
+[[36m2026-09-04 12:49:33,623[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 13/18] Seq: redkitchen/seq-04, Acc: 0.026843715264249786, Comp: 0.040998935275649954, NC1: 0.7481033666575834, NC2: 0.7425590192541546 - Acc_med: 0.013085609549548254, Compc_med: 0.0184103132740701, NC1c_med: 0.8636429276143684, NC2c_med: 0.8602221197622867[0m
+[[36m2026-09-04 12:49:36,200[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-06: 2.35 seconds.[0m
+[[36m2026-09-04 12:49:37,293[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-06: 0.92 seconds.[0m
+[[36m2026-09-04 12:49:37,621[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-06: 0.16 seconds.[0m
+[[36m2026-09-04 12:49:44,824[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-06: 5.87 seconds.[0m
+[[36m2026-09-04 12:49:46,520[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-06: 1.56 seconds.[0m
+[[36m2026-09-04 12:49:48,331[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-06: 1.67 seconds.[0m
+[[36m2026-09-04 12:49:48,467[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 14/18] Seq: redkitchen/seq-06, Acc: 0.018740670925297787, Comp: 0.02816936559024981, NC1: 0.781953968151693, NC2: 0.7750457877877345 - Acc_med: 0.011817228761519563, Compc_med: 0.016437913397561874, NC1c_med: 0.8953108447832758, NC2c_med: 0.8905950867808335[0m
+[[36m2026-09-04 12:49:50,481[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-12: 1.79 seconds.[0m
+[[36m2026-09-04 12:49:51,620[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-12: 1.00 seconds.[0m
+[[36m2026-09-04 12:49:51,943[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-12: 0.15 seconds.[0m
+[[36m2026-09-04 12:49:58,649[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-12: 5.42 seconds.[0m
+[[36m2026-09-04 12:50:00,162[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-12: 1.38 seconds.[0m
+[[36m2026-09-04 12:50:01,645[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-12: 1.35 seconds.[0m
+[[36m2026-09-04 12:50:01,781[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 15/18] Seq: redkitchen/seq-12, Acc: 0.020948434428584167, Comp: 0.031652027900360064, NC1: 0.785307436741998, NC2: 0.7813404160467007 - Acc_med: 0.009707744652130222, Compc_med: 0.01543059068785256, NC1c_med: 0.9125816035578542, NC2c_med: 0.899987200061205[0m
+[[36m2026-09-04 12:50:04,169[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-14: 2.16 seconds.[0m
+[[36m2026-09-04 12:50:05,303[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-14: 0.99 seconds.[0m
+[[36m2026-09-04 12:50:05,637[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-14: 0.16 seconds.[0m
+[[36m2026-09-04 12:50:13,354[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-14: 6.34 seconds.[0m
+[[36m2026-09-04 12:50:15,009[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-14: 1.52 seconds.[0m
+[[36m2026-09-04 12:50:16,468[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-14: 1.32 seconds.[0m
+[[36m2026-09-04 12:50:16,607[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 16/18] Seq: redkitchen/seq-14, Acc: 0.0293342152026789, Comp: 0.044406921834659975, NC1: 0.7479771515546279, NC2: 0.7553424918841211 - Acc_med: 0.017879611510550675, Compc_med: 0.02647582451718742, NC1c_med: 0.8613459301503159, NC2c_med: 0.8699751337673476[0m
+[[36m2026-09-04 12:50:17,465[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence stairs/seq-01: 0.63 seconds.[0m
+[[36m2026-09-04 12:50:18,307[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence stairs/seq-01: 0.70 seconds.[0m
+[[36m2026-09-04 12:50:18,566[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence stairs/seq-01: 0.10 seconds.[0m
+[[36m2026-09-04 12:50:23,950[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence stairs/seq-01: 4.53 seconds.[0m
+[[36m2026-09-04 12:50:24,880[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence stairs/seq-01: 0.79 seconds.[0m
+[[36m2026-09-04 12:50:26,779[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence stairs/seq-01: 1.76 seconds.[0m
+[[36m2026-09-04 12:50:26,917[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 17/18] Seq: stairs/seq-01, Acc: 0.0566148377874331, Comp: 0.12327705784736845, NC1: 0.7330005032004907, NC2: 0.7040770014090517 - Acc_med: 0.03801277859434251, Compc_med: 0.038904748949872565, NC1c_med: 0.8952820431622815, NC2c_med: 0.8639500329945033[0m
+[[36m2026-09-04 12:50:27,844[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence stairs/seq-04: 0.70 seconds.[0m
+[[36m2026-09-04 12:50:28,680[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence stairs/seq-04: 0.70 seconds.[0m
+[[36m2026-09-04 12:50:28,881[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence stairs/seq-04: 0.09 seconds.[0m
+[[36m2026-09-04 12:50:33,758[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence stairs/seq-04: 4.04 seconds.[0m
+[[36m2026-09-04 12:50:34,712[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence stairs/seq-04: 0.82 seconds.[0m
+[[36m2026-09-04 12:50:36,120[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence stairs/seq-04: 1.27 seconds.[0m
+[[36m2026-09-04 12:50:36,222[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-sparse 18/18] Seq: stairs/seq-04, Acc: 0.03878163916302297, Comp: 0.08779470175977339, NC1: 0.7411244340571631, NC2: 0.7066663477889833 - Acc_med: 0.01840146625027867, Compc_med: 0.02305592176086611, NC1c_med: 0.8798443012387369, NC2c_med: 0.8289686306504715[0m
+SEVENSCENES_DIR is data/7scenes
+[7Scenes] Loading from cache file: data/dataset_cache/7scenes_mv_recon_cache.npy
+[7Scenes] Data size: 18
+[[36m2026-09-04 12:50:36,592[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[2/4] Evaluating Multi-View Pointcloud Reconstruction on dataset 7scenes-dense...[0m
+[[36m2026-09-04 12:50:36,732[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mSampling strategy: stride[0m
+[[36m2026-09-04 12:50:37,122[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mEvaluating 7scenes-dense with ZipMap...[0m
+[[36m2026-09-04 12:50:48,433[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence chess/seq-03: 11.17 seconds.[0m
+[[36m2026-09-04 12:50:52,333[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence chess/seq-03: 3.76 seconds.[0m
+[[36m2026-09-04 12:50:53,318[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence chess/seq-03: 0.80 seconds.[0m
+[[36m2026-09-04 12:51:29,341[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence chess/seq-03: 30.02 seconds.[0m
+[[36m2026-09-04 12:51:38,259[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence chess/seq-03: 8.78 seconds.[0m
+[[36m2026-09-04 12:51:44,653[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence chess/seq-03: 6.26 seconds.[0m
+[[36m2026-09-04 12:51:44,790[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 1/18] Seq: chess/seq-03, Acc: 0.01571711350275847, Comp: 0.02483123057367634, NC1: 0.653620560855609, NC2: 0.6402607887472747 - Acc_med: 0.007000056337312494, Compc_med: 0.010886721879325833, NC1c_med: 0.7418944317331819, NC2c_med: 0.7175920948219892[0m
+[[36m2026-09-04 12:51:57,531[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence chess/seq-05: 12.52 seconds.[0m
+[[36m2026-09-04 12:52:01,445[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence chess/seq-05: 3.78 seconds.[0m
+[[36m2026-09-04 12:52:02,425[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence chess/seq-05: 0.79 seconds.[0m
+[[36m2026-09-04 12:52:39,944[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence chess/seq-05: 31.87 seconds.[0m
+[[36m2026-09-04 12:52:48,703[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence chess/seq-05: 8.62 seconds.[0m
+[[36m2026-09-04 12:52:56,406[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence chess/seq-05: 7.57 seconds.[0m
+[[36m2026-09-04 12:52:56,543[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 2/18] Seq: chess/seq-05, Acc: 0.022418195369646732, Comp: 0.03371505728118693, NC1: 0.6618831244119985, NC2: 0.6280082011004456 - Acc_med: 0.01240860637594575, Compc_med: 0.01945057979732123, NC1c_med: 0.7601608878504994, NC2c_med: 0.6997769211276608[0m
+[[36m2026-09-04 12:53:05,032[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence fire/seq-03: 8.24 seconds.[0m
+[[36m2026-09-04 12:53:08,946[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence fire/seq-03: 3.78 seconds.[0m
+[[36m2026-09-04 12:53:09,982[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence fire/seq-03: 0.86 seconds.[0m
+[[36m2026-09-04 12:53:44,753[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence fire/seq-03: 28.94 seconds.[0m
+[[36m2026-09-04 12:53:53,358[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence fire/seq-03: 8.47 seconds.[0m
+[[36m2026-09-04 12:53:59,618[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence fire/seq-03: 6.07 seconds.[0m
+[[36m2026-09-04 12:53:59,756[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 3/18] Seq: fire/seq-03, Acc: 0.008346695219870566, Comp: 0.013087818982799905, NC1: 0.6646012658489568, NC2: 0.6885257887631252 - Acc_med: 0.0038364977595761116, Compc_med: 0.007531467779562233, NC1c_med: 0.7635373236247952, NC2c_med: 0.7924315294556542[0m
+[[36m2026-09-04 12:54:07,131[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence fire/seq-04: 7.11 seconds.[0m
+[[36m2026-09-04 12:54:11,027[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence fire/seq-04: 3.76 seconds.[0m
+[[36m2026-09-04 12:54:12,030[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence fire/seq-04: 0.83 seconds.[0m
+[[36m2026-09-04 12:54:47,174[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence fire/seq-04: 29.40 seconds.[0m
+[[36m2026-09-04 12:54:55,737[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence fire/seq-04: 8.42 seconds.[0m
+[[36m2026-09-04 12:55:01,658[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence fire/seq-04: 5.78 seconds.[0m
+[[36m2026-09-04 12:55:01,797[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 4/18] Seq: fire/seq-04, Acc: 0.010238250402334871, Comp: 0.01351491919957326, NC1: 0.6624715566664882, NC2: 0.6722462767800008 - Acc_med: 0.0030818276329945887, Compc_med: 0.004784501608006411, NC1c_med: 0.7573344725155442, NC2c_med: 0.768134772379961[0m
+[[36m2026-09-04 12:55:12,341[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence heads/seq-01: 10.29 seconds.[0m
+[[36m2026-09-04 12:55:16,217[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence heads/seq-01: 3.74 seconds.[0m
+[[36m2026-09-04 12:55:17,158[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence heads/seq-01: 0.76 seconds.[0m
+[[36m2026-09-04 12:55:52,486[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence heads/seq-01: 29.69 seconds.[0m
+[[36m2026-09-04 12:56:00,536[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence heads/seq-01: 7.64 seconds.[0m
+[[36m2026-09-04 12:56:07,710[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence heads/seq-01: 7.04 seconds.[0m
+[[36m2026-09-04 12:56:07,887[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 5/18] Seq: heads/seq-01, Acc: 0.00901325018620449, Comp: 0.011979261225693767, NC1: 0.7560376971233835, NC2: 0.7455960815709346 - Acc_med: 0.0033860450042635408, Compc_med: 0.004309301095552121, NC1c_med: 0.8839190901349191, NC2c_med: 0.8681018891663635[0m
+[[36m2026-09-04 12:56:15,022[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-02: 6.87 seconds.[0m
+[[36m2026-09-04 12:56:18,820[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-02: 3.66 seconds.[0m
+[[36m2026-09-04 12:56:19,888[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-02: 0.87 seconds.[0m
+[[36m2026-09-04 12:56:56,016[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-02: 30.09 seconds.[0m
+[[36m2026-09-04 12:57:04,325[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-02: 8.17 seconds.[0m
+[[36m2026-09-04 12:57:10,811[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-02: 6.35 seconds.[0m
+[[36m2026-09-04 12:57:10,947[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 6/18] Seq: office/seq-02, Acc: 0.019660828859840405, Comp: 0.020599048029610777, NC1: 0.7009194588150802, NC2: 0.6850393452943838 - Acc_med: 0.008400391476531958, Compc_med: 0.010014442417286887, NC1c_med: 0.8134235450796831, NC2c_med: 0.7814581289857752[0m
+[[36m2026-09-04 12:57:16,595[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-06: 5.40 seconds.[0m
+[[36m2026-09-04 12:57:20,466[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-06: 3.73 seconds.[0m
+[[36m2026-09-04 12:57:21,458[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-06: 0.82 seconds.[0m
+[[36m2026-09-04 12:57:58,641[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-06: 31.21 seconds.[0m
+[[36m2026-09-04 12:58:06,736[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-06: 8.01 seconds.[0m
+[[36m2026-09-04 12:58:14,510[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-06: 7.64 seconds.[0m
+[[36m2026-09-04 12:58:14,653[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 7/18] Seq: office/seq-06, Acc: 0.02107457025022498, Comp: 0.023850506180503533, NC1: 0.7289461225204925, NC2: 0.7106716933319669 - Acc_med: 0.010764926591297526, Compc_med: 0.012015626223146511, NC1c_med: 0.8579373811018003, NC2c_med: 0.8260123162894119[0m
+[[36m2026-09-04 12:58:22,878[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-07: 7.97 seconds.[0m
+[[36m2026-09-04 12:58:26,788[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-07: 3.77 seconds.[0m
+[[36m2026-09-04 12:58:27,784[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-07: 0.82 seconds.[0m
+[[36m2026-09-04 12:59:02,483[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-07: 28.90 seconds.[0m
+[[36m2026-09-04 12:59:11,110[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-07: 8.49 seconds.[0m
+[[36m2026-09-04 12:59:17,219[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-07: 5.97 seconds.[0m
+[[36m2026-09-04 12:59:17,355[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 8/18] Seq: office/seq-07, Acc: 0.016261197792278, Comp: 0.021355610585006162, NC1: 0.6868270076224052, NC2: 0.671443170867777 - Acc_med: 0.007202390818137883, Compc_med: 0.01048480242026308, NC1c_med: 0.7893237467294538, NC2c_med: 0.7634248073424044[0m
+[[36m2026-09-04 12:59:22,598[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence office/seq-09: 4.97 seconds.[0m
+[[36m2026-09-04 12:59:26,509[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence office/seq-09: 3.77 seconds.[0m
+[[36m2026-09-04 12:59:27,584[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence office/seq-09: 0.90 seconds.[0m
+[[36m2026-09-04 13:00:07,922[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence office/seq-09: 34.37 seconds.[0m
+[[36m2026-09-04 13:00:15,947[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence office/seq-09: 7.89 seconds.[0m
+[[36m2026-09-04 13:00:30,026[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence office/seq-09: 13.94 seconds.[0m
+[[36m2026-09-04 13:00:30,164[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 9/18] Seq: office/seq-09, Acc: 0.04964203550850174, Comp: 0.042236610416142496, NC1: 0.6643112541835818, NC2: 0.6541832115670383 - Acc_med: 0.019082557364267054, Compc_med: 0.017212842639489127, NC1c_med: 0.7590606878870416, NC2c_med: 0.7448941990419762[0m
+[[36m2026-09-04 13:00:40,452[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence pumpkin/seq-01: 10.03 seconds.[0m
+[[36m2026-09-04 13:00:44,376[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence pumpkin/seq-01: 3.78 seconds.[0m
+[[36m2026-09-04 13:00:45,356[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence pumpkin/seq-01: 0.79 seconds.[0m
+[[36m2026-09-04 13:01:17,914[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence pumpkin/seq-01: 26.73 seconds.[0m
+[[36m2026-09-04 13:01:26,087[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence pumpkin/seq-01: 8.03 seconds.[0m
+[[36m2026-09-04 13:01:43,327[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence pumpkin/seq-01: 17.10 seconds.[0m
+[[36m2026-09-04 13:01:43,470[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 10/18] Seq: pumpkin/seq-01, Acc: 0.011111277061320665, Comp: 0.025879309543417127, NC1: 0.6967735868084202, NC2: 0.7084413562885834 - Acc_med: 0.005366370421543552, Compc_med: 0.012782764990466093, NC1c_med: 0.7969739147062447, NC2c_med: 0.8069501053575511[0m
+[[36m2026-09-04 13:01:54,981[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence pumpkin/seq-07: 11.25 seconds.[0m
+[[36m2026-09-04 13:01:58,798[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence pumpkin/seq-07: 3.67 seconds.[0m
+[[36m2026-09-04 13:01:59,831[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence pumpkin/seq-07: 0.85 seconds.[0m
+[[36m2026-09-04 13:02:34,734[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence pumpkin/seq-07: 29.13 seconds.[0m
+[[36m2026-09-04 13:02:43,267[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence pumpkin/seq-07: 8.44 seconds.[0m
+[[36m2026-09-04 13:02:56,433[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence pumpkin/seq-07: 13.03 seconds.[0m
+[[36m2026-09-04 13:02:56,571[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 11/18] Seq: pumpkin/seq-07, Acc: 0.017284361837396543, Comp: 0.024815956750409346, NC1: 0.6910442418285695, NC2: 0.7064985738838901 - Acc_med: 0.006308642472752125, Compc_med: 0.012975438174458486, NC1c_med: 0.7965035609679495, NC2c_med: 0.8205987864101204[0m
+[[36m2026-09-04 13:03:08,538[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-03: 11.71 seconds.[0m
+[[36m2026-09-04 13:03:12,438[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-03: 3.75 seconds.[0m
+[[36m2026-09-04 13:03:13,483[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-03: 0.82 seconds.[0m
+[[36m2026-09-04 13:03:48,221[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-03: 29.08 seconds.[0m
+[[36m2026-09-04 13:03:56,214[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-03: 7.85 seconds.[0m
+[[36m2026-09-04 13:04:12,280[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-03: 15.93 seconds.[0m
+[[36m2026-09-04 13:04:12,417[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 12/18] Seq: redkitchen/seq-03, Acc: 0.01524985552441537, Comp: 0.02297703531036802, NC1: 0.7181878645117725, NC2: 0.6947758554240707 - Acc_med: 0.006843572716626328, Compc_med: 0.011075131359859963, NC1c_med: 0.8403032727716475, NC2c_med: 0.8068042246173219[0m
+[[36m2026-09-04 13:04:17,987[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-04: 5.31 seconds.[0m
+[[36m2026-09-04 13:04:21,854[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-04: 3.73 seconds.[0m
+[[36m2026-09-04 13:04:22,901[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-04: 0.85 seconds.[0m
+[[36m2026-09-04 13:04:59,286[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-04: 30.42 seconds.[0m
+[[36m2026-09-04 13:05:08,156[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-04: 8.73 seconds.[0m
+[[36m2026-09-04 13:05:14,377[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-04: 6.08 seconds.[0m
+[[36m2026-09-04 13:05:14,515[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 13/18] Seq: redkitchen/seq-04, Acc: 0.012624466278192595, Comp: 0.02096999456668233, NC1: 0.6793893158105344, NC2: 0.6742967702073388 - Acc_med: 0.005573723228038621, Compc_med: 0.0099181520597973, NC1c_med: 0.7814881739405268, NC2c_med: 0.7725807140856442[0m
+[[36m2026-09-04 13:05:19,888[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-06: 5.12 seconds.[0m
+[[36m2026-09-04 13:05:23,608[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-06: 3.58 seconds.[0m
+[[36m2026-09-04 13:05:24,703[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-06: 0.94 seconds.[0m
+[[36m2026-09-04 13:06:01,578[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-06: 30.78 seconds.[0m
+[[36m2026-09-04 13:06:10,996[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-06: 9.28 seconds.[0m
+[[36m2026-09-04 13:06:20,247[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-06: 9.12 seconds.[0m
+[[36m2026-09-04 13:06:20,384[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 14/18] Seq: redkitchen/seq-06, Acc: 0.014265480369370554, Comp: 0.02513658222305215, NC1: 0.6785369809870384, NC2: 0.6537435358628813 - Acc_med: 0.006820250124805132, Compc_med: 0.014701737012457103, NC1c_med: 0.7763843771874582, NC2c_med: 0.7346188900736331[0m
+[[36m2026-09-04 13:06:29,520[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-12: 8.88 seconds.[0m
+[[36m2026-09-04 13:06:33,450[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-12: 3.77 seconds.[0m
+[[36m2026-09-04 13:06:34,473[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-12: 0.84 seconds.[0m
+[[36m2026-09-04 13:07:08,845[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-12: 28.35 seconds.[0m
+[[36m2026-09-04 13:07:17,696[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-12: 8.72 seconds.[0m
+[[36m2026-09-04 13:07:24,331[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-12: 6.48 seconds.[0m
+[[36m2026-09-04 13:07:24,469[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 15/18] Seq: redkitchen/seq-12, Acc: 0.013421597477160417, Comp: 0.025854793539023625, NC1: 0.6500767196645605, NC2: 0.6738255925649994 - Acc_med: 0.005527588039354094, Compc_med: 0.01341349301259238, NC1c_med: 0.7383589971196973, NC2c_med: 0.7717045747518572[0m
+[[36m2026-09-04 13:07:37,811[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence redkitchen/seq-14: 13.09 seconds.[0m
+[[36m2026-09-04 13:07:41,731[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence redkitchen/seq-14: 3.78 seconds.[0m
+[[36m2026-09-04 13:07:42,800[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence redkitchen/seq-14: 0.86 seconds.[0m
+[[36m2026-09-04 13:08:18,270[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence redkitchen/seq-14: 29.29 seconds.[0m
+[[36m2026-09-04 13:08:27,161[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence redkitchen/seq-14: 8.76 seconds.[0m
+[[36m2026-09-04 13:08:33,662[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence redkitchen/seq-14: 6.37 seconds.[0m
+[[36m2026-09-04 13:08:33,799[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 16/18] Seq: redkitchen/seq-14, Acc: 0.011298290668674316, Comp: 0.02261896866092246, NC1: 0.65824509664271, NC2: 0.6721732462645689 - Acc_med: 0.005280848362378933, Compc_med: 0.010072771764157443, NC1c_med: 0.7478623418472758, NC2c_med: 0.7644725671040868[0m
+[[36m2026-09-04 13:08:35,471[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence stairs/seq-01: 1.42 seconds.[0m
+[[36m2026-09-04 13:08:37,823[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence stairs/seq-01: 2.12 seconds.[0m
+[[36m2026-09-04 13:08:38,417[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence stairs/seq-01: 0.41 seconds.[0m
+[[36m2026-09-04 13:09:00,283[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence stairs/seq-01: 18.79 seconds.[0m
+[[36m2026-09-04 13:09:04,183[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence stairs/seq-01: 3.75 seconds.[0m
+[[36m2026-09-04 13:09:14,244[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence stairs/seq-01: 9.93 seconds.[0m
+[[36m2026-09-04 13:09:14,383[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 17/18] Seq: stairs/seq-01, Acc: 0.04080763337826077, Comp: 0.09627866057208848, NC1: 0.6698125839547553, NC2: 0.6439820110916777 - Acc_med: 0.022346938086709348, Compc_med: 0.02351485540201809, NC1c_med: 0.7877591671049236, NC2c_med: 0.737313917800356[0m
+[[36m2026-09-04 13:09:16,899[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence stairs/seq-04: 2.26 seconds.[0m
+[[36m2026-09-04 13:09:19,120[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence stairs/seq-04: 2.09 seconds.[0m
+[[36m2026-09-04 13:09:19,710[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence stairs/seq-04: 0.42 seconds.[0m
+[[36m2026-09-04 13:09:40,576[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence stairs/seq-04: 17.63 seconds.[0m
+[[36m2026-09-04 13:09:45,236[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence stairs/seq-04: 4.52 seconds.[0m
+[[36m2026-09-04 13:09:53,701[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence stairs/seq-04: 8.33 seconds.[0m
+[[36m2026-09-04 13:09:53,837[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[7scenes-dense 18/18] Seq: stairs/seq-04, Acc: 0.020331641976345568, Comp: 0.07535390761332743, NC1: 0.6739245337539156, NC2: 0.6569290799556713 - Acc_med: 0.00745584087481349, Compc_med: 0.00836223563231854, NC1c_med: 0.7743071559202099, NC2c_med: 0.7426593618420099[0m
+NRGBD_DIR is data/nrgbd
+[NRGBD] Cache file not found, loading from data/nrgbd
+  0%|          | 0/9 [00:00<?, ?it/s] 11%|█         | 1/9 [00:00<00:04,  1.87it/s] 22%|██▏       | 2/9 [00:00<00:03,  2.08it/s] 33%|███▎      | 3/9 [00:01<00:03,  1.83it/s] 44%|████▍     | 4/9 [00:01<00:02,  2.42it/s] 56%|█████▌    | 5/9 [00:02<00:01,  2.35it/s] 67%|██████▋   | 6/9 [00:02<00:01,  2.86it/s] 78%|███████▊  | 7/9 [00:02<00:00,  2.69it/s] 89%|████████▉ | 8/9 [00:03<00:00,  2.14it/s]100%|██████████| 9/9 [00:03<00:00,  2.47it/s]
+[NRGBD] Data size: 9
+[[36m2026-09-04 13:09:58,975[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[3/4] Evaluating Multi-View Pointcloud Reconstruction on dataset NRGBD-sparse...[0m
+[[36m2026-09-04 13:09:59,114[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mSampling strategy: stride[0m
+[[36m2026-09-04 13:09:59,317[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mEvaluating NRGBD-sparse with ZipMap...[0m
+[[36m2026-09-04 13:09:59,979[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence breakfast_room: 0.52 seconds.[0m
+[[36m2026-09-04 13:10:00,812[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence breakfast_room: 0.70 seconds.[0m
+[[36m2026-09-04 13:10:01,097[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence breakfast_room: 0.12 seconds.[0m
+[[36m2026-09-04 13:10:07,780[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence breakfast_room: 5.58 seconds.[0m
+[[36m2026-09-04 13:10:09,020[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence breakfast_room: 1.10 seconds.[0m
+[[36m2026-09-04 13:10:10,086[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence breakfast_room: 0.93 seconds.[0m
+[[36m2026-09-04 13:10:10,224[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 1/9] Seq: breakfast_room, Acc: 0.03036759107878138, Comp: 0.0245256373789869, NC1: 0.9244993134768297, NC2: 0.9085153397388227 - Acc_med: 0.02301600297934312, Compc_med: 0.01759983843764245, NC1c_med: 0.9933208664520883, NC2c_med: 0.9931239094168012[0m
+[[36m2026-09-04 13:10:12,957[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence complete_kitchen: 2.55 seconds.[0m
+[[36m2026-09-04 13:10:13,777[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence complete_kitchen: 0.68 seconds.[0m
+[[36m2026-09-04 13:10:14,059[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence complete_kitchen: 0.12 seconds.[0m
+[[36m2026-09-04 13:10:19,663[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence complete_kitchen: 4.49 seconds.[0m
+[[36m2026-09-04 13:10:21,001[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence complete_kitchen: 1.20 seconds.[0m
+[[36m2026-09-04 13:10:21,995[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence complete_kitchen: 0.86 seconds.[0m
+[[36m2026-09-04 13:10:22,093[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 2/9] Seq: complete_kitchen, Acc: 0.025412451904192706, Comp: 0.02386423109742692, NC1: 0.9084858506551566, NC2: 0.9127890176135169 - Acc_med: 0.015031926384910074, Compc_med: 0.01424522288387834, NC1c_med: 0.9925557355661672, NC2c_med: 0.9927626420472937[0m
+[[36m2026-09-04 13:10:23,575[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence green_room: 1.26 seconds.[0m
+[[36m2026-09-04 13:10:24,389[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence green_room: 0.68 seconds.[0m
+[[36m2026-09-04 13:10:24,666[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence green_room: 0.12 seconds.[0m
+[[36m2026-09-04 13:10:30,321[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence green_room: 4.53 seconds.[0m
+[[36m2026-09-04 13:10:31,485[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence green_room: 1.03 seconds.[0m
+[[36m2026-09-04 13:10:32,926[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence green_room: 1.31 seconds.[0m
+[[36m2026-09-04 13:10:33,061[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 3/9] Seq: green_room, Acc: 0.029163208396079266, Comp: 0.07204162903360398, NC1: 0.9179816150786733, NC2: 0.9099588832502734 - Acc_med: 0.022574905224096543, Compc_med: 0.021874175596554326, NC1c_med: 0.9952301425553924, NC2c_med: 0.9948754474764063[0m
+[[36m2026-09-04 13:10:35,369[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence grey_white_room: 1.96 seconds.[0m
+[[36m2026-09-04 13:10:36,187[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence grey_white_room: 0.68 seconds.[0m
+[[36m2026-09-04 13:10:36,463[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence grey_white_room: 0.11 seconds.[0m
+[[36m2026-09-04 13:10:42,205[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence grey_white_room: 4.71 seconds.[0m
+[[36m2026-09-04 13:10:43,314[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence grey_white_room: 0.97 seconds.[0m
+[[36m2026-09-04 13:10:46,368[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence grey_white_room: 2.96 seconds.[0m
+[[36m2026-09-04 13:10:46,505[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 4/9] Seq: grey_white_room, Acc: 0.13877501207007711, Comp: 0.20757681863138083, NC1: 0.7672498816156167, NC2: 0.7974765493358883 - Acc_med: 0.10957329779386288, Compc_med: 0.17990592900036526, NC1c_med: 0.9753247499044633, NC2c_med: 0.9634431890820048[0m
+[[36m2026-09-04 13:10:48,986[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence kitchen: 2.28 seconds.[0m
+[[36m2026-09-04 13:10:49,929[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence kitchen: 0.81 seconds.[0m
+[[36m2026-09-04 13:10:50,257[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence kitchen: 0.16 seconds.[0m
+[[36m2026-09-04 13:11:01,961[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence kitchen: 10.26 seconds.[0m
+[[36m2026-09-04 13:11:03,604[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence kitchen: 1.51 seconds.[0m
+[[36m2026-09-04 13:11:05,998[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence kitchen: 2.26 seconds.[0m
+[[36m2026-09-04 13:11:06,136[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 5/9] Seq: kitchen, Acc: 0.12572539314813932, Comp: 0.13180619511524772, NC1: 0.866084163210338, NC2: 0.8646280543228985 - Acc_med: 0.042188065686034594, Compc_med: 0.044243813072055535, NC1c_med: 0.9929794955418001, NC2c_med: 0.9934924451856675[0m
+[[36m2026-09-04 13:11:07,535[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence morning_apartment: 1.17 seconds.[0m
+[[36m2026-09-04 13:11:08,275[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence morning_apartment: 0.60 seconds.[0m
+[[36m2026-09-04 13:11:08,531[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence morning_apartment: 0.08 seconds.[0m
+[[36m2026-09-04 13:11:11,229[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence morning_apartment: 1.89 seconds.[0m
+[[36m2026-09-04 13:11:12,115[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence morning_apartment: 0.75 seconds.[0m
+[[36m2026-09-04 13:11:12,754[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence morning_apartment: 0.53 seconds.[0m
+[[36m2026-09-04 13:11:12,892[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 6/9] Seq: morning_apartment, Acc: 0.011739171475354021, Comp: 0.0148241302451452, NC1: 0.9099517660196156, NC2: 0.9151718195647359 - Acc_med: 0.007763992677532177, Compc_med: 0.009042604301231862, NC1c_med: 0.9950459991367648, NC2c_med: 0.9954377577688119[0m
+[[36m2026-09-04 13:11:15,358[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence staircase: 2.24 seconds.[0m
+[[36m2026-09-04 13:11:16,175[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence staircase: 0.68 seconds.[0m
+[[36m2026-09-04 13:11:16,460[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence staircase: 0.12 seconds.[0m
+[[36m2026-09-04 13:11:22,117[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence staircase: 4.56 seconds.[0m
+[[36m2026-09-04 13:11:23,411[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence staircase: 1.16 seconds.[0m
+[[36m2026-09-04 13:11:24,467[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence staircase: 0.92 seconds.[0m
+[[36m2026-09-04 13:11:24,603[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 7/9] Seq: staircase, Acc: 0.02682043071675215, Comp: 0.020167804821151162, NC1: 0.8911703385103069, NC2: 0.8773126332038803 - Acc_med: 0.014426050913116637, Compc_med: 0.008783763010746348, NC1c_med: 0.9841531146503589, NC2c_med: 0.9813061577005717[0m
+[[36m2026-09-04 13:11:25,396[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence thin_geometry: 0.53 seconds.[0m
+[[36m2026-09-04 13:11:25,959[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence thin_geometry: 0.42 seconds.[0m
+[[36m2026-09-04 13:11:26,156[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence thin_geometry: 0.03 seconds.[0m
+[[36m2026-09-04 13:11:27,522[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence thin_geometry: 0.98 seconds.[0m
+[[36m2026-09-04 13:11:27,916[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence thin_geometry: 0.26 seconds.[0m
+[[36m2026-09-04 13:11:28,311[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence thin_geometry: 0.26 seconds.[0m
+[[36m2026-09-04 13:11:28,481[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 8/9] Seq: thin_geometry, Acc: 0.01278264405864229, Comp: 0.011123934444619466, NC1: 0.9393575490661893, NC2: 0.9564122431483202 - Acc_med: 0.004286532000332231, Compc_med: 0.004165053045374785, NC1c_med: 0.9977424453941338, NC2c_med: 0.9976666726467622[0m
+[[36m2026-09-04 13:11:31,149[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence whiteroom: 2.43 seconds.[0m
+[[36m2026-09-04 13:11:32,099[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence whiteroom: 0.81 seconds.[0m
+[[36m2026-09-04 13:11:32,432[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence whiteroom: 0.16 seconds.[0m
+[[36m2026-09-04 13:11:36,900[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence whiteroom: 3.08 seconds.[0m
+[[36m2026-09-04 13:11:38,766[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence whiteroom: 1.73 seconds.[0m
+[[36m2026-09-04 13:11:39,921[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence whiteroom: 1.02 seconds.[0m
+[[36m2026-09-04 13:11:40,057[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-sparse 9/9] Seq: whiteroom, Acc: 0.014191942026692026, Comp: 0.013697394980396516, NC1: 0.926450554102304, NC2: 0.9054317833661858 - Acc_med: 0.010092925958645695, Compc_med: 0.009161008637987172, NC1c_med: 0.9928309345338807, NC2c_med: 0.9917952750369038[0m
+NRGBD_DIR is data/nrgbd
+[NRGBD] Loading from cache file: data/dataset_cache/nrgbd_mv_recon_cache.npy
+[NRGBD] Data size: 9
+[[36m2026-09-04 13:11:40,390[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[4/4] Evaluating Multi-View Pointcloud Reconstruction on dataset NRGBD-dense...[0m
+[[36m2026-09-04 13:11:40,527[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mSampling strategy: stride[0m
+[[36m2026-09-04 13:11:40,903[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mEvaluating NRGBD-dense with ZipMap...[0m
+[[36m2026-09-04 13:11:46,310[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence breakfast_room: 5.27 seconds.[0m
+[[36m2026-09-04 13:11:48,380[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence breakfast_room: 1.93 seconds.[0m
+[[36m2026-09-04 13:11:49,054[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence breakfast_room: 0.49 seconds.[0m
+[[36m2026-09-04 13:12:12,596[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence breakfast_room: 19.58 seconds.[0m
+[[36m2026-09-04 13:12:17,587[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence breakfast_room: 4.85 seconds.[0m
+[[36m2026-09-04 13:12:21,378[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence breakfast_room: 3.72 seconds.[0m
+[[36m2026-09-04 13:12:21,514[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 1/9] Seq: breakfast_room, Acc: 0.014623195036138393, Comp: 0.010929455662057195, NC1: 0.8606719870075811, NC2: 0.8525010020280255 - Acc_med: 0.008651511893274618, Compc_med: 0.005861119976175705, NC1c_med: 0.9831679432780266, NC2c_med: 0.9844606228512396[0m
+[[36m2026-09-04 13:12:30,755[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence complete_kitchen: 9.06 seconds.[0m
+[[36m2026-09-04 13:12:32,967[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence complete_kitchen: 2.07 seconds.[0m
+[[36m2026-09-04 13:12:33,673[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence complete_kitchen: 0.53 seconds.[0m
+[[36m2026-09-04 13:12:58,919[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence complete_kitchen: 20.93 seconds.[0m
+[[36m2026-09-04 13:13:04,472[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence complete_kitchen: 5.42 seconds.[0m
+[[36m2026-09-04 13:13:08,511[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence complete_kitchen: 3.90 seconds.[0m
+[[36m2026-09-04 13:13:08,647[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 2/9] Seq: complete_kitchen, Acc: 0.018257226677492737, Comp: 0.014585787161618423, NC1: 0.883350554404186, NC2: 0.8574789435602294 - Acc_med: 0.010053604765003703, Compc_med: 0.0071408785332886604, NC1c_med: 0.9861953239751067, NC2c_med: 0.9825424563367244[0m
+[[36m2026-09-04 13:13:20,640[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence green_room: 11.74 seconds.[0m
+[[36m2026-09-04 13:13:23,128[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence green_room: 2.35 seconds.[0m
+[[36m2026-09-04 13:13:23,947[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence green_room: 0.63 seconds.[0m
+[[36m2026-09-04 13:13:55,672[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence green_room: 26.65 seconds.[0m
+[[36m2026-09-04 13:14:02,016[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence green_room: 6.21 seconds.[0m
+[[36m2026-09-04 13:14:08,423[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence green_room: 6.27 seconds.[0m
+[[36m2026-09-04 13:14:08,559[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 3/9] Seq: green_room, Acc: 0.021155648765627963, Comp: 0.05751846298214271, NC1: 0.8510846873738775, NC2: 0.8437383445601345 - Acc_med: 0.013194910452855205, Compc_med: 0.009500344072585699, NC1c_med: 0.984443430912801, NC2c_med: 0.9827735077186683[0m
+[[36m2026-09-04 13:14:18,379[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence grey_white_room: 9.57 seconds.[0m
+[[36m2026-09-04 13:14:20,923[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence grey_white_room: 2.40 seconds.[0m
+[[36m2026-09-04 13:14:21,732[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence grey_white_room: 0.63 seconds.[0m
+[[36m2026-09-04 13:14:43,929[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence grey_white_room: 17.26 seconds.[0m
+[[36m2026-09-04 13:14:50,224[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence grey_white_room: 6.15 seconds.[0m
+[[36m2026-09-04 13:14:55,355[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence grey_white_room: 4.99 seconds.[0m
+[[36m2026-09-04 13:14:55,491[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 4/9] Seq: grey_white_room, Acc: 0.024049056246052653, Comp: 0.019864272532733863, NC1: 0.8701527072478419, NC2: 0.8497548530288365 - Acc_med: 0.01613370879489225, Compc_med: 0.012755073198639721, NC1c_med: 0.9815006811796163, NC2c_med: 0.9779649486714073[0m
+[[36m2026-09-04 13:15:07,396[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence kitchen: 11.65 seconds.[0m
+[[36m2026-09-04 13:15:10,035[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence kitchen: 2.50 seconds.[0m
+[[36m2026-09-04 13:15:10,930[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence kitchen: 0.70 seconds.[0m
+[[36m2026-09-04 13:15:42,197[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence kitchen: 25.86 seconds.[0m
+[[36m2026-09-04 13:15:48,783[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence kitchen: 6.51 seconds.[0m
+[[36m2026-09-04 13:15:53,395[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence kitchen: 4.47 seconds.[0m
+[[36m2026-09-04 13:15:53,532[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 5/9] Seq: kitchen, Acc: 0.019571173426102612, Comp: 0.01567572982210206, NC1: 0.8922014037025692, NC2: 0.8721463246109766 - Acc_med: 0.010053829647922698, Compc_med: 0.008216771389391314, NC1c_med: 0.9883806790838452, NC2c_med: 0.9866424746915551[0m
+[[36m2026-09-04 13:16:01,070[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence morning_apartment: 7.28 seconds.[0m
+[[36m2026-09-04 13:16:02,865[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence morning_apartment: 1.66 seconds.[0m
+[[36m2026-09-04 13:16:03,454[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence morning_apartment: 0.42 seconds.[0m
+[[36m2026-09-04 13:16:16,010[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence morning_apartment: 9.11 seconds.[0m
+[[36m2026-09-04 13:16:20,132[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence morning_apartment: 3.99 seconds.[0m
+[[36m2026-09-04 13:16:23,109[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence morning_apartment: 2.84 seconds.[0m
+[[36m2026-09-04 13:16:23,245[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 6/9] Seq: morning_apartment, Acc: 0.010858906176489212, Comp: 0.011683006205013871, NC1: 0.8773763190581664, NC2: 0.8657921021845387 - Acc_med: 0.007064137800087556, Compc_med: 0.006066030563343254, NC1c_med: 0.9891094519033523, NC2c_med: 0.987484210239303[0m
+[[36m2026-09-04 13:16:31,375[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence staircase: 7.91 seconds.[0m
+[[36m2026-09-04 13:16:33,495[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence staircase: 1.98 seconds.[0m
+[[36m2026-09-04 13:16:34,161[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence staircase: 0.49 seconds.[0m
+[[36m2026-09-04 13:16:48,313[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence staircase: 10.18 seconds.[0m
+[[36m2026-09-04 13:16:53,540[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence staircase: 5.09 seconds.[0m
+[[36m2026-09-04 13:16:57,471[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence staircase: 3.79 seconds.[0m
+[[36m2026-09-04 13:16:57,608[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 7/9] Seq: staircase, Acc: 0.016520315694730996, Comp: 0.011698334043171185, NC1: 0.8506465431278307, NC2: 0.8503591941478646 - Acc_med: 0.009625412872068077, Compc_med: 0.006195289343700335, NC1c_med: 0.9761967825949619, NC2c_med: 0.9762428169030777[0m
+[[36m2026-09-04 13:17:00,447[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence thin_geometry: 2.62 seconds.[0m
+[[36m2026-09-04 13:17:01,408[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence thin_geometry: 0.82 seconds.[0m
+[[36m2026-09-04 13:17:01,714[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence thin_geometry: 0.14 seconds.[0m
+[[36m2026-09-04 13:17:05,355[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence thin_geometry: 2.36 seconds.[0m
+[[36m2026-09-04 13:17:06,734[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence thin_geometry: 1.24 seconds.[0m
+[[36m2026-09-04 13:17:07,908[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence thin_geometry: 1.04 seconds.[0m
+[[36m2026-09-04 13:17:08,070[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 8/9] Seq: thin_geometry, Acc: 0.006952718157442574, Comp: 0.0050034441844359215, NC1: 0.9513599078290607, NC2: 0.9658767964907313 - Acc_med: 0.0027996114392789206, Compc_med: 0.0025204384474249086, NC1c_med: 0.9962499271680473, NC2c_med: 0.996433466237426[0m
+[[36m2026-09-04 13:17:18,016[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mData loading time for sequence whiteroom: 9.62 seconds.[0m
+[[36m2026-09-04 13:17:20,825[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mInference time for sequence whiteroom: 2.67 seconds.[0m
+[[36m2026-09-04 13:17:21,711[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mCoarse alignment time for sequence whiteroom: 0.71 seconds.[0m
+[[36m2026-09-04 13:17:44,432[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mICP alignment time for sequence whiteroom: 17.07 seconds.[0m
+[[36m2026-09-04 13:17:51,859[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mNormal estimation time for sequence whiteroom: 7.29 seconds.[0m
+[[36m2026-09-04 13:17:56,840[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mMetrics computation time for sequence whiteroom: 4.85 seconds.[0m
+[[36m2026-09-04 13:17:56,977[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37m[NRGBD-dense 9/9] Seq: whiteroom, Acc: 0.009699525214150776, Comp: 0.007643851704812549, NC1: 0.8412002277801222, NC2: 0.8276859396559936 - Acc_med: 0.006229700730358537, Compc_med: 0.004975923462066862, NC1c_med: 0.9712564690842651, NC2c_med: 0.9686424707351469[0m
+[[36m2026-09-04 13:17:57,300[0m][[34mmv_recon-eval-ZipMap[0m][[32mINFO[0m] - [37mFinished evaluating ZipMap on all datasets.[0m
+Error executing job with overrides: ['evaluation=mv_recon']
+Traceback (most recent call last):
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 92, in _call_target
+    return _target_(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py", line 172, in __init__
+    from models.ttt3r.dust3r.model import ARCroco3DStereo
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/model.py", line 14, in <module>
+    from transformers import PretrainedConfig
+ModuleNotFoundError: No module named 'transformers'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/mv_recon/eval.py", line 233, in <module>
+    main()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+           ^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+            ^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+        ^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/mv_recon/eval.py", line 39, in main
+    model = hydra.utils.instantiate(model_info.cfg).to(hydra_cfg.device)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 226, in instantiate
+    return instantiate_node(
+           ^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 347, in instantiate_node
+    return _call_target(_target_, partial, args, kwargs, full_key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/instantiate/_instantiate2.py", line 97, in _call_target
+    raise InstantiationException(msg) from e
+hydra.errors.InstantiationException: Error in call to target 'models.fastmodel.TTT3R':
+ModuleNotFoundError("No module named 'transformers'")
+full_key: model.ttt3r.cfg

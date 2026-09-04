@@ -1,0 +1,30 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:282: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[smoke] 8 frames
+>> Loading a list of 8 images
+ - adding /data/NRGBD/breakfast_room/images/img0.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img1.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img2.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img3.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img4.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img5.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img6.png with resolution 640x480 --> 512x384
+ - adding /data/NRGBD/breakfast_room/images/img7.png with resolution 640x480 --> 512x384
+ (Found 8 images)
+... loading model from src/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 8 image/raymaps
+[smoke] output type: <class 'dict'>
+[smoke] first pred keys: ['pts3d_in_self_view', 'conf_self', 'rgb', 'camera_pose', 'pts3d_in_other_view', 'conf']
+[smoke]   pts3d_in_self_view: (1, 384, 512, 3)
+[smoke]   pts3d_in_other_view: (1, 384, 512, 3)
+[smoke]   conf: (1, 384, 512)
+[smoke] TTT3R OK

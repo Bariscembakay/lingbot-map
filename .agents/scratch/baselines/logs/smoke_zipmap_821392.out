@@ -1,0 +1,12 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+[smoke] 8 frames
+[smoke] online ckpt: 0 missing / 0 unexpected keys
+[smoke] images: (8, 3, 392, 518)
+[smoke]   pose_enc: (1, 8, 9)
+[smoke]   depth: (1, 8, 392, 518, 1)
+[smoke]   depth_conf: (1, 8, 392, 518)
+[smoke]   local_points: (1, 8, 392, 518, 3)
+[smoke]   images: (1, 8, 3, 392, 518)
+[smoke] state_query ckpt loads: 1566 tensors; sample keys: ['aggregator.ray_cond_token', 'aggregator.camera_token', 'aggregator.register_token', 'aggregator.patch_embed.mask_token', 'aggregator.patch_embed.cls_token']
+[smoke] ZipMap OK

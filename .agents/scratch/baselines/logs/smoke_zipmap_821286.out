@@ -1,0 +1,19 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+[smoke] 8 frames
+[smoke] online ckpt: 192 missing / 288 unexpected keys
+[smoke] images: (8, 3, 392, 518)
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/.agents/scratch/baselines/smoke_zipmap.py", line 20, in <module>
+    pred = model(images)
+           ^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/models/ZipMap_AR.py", line 110, in forward
+    elif "window_size" in self.ttt_config:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: argument of type 'NoneType' is not iterable
