@@ -34,3 +34,9 @@ docs/
 CUT3R/assets/
 CUT3R/examples/
 CUT3R/cut3r.pdf
+
+# --- vendored TTT3R / ZipMap (see their UPSTREAM.md) ---
+# demo media only; not needed for eval
+TTT3R/examples/
+ZipMap/examples/
+!TTT3R/docs/
