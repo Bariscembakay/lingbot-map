@@ -99,3 +99,13 @@ Every value matches the paper to its printed precision. This validates: the
 vendored code + patches, the ZipMap checkpoints, the CUT3R weights, the
 7-Scenes depth.proj registration (SimpleRecon script), the raw-NRGBD wiring,
 and the curope build. Cleared to build the recall-benchmark adapters (Phase 3).
+- 2026-09-04 (17:55): Secondary check, TTT3R's own eval (7scenes test split,
+  18 seqs, kf_every=2, max_frames=200, job 821690): mean acc 0.028 / comp
+  0.024 / nc 0.581 (nc_med 0.625) — consistent with paper Figure 9 at 200
+  views (no numeric table exists to compare exactly). cut3r-mode twin still
+  running (821370, keep-alive holding against the reaper).
+- 2026-09-04 (18:00): cut3r-mode twin done (821370): mean acc 0.104 / comp
+  0.058 / nc 0.564 at 200 views — vs ttt3r-mode 0.028/0.024/0.581. Chamfer
+  (acc+comp)/2: cut3r 0.081, ttt3r 0.026 — reproduces Figure 9's headline gap
+  (CUT3R forgets at long horizon, TTT3R holds). Secondary check closed; the
+  whole reproduction phase is complete.
