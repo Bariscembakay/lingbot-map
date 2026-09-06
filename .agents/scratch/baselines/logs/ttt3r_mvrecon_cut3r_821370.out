@@ -42,4 +42,63 @@ instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_siz
   with torch.cuda.amp.autocast(enabled=False):
 /home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
   with torch.cuda.amp.autocast(enabled=False):
-  6%|▌         | 1/18 [19:29<5:31:22, 1169.58s/it] 11%|█         | 2/18 [37:52<5:01:26, 1130.40s/it] 17%|█▋        | 3/18 [1:12:42<6:32:06, 1568.42s/it] 22%|██▏       | 4/18 [1:34:19<5:41:01, 1461.54s/it] 28%|██▊       | 5/18 [1:53:22<4:51:45, 1346.60s/it] 33%|███▎      | 6/18 [2:11:40<4:12:25, 1262.15s/it] 39%|███▉      | 7/18 [2:39:03<4:14:12, 1386.63s/it] 44%|████▍     | 8/18 [2:54:07<3:25:27, 1232.73s/it] 50%|█████     | 9/18 [3:22:19<3:26:27, 1376.40s/it] 56%|█████▌    | 10/18 [3:37:28<2:44:18, 1232.29s/it] 61%|██████    | 11/18 [4:00:55<2:29:59, 1285.65s/it] 67%|██████▋   | 12/18 [4:18:03<2:00:43, 1207.30s/it] 72%|███████▏  | 13/18 [4:32:02<1:31:18, 1095.62s/it]
+  6%|▌         | 1/18 [19:29<5:31:22, 1169.58s/it] 11%|█         | 2/18 [37:52<5:01:26, 1130.40s/it] 17%|█▋        | 3/18 [1:12:42<6:32:06, 1568.42s/it] 22%|██▏       | 4/18 [1:34:19<5:41:01, 1461.54s/it] 28%|██▊       | 5/18 [1:53:22<4:51:45, 1346.60s/it] 33%|███▎      | 6/18 [2:11:40<4:12:25, 1262.15s/it] 39%|███▉      | 7/18 [2:39:03<4:14:12, 1386.63s/it] 44%|████▍     | 8/18 [2:54:07<3:25:27, 1232.73s/it] 50%|█████     | 9/18 [3:22:19<3:26:27, 1376.40s/it] 56%|█████▌    | 10/18 [3:37:28<2:44:18, 1232.29s/it] 61%|██████    | 11/18 [4:00:55<2:29:59, 1285.65s/it] 67%|██████▋   | 12/18 [4:18:03<2:00:43, 1207.30s/it] 72%|███████▏  | 13/18 [4:32:02<1:31:18, 1095.62s/it] 78%|███████▊  | 14/18 [4:49:31<1:12:06, 1081.53s/it] 83%|████████▎ | 15/18 [5:18:57<1:04:23, 1288.00s/it] 89%|████████▉ | 16/18 [5:33:53<38:59, 1169.83s/it]   94%|█████████▍| 17/18 [5:49:28<18:19, 1099.22s/it]100%|██████████| 18/18 [6:04:38<00:00, 1042.32s/it]100%|██████████| 18/18 [6:04:38<00:00, 1215.45s/it]
+Finished reconstruction for 7scenes 1/18, FPS: 1.73
+Evaluation for 7scenes 1/18
+Idx: pumpkin/seq-01, Acc: 0.18658241795647654, Comp: 0.0909383176367175, NC1: 0.5882009338590662, NC2: 0.5334250161760925 - Acc_med: 0.08423736171644455, Compc_med: 0.022147447128753668, NC1c_med: 0.6397717850577873, NC2c_med: 0.5503258716063724
+Finished reconstruction for 7scenes 2/18, FPS: 1.74
+Evaluation for 7scenes 2/18
+Idx: pumpkin/seq-07, Acc: 0.08744087254060384, Comp: 0.033656945000164, NC1: 0.6198620781584513, NC2: 0.585473939605235 - Acc_med: 0.042648937687115224, Compc_med: 0.007339575906961443, NC1c_med: 0.6932920510939298, NC2c_med: 0.631746748081186
+Finished reconstruction for 7scenes 3/18, FPS: 1.87
+Evaluation for 7scenes 3/18
+Idx: stairs/seq-01, Acc: 0.2183341194488623, Comp: 0.1800690173081632, NC1: 0.5390345860828054, NC2: 0.5275093493941152 - Acc_med: 0.20699027739780737, Compc_med: 0.0659538691947385, NC1c_med: 0.5543309348222418, NC2c_med: 0.5420328009719375
+Finished reconstruction for 7scenes 4/18, FPS: 1.74
+Evaluation for 7scenes 4/18
+Idx: stairs/seq-04, Acc: 0.12855874566692488, Comp: 0.06967062852845947, NC1: 0.5763975563566325, NC2: 0.5167438731333005 - Acc_med: 0.08083712479540273, Compc_med: 0.008009423977784605, NC1c_med: 0.6190071694560583, NC2c_med: 0.5240012672887441
+Finished reconstruction for 7scenes 5/18, FPS: 1.87
+Evaluation for 7scenes 5/18
+Idx: fire/seq-03, Acc: 0.06362054569904169, Comp: 0.012661428230669668, NC1: 0.5947053477231923, NC2: 0.5359071787522045 - Acc_med: 0.04026755507988264, Compc_med: 0.004600448968887352, NC1c_med: 0.6460658475246772, NC2c_med: 0.552599573904504
+Finished reconstruction for 7scenes 6/18, FPS: 1.74
+Evaluation for 7scenes 6/18
+Idx: fire/seq-04, Acc: 0.05178169423279376, Comp: 0.006144326698332854, NC1: 0.6035098172098553, NC2: 0.5428697456920402 - Acc_med: 0.031230003501581578, Compc_med: 0.002425292716236346, NC1c_med: 0.6653415565453975, NC2c_med: 0.5638302555822265
+Finished reconstruction for 7scenes 7/18, FPS: 1.74
+Evaluation for 7scenes 7/18
+Idx: heads/seq-01, Acc: 0.06607449909464023, Comp: 0.009054797357878102, NC1: 0.6013411260486556, NC2: 0.5491244609205448 - Acc_med: 0.028388918725828258, Compc_med: 0.0042148485186330594, NC1c_med: 0.6608732777011419, NC2c_med: 0.5726483359590415
+Finished reconstruction for 7scenes 8/18, FPS: 1.74
+Evaluation for 7scenes 8/18
+Idx: office/seq-02, Acc: 0.05035101585777001, Comp: 0.026357503108462983, NC1: 0.5915688333435825, NC2: 0.5574702998008524 - Acc_med: 0.027401810267221174, Compc_med: 0.007393871083100568, NC1c_med: 0.6435704649244234, NC2c_med: 0.5848208478615335
+Finished reconstruction for 7scenes 9/18, FPS: 1.74
+Evaluation for 7scenes 9/18
+Idx: office/seq-06, Acc: 0.11152461058568729, Comp: 0.09463220772829686, NC1: 0.6241893117679611, NC2: 0.5739642232714577 - Acc_med: 0.032521608308256275, Compc_med: 0.004958426709948112, NC1c_med: 0.6945554392450227, NC2c_med: 0.6135052885854967
+Finished reconstruction for 7scenes 10/18, FPS: 1.74
+Evaluation for 7scenes 10/18
+Idx: office/seq-07, Acc: 0.07681431428694235, Comp: 0.026334173421132565, NC1: 0.5955271873371858, NC2: 0.5666023354286501 - Acc_med: 0.029322098841078177, Compc_med: 0.0063690193390615255, NC1c_med: 0.6511021504383965, NC2c_med: 0.6007702850567138
+Finished reconstruction for 7scenes 11/18, FPS: 1.87
+Evaluation for 7scenes 11/18
+Idx: office/seq-09, Acc: 0.1794327488289337, Comp: 0.10580761555496816, NC1: 0.5541972023330566, NC2: 0.545615887334492 - Acc_med: 0.13188998929342888, Compc_med: 0.04921956268660217, NC1c_med: 0.57974428475532, NC2c_med: 0.5648846913306228
+Finished reconstruction for 7scenes 12/18, FPS: 1.74
+Evaluation for 7scenes 12/18
+Idx: redkitchen/seq-03, Acc: 0.08065607316822339, Comp: 0.04357453041352874, NC1: 0.562174634636429, NC2: 0.5405625383667397 - Acc_med: 0.025325497617494686, Compc_med: 0.004367861596279041, NC1c_med: 0.5941881559300426, NC2c_med: 0.5605799671848699
+Finished reconstruction for 7scenes 13/18, FPS: 1.87
+Evaluation for 7scenes 13/18
+Idx: redkitchen/seq-04, Acc: 0.01533998872526378, Comp: 0.008288922038194521, NC1: 0.5481283497445549, NC2: 0.5242714176496908 - Acc_med: 0.0032879069770116337, Compc_med: 0.002224855151950551, NC1c_med: 0.570473911223752, NC2c_med: 0.5338683022900421
+Finished reconstruction for 7scenes 14/18, FPS: 1.74
+Evaluation for 7scenes 14/18
+Idx: redkitchen/seq-06, Acc: 0.06415459034225106, Comp: 0.0253063006614798, NC1: 0.593708159554978, NC2: 0.5483511642353306 - Acc_med: 0.030106526952325095, Compc_med: 0.007227478673921302, NC1c_med: 0.6451709315369815, NC2c_med: 0.5714980910143668
+Finished reconstruction for 7scenes 15/18, FPS: 1.74
+Evaluation for 7scenes 15/18
+Idx: redkitchen/seq-12, Acc: 0.18605013316367475, Comp: 0.13106523253025945, NC1: 0.5415143473458209, NC2: 0.5393952024756401 - Acc_med: 0.12675919807574773, Compc_med: 0.09392790597549266, NC1c_med: 0.5535214161811746, NC2c_med: 0.5571867390817705
+Finished reconstruction for 7scenes 16/18, FPS: 1.74
+Evaluation for 7scenes 16/18
+Idx: redkitchen/seq-14, Acc: 0.0394169859568843, Comp: 0.018899798382082906, NC1: 0.5817218859356519, NC2: 0.5418828820827409 - Acc_med: 0.01639506618476795, Compc_med: 0.0046430431711757415, NC1c_med: 0.6276349296796693, NC2c_med: 0.5611943516831255
+Finished reconstruction for 7scenes 17/18, FPS: 1.80
+Evaluation for 7scenes 17/18
+Idx: chess/seq-03, Acc: 0.047461556729932075, Comp: 0.02165068550742929, NC1: 0.581291354342888, NC2: 0.5337405716270638 - Acc_med: 0.02768513288177288, Compc_med: 0.003771245091069598, NC1c_med: 0.6226324787208646, NC2c_med: 0.549665823513095
+Finished reconstruction for 7scenes 18/18, FPS: 1.74
+Evaluation for 7scenes 18/18
+Idx: chess/seq-05, Acc: 0.03933600298171195, Comp: 0.014044417134999954, NC1: 0.5947893722214961, NC2: 0.5363397315415471 - Acc_med: 0.022513095648813715, Compc_med: 0.00315061087582482, NC1c_med: 0.6471670768260298, NC2c_med: 0.5550282635570147
+=== eval exit 0 ===
+total 0
+drwxr-xr-x 3 baris_bakay baris_bakay  1 Sep  4 08:36 .
+drwxr-xr-x 4 baris_bakay baris_bakay  2 Sep  4 08:35 ..
+drwxr-xr-x 2 baris_bakay baris_bakay 56 Sep  4 16:56 7scenes

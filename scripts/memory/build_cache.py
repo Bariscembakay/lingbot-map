@@ -129,6 +129,10 @@ def build_model(args, device):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--scannetpp-root", default="/data/ScanNetpp")
+    ap.add_argument("--tap-layers", default="4,11,17,23",
+                    help="comma list of tap layers to STORE. The aggregator "
+                         "always produces all four; storing fewer (e.g. just "
+                         "23) cuts the cache ~4x for tap-23-only training.")
     ap.add_argument("--scene", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--clip-index", type=int, default=0)
@@ -196,14 +200,19 @@ def main() -> None:
     P = patch_w * patch_h + model.aggregator.patch_start_idx
     E = model.aggregator.embed_dim * 2  # taps are cat([frame_inter, global_inter])
 
+    store_layers = [int(x) for x in args.tap_layers.split(",")]
+    assert all(l in TAP_LAYERS for l in store_layers), store_layers
+    store_idx = [TAP_LAYERS.index(l) for l in store_layers]
+
     taps_mm = np.memmap(out / TAPS, dtype=np.float16, mode="w+",
-                        shape=(args.clip_len, len(TAP_LAYERS), P, E))
+                        shape=(args.clip_len, len(store_layers), P, E))
     written = {"n": 0, "absmax": 0.0}
 
     def capture(_module, _inputs, output):
         tokens = output[0]
         assert len(tokens) == len(TAP_LAYERS), f"{len(tokens)} taps, expected {len(TAP_LAYERS)}"
         stacked = torch.stack(tokens, dim=2)[0]          # [S, 4, P, E]
+        stacked = stacked[:, store_idx]                  # keep only stored layers
         written["absmax"] = max(written["absmax"], float(stacked.abs().amax()))
         i = written["n"]
         s = stacked.shape[0]
@@ -281,7 +290,7 @@ def main() -> None:
         patch_h=patch_h, patch_w=patch_w,
         num_tokens=P,
         patch_start_idx=int(model.aggregator.patch_start_idx),
-        tap_layers=TAP_LAYERS,
+        tap_layers=store_layers,
         embed_dim=E,
         tap_dtype="float16",
         scale_frames=args.num_scale_frames,

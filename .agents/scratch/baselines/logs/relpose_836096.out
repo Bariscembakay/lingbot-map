@@ -1,0 +1,279 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13149x13149 matmul (~240 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[93mUpdated outdated /home/baris_bakay/.evo/settings.json[39m
+[2026-09-06 23:40:13,366][dinov2][INFO] - using MLP layer as FFN
+[2026-09-06 23:40:27,900][root][INFO] - Aggregator initialized with affine_invariant=True
+Unexpected keys in state_dict: ['local_point_head.norm.weight', 'local_point_head.norm.bias', 'local_point_head.projects.0.weight', 'local_point_head.projects.0.bias', 'local_point_head.projects.1.weight', 'local_point_head.projects.1.bias', 'local_point_head.projects.2.weight', 'local_point_head.projects.2.bias', 'local_point_head.projects.3.weight', 'local_point_head.projects.3.bias', 'local_point_head.resize_layers.0.weight', 'local_point_head.resize_layers.0.bias', 'local_point_head.resize_layers.1.weight', 'local_point_head.resize_layers.1.bias', 'local_point_head.resize_layers.3.weight', 'local_point_head.resize_layers.3.bias', 'local_point_head.scratch.layer1_rn.weight', 'local_point_head.scratch.layer2_rn.weight', 'local_point_head.scratch.layer3_rn.weight', 'local_point_head.scratch.layer4_rn.weight', 'local_point_head.scratch.refinenet1.out_conv.weight', 'local_point_head.scratch.refinenet1.out_conv.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet2.out_conv.weight', 'local_point_head.scratch.refinenet2.out_conv.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet3.out_conv.weight', 'local_point_head.scratch.refinenet3.out_conv.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet4.out_conv.weight', 'local_point_head.scratch.refinenet4.out_conv.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.bias', 'local_point_head.scratch.output_conv1.weight', 'local_point_head.scratch.output_conv1.bias', 'local_point_head.scratch.output_conv2.0.weight', 'local_point_head.scratch.output_conv2.0.bias', 'local_point_head.scratch.output_conv2.2.weight', 'local_point_head.scratch.output_conv2.2.bias']
+[2026-09-06 23:42:04,046][relpose-dist][INFO] - [1/3] Loaded Model ZipMap from checkpoints/checkpoint_aff_inv.pt
+[2026-09-06 23:42:06,679][relpose-dist-ZipMap][INFO] - [1/2] Infering relpose(c2w) on sintel dataset..., output to outputs/relpose-distance/ZipMap/sintel
+[sintel eval]:   0%|          | 0/14 [00:00<?, ?it/s][sintel eval]:   0%|          | 0/14 [00:24<?, ?it/s, Seq alley_2 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.10][sintel eval]:   7%|▋         | 1/14 [00:25<05:26, 25.09s/it, Seq alley_2 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.10][sintel eval]:   7%|▋         | 1/14 [00:32<05:26, 25.09s/it, Seq ambush_4 ATE:  0.13 | RPE-trans:  0.07 | RPE-rot:  0.34][sintel eval]:  14%|█▍        | 2/14 [00:32<02:57, 14.82s/it, Seq ambush_4 ATE:  0.13 | RPE-trans:  0.07 | RPE-rot:  0.34][sintel eval]:  14%|█▍        | 2/14 [00:41<02:57, 14.82s/it, Seq ambush_5 ATE:  0.04 | RPE-trans:  0.03 | RPE-rot:  0.48][sintel eval]:  21%|██▏       | 3/14 [00:42<02:15, 12.35s/it, Seq ambush_5 ATE:  0.04 | RPE-trans:  0.03 | RPE-rot:  0.48][sintel eval]:  21%|██▏       | 3/14 [00:46<02:15, 12.35s/it, Seq ambush_6 ATE:  0.21 | RPE-trans:  0.11 | RPE-rot:  1.93][sintel eval]:  29%|██▊       | 4/14 [00:46<01:32,  9.24s/it, Seq ambush_6 ATE:  0.21 | RPE-trans:  0.11 | RPE-rot:  1.93][sintel eval]:  29%|██▊       | 4/14 [00:57<01:32,  9.24s/it, Seq cave_2 ATE:  0.49 | RPE-trans:  0.21 | RPE-rot:  1.04]  [sintel eval]:  36%|███▌      | 5/14 [00:57<01:29,  9.95s/it, Seq cave_2 ATE:  0.49 | RPE-trans:  0.21 | RPE-rot:  1.04][sintel eval]:  36%|███▌      | 5/14 [01:08<01:29,  9.95s/it, Seq cave_4 ATE:  0.05 | RPE-trans:  0.04 | RPE-rot:  0.28][sintel eval]:  43%|████▎     | 6/14 [01:08<01:21, 10.17s/it, Seq cave_4 ATE:  0.05 | RPE-trans:  0.04 | RPE-rot:  0.28][sintel eval]:  43%|████▎     | 6/14 [01:17<01:21, 10.17s/it, Seq market_2 ATE:  0.03 | RPE-trans:  0.02 | RPE-rot:  0.06][sintel eval]:  50%|█████     | 7/14 [01:17<01:09,  9.97s/it, Seq market_2 ATE:  0.03 | RPE-trans:  0.02 | RPE-rot:  0.06][sintel eval]:  50%|█████     | 7/14 [01:27<01:09,  9.97s/it, Seq market_5 ATE:  0.09 | RPE-trans:  0.07 | RPE-rot:  0.36][sintel eval]:  57%|█████▋    | 8/14 [01:27<00:58,  9.83s/it, Seq market_5 ATE:  0.09 | RPE-trans:  0.07 | RPE-rot:  0.36][sintel eval]:  57%|█████▋    | 8/14 [01:35<00:58,  9.83s/it, Seq market_6 ATE:  0.06 | RPE-trans:  0.03 | RPE-rot:  0.24][sintel eval]:  64%|██████▍   | 9/14 [01:35<00:46,  9.37s/it, Seq market_6 ATE:  0.06 | RPE-trans:  0.03 | RPE-rot:  0.24][sintel eval]:  64%|██████▍   | 9/14 [01:45<00:46,  9.37s/it, Seq shaman_3 ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.12][sintel eval]:  71%|███████▏  | 10/14 [01:46<00:38,  9.63s/it, Seq shaman_3 ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.12][sintel eval]:  71%|███████▏  | 10/14 [01:57<00:38,  9.63s/it, Seq sleeping_1 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.24][sintel eval]:  79%|███████▊  | 11/14 [01:57<00:30, 10.25s/it, Seq sleeping_1 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.24][sintel eval]:  79%|███████▊  | 11/14 [02:08<00:30, 10.25s/it, Seq sleeping_2 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.10][sintel eval]:  86%|████████▌ | 12/14 [02:08<00:20, 10.39s/it, Seq sleeping_2 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.10][sintel eval]:  86%|████████▌ | 12/14 [02:18<00:20, 10.39s/it, Seq temple_2 ATE:  0.05 | RPE-trans:  0.04 | RPE-rot:  0.11]  [sintel eval]:  93%|█████████▎| 13/14 [02:18<00:10, 10.23s/it, Seq temple_2 ATE:  0.05 | RPE-trans:  0.04 | RPE-rot:  0.11][sintel eval]:  93%|█████████▎| 13/14 [02:27<00:10, 10.23s/it, Seq temple_3 ATE:  0.65 | RPE-trans:  0.27 | RPE-rot:  0.76][sintel eval]: 100%|██████████| 14/14 [02:28<00:00, 10.09s/it, Seq temple_3 ATE:  0.65 | RPE-trans:  0.27 | RPE-rot:  0.76][sintel eval]: 100%|██████████| 14/14 [02:28<00:00, 10.59s/it, Seq temple_3 ATE:  0.65 | RPE-trans:  0.27 | RPE-rot:  0.76]
+[2026-09-06 23:44:37,018][relpose-dist-ZipMap][INFO] - sintel - Average pose estimation metrics: {'ATE': 0.13147021150960492, 'RPE trans': 0.0656198107505416, 'RPE rot': 0.4393621787362717}
+[2026-09-06 23:44:39,235][relpose-dist-ZipMap][INFO] - [2/2] Infering relpose(c2w) on tum dataset..., output to outputs/relpose-distance/ZipMap/tum
+[tum eval]:   0%|          | 0/8 [00:00<?, ?it/s][tum eval]:   0%|          | 0/8 [00:15<?, ?it/s, Seq rgbd_dataset_freiburg3_sitting_halfsphere ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.34][tum eval]:  12%|█▎        | 1/8 [00:16<01:53, 16.16s/it, Seq rgbd_dataset_freiburg3_sitting_halfsphere ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.34][tum eval]:  12%|█▎        | 1/8 [00:31<01:53, 16.16s/it, Seq rgbd_dataset_freiburg3_sitting_rpy ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.35]       [tum eval]:  25%|██▌       | 2/8 [00:31<01:35, 15.90s/it, Seq rgbd_dataset_freiburg3_sitting_rpy ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.35][tum eval]:  25%|██▌       | 2/8 [00:47<01:35, 15.90s/it, Seq rgbd_dataset_freiburg3_sitting_static ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.22][tum eval]:  38%|███▊      | 3/8 [00:47<01:19, 15.82s/it, Seq rgbd_dataset_freiburg3_sitting_static ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.22][tum eval]:  38%|███▊      | 3/8 [01:03<01:19, 15.82s/it, Seq rgbd_dataset_freiburg3_sitting_xyz ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.28]   [tum eval]:  50%|█████     | 4/8 [01:03<01:04, 16.04s/it, Seq rgbd_dataset_freiburg3_sitting_xyz ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.28][tum eval]:  50%|█████     | 4/8 [01:21<01:04, 16.04s/it, Seq rgbd_dataset_freiburg3_walking_halfsphere ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.38][tum eval]:  62%|██████▎   | 5/8 [01:21<00:49, 16.49s/it, Seq rgbd_dataset_freiburg3_walking_halfsphere ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.38][tum eval]:  62%|██████▎   | 5/8 [01:37<00:49, 16.49s/it, Seq rgbd_dataset_freiburg3_walking_rpy ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.37]       [tum eval]:  75%|███████▌  | 6/8 [01:37<00:32, 16.46s/it, Seq rgbd_dataset_freiburg3_walking_rpy ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.37][tum eval]:  75%|███████▌  | 6/8 [01:54<00:32, 16.46s/it, Seq rgbd_dataset_freiburg3_walking_static ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.23][tum eval]:  88%|████████▊ | 7/8 [01:54<00:16, 16.56s/it, Seq rgbd_dataset_freiburg3_walking_static ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.23][tum eval]:  88%|████████▊ | 7/8 [02:10<00:16, 16.56s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.30]   [tum eval]: 100%|██████████| 8/8 [02:10<00:00, 16.48s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.30][tum eval]: 100%|██████████| 8/8 [02:10<00:00, 16.37s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.30]
+[2026-09-06 23:46:53,460][relpose-dist-ZipMap][INFO] - tum - Average pose estimation metrics: {'ATE': 0.0122231890197038, 'RPE trans': 0.009897927531003842, 'RPE rot': 0.3099033250580961}
+... loading model from checkpoints/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+[2026-09-06 23:48:03,812][relpose-dist][INFO] - [2/3] Loaded Model ttt3r from checkpoints/cut3r_512_dpt_4_64.pth
+[2026-09-06 23:48:05,231][relpose-dist-ttt3r][INFO] - [1/2] Infering relpose(c2w) on sintel dataset..., output to outputs/relpose-distance/ttt3r/sintel
+[sintel eval]:   0%|          | 0/14 [00:00<?, ?it/s]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:   0%|          | 0/14 [00:11<?, ?it/s, Seq alley_2 ATE:  0.02 | RPE-trans:  0.02 | RPE-rot:  0.16][sintel eval]:   7%|▋         | 1/14 [00:11<02:35, 11.99s/it, Seq alley_2 ATE:  0.02 | RPE-trans:  0.02 | RPE-rot:  0.16]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:   7%|▋         | 1/14 [00:20<02:35, 11.99s/it, Seq ambush_4 ATE:  0.16 | RPE-trans:  0.05 | RPE-rot:  1.21][sintel eval]:  14%|█▍        | 2/14 [00:20<01:59,  9.98s/it, Seq ambush_4 ATE:  0.16 | RPE-trans:  0.05 | RPE-rot:  1.21]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  14%|█▍        | 2/14 [00:32<01:59,  9.98s/it, Seq ambush_5 ATE:  0.07 | RPE-trans:  0.04 | RPE-rot:  0.66][sintel eval]:  21%|██▏       | 3/14 [00:32<01:59, 10.90s/it, Seq ambush_5 ATE:  0.07 | RPE-trans:  0.04 | RPE-rot:  0.66]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  21%|██▏       | 3/14 [00:37<01:59, 10.90s/it, Seq ambush_6 ATE:  0.25 | RPE-trans:  0.10 | RPE-rot:  1.92][sintel eval]:  29%|██▊       | 4/14 [00:38<01:27,  8.75s/it, Seq ambush_6 ATE:  0.25 | RPE-trans:  0.10 | RPE-rot:  1.92]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  29%|██▊       | 4/14 [00:49<01:27,  8.75s/it, Seq cave_2 ATE:  0.97 | RPE-trans:  0.39 | RPE-rot:  2.24]  [sintel eval]:  36%|███▌      | 5/14 [00:50<01:29,  9.94s/it, Seq cave_2 ATE:  0.97 | RPE-trans:  0.39 | RPE-rot:  2.24]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  36%|███▌      | 5/14 [01:01<01:29,  9.94s/it, Seq cave_4 ATE:  0.15 | RPE-trans:  0.05 | RPE-rot:  0.56][sintel eval]:  43%|████▎     | 6/14 [01:01<01:22, 10.36s/it, Seq cave_4 ATE:  0.15 | RPE-trans:  0.05 | RPE-rot:  0.56]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  43%|████▎     | 6/14 [01:12<01:22, 10.36s/it, Seq market_2 ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.03][sintel eval]:  50%|█████     | 7/14 [01:13<01:16, 10.91s/it, Seq market_2 ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.03]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  50%|█████     | 7/14 [01:24<01:16, 10.91s/it, Seq market_5 ATE:  0.24 | RPE-trans:  0.18 | RPE-rot:  0.64][sintel eval]:  57%|█████▋    | 8/14 [01:24<01:05, 10.97s/it, Seq market_5 ATE:  0.24 | RPE-trans:  0.18 | RPE-rot:  0.64]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  57%|█████▋    | 8/14 [01:34<01:05, 10.97s/it, Seq market_6 ATE:  0.11 | RPE-trans:  0.05 | RPE-rot:  0.38][sintel eval]:  64%|██████▍   | 9/14 [01:34<00:53, 10.62s/it, Seq market_6 ATE:  0.11 | RPE-trans:  0.05 | RPE-rot:  0.38]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  64%|██████▍   | 9/14 [01:45<00:53, 10.62s/it, Seq shaman_3 ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.18][sintel eval]:  71%|███████▏  | 10/14 [01:45<00:43, 10.78s/it, Seq shaman_3 ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.18]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  71%|███████▏  | 10/14 [01:57<00:43, 10.78s/it, Seq sleeping_1 ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.22][sintel eval]:  79%|███████▊  | 11/14 [01:57<00:33, 11.15s/it, Seq sleeping_1 ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.22]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  79%|███████▊  | 11/14 [02:09<00:33, 11.15s/it, Seq sleeping_2 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.11][sintel eval]:  86%|████████▌ | 12/14 [02:09<00:22, 11.34s/it, Seq sleeping_2 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.11]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  86%|████████▌ | 12/14 [02:20<00:22, 11.34s/it, Seq temple_2 ATE:  0.08 | RPE-trans:  0.06 | RPE-rot:  0.25]  [sintel eval]:  93%|█████████▎| 13/14 [02:20<00:11, 11.26s/it, Seq temple_2 ATE:  0.08 | RPE-trans:  0.06 | RPE-rot:  0.25]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  93%|█████████▎| 13/14 [02:32<00:11, 11.26s/it, Seq temple_3 ATE:  0.62 | RPE-trans:  0.25 | RPE-rot:  1.05][sintel eval]: 100%|██████████| 14/14 [02:32<00:00, 11.52s/it, Seq temple_3 ATE:  0.62 | RPE-trans:  0.25 | RPE-rot:  1.05][sintel eval]: 100%|██████████| 14/14 [02:32<00:00, 10.89s/it, Seq temple_3 ATE:  0.62 | RPE-trans:  0.25 | RPE-rot:  1.05]
+[2026-09-06 23:50:39,408][relpose-dist-ttt3r][INFO] - sintel - Average pose estimation metrics: {'ATE': 0.19538789244091226, 'RPE trans': 0.08628272783959633, 'RPE rot': 0.6873061420838293}
+[2026-09-06 23:50:40,578][relpose-dist-ttt3r][INFO] - [2/2] Infering relpose(c2w) on tum dataset..., output to outputs/relpose-distance/ttt3r/tum
+[tum eval]:   0%|          | 0/8 [00:00<?, ?it/s]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:   0%|          | 0/8 [00:21<?, ?it/s, Seq rgbd_dataset_freiburg3_sitting_halfsphere ATE:  0.04 | RPE-trans:  0.01 | RPE-rot:  0.35][tum eval]:  12%|█▎        | 1/8 [00:21<02:30, 21.46s/it, Seq rgbd_dataset_freiburg3_sitting_halfsphere ATE:  0.04 | RPE-trans:  0.01 | RPE-rot:  0.35]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  12%|█▎        | 1/8 [00:42<02:30, 21.46s/it, Seq rgbd_dataset_freiburg3_sitting_rpy ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.44]       [tum eval]:  25%|██▌       | 2/8 [00:42<02:08, 21.34s/it, Seq rgbd_dataset_freiburg3_sitting_rpy ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.44]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  25%|██▌       | 2/8 [01:05<02:08, 21.34s/it, Seq rgbd_dataset_freiburg3_sitting_static ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.23][tum eval]:  38%|███▊      | 3/8 [01:05<01:50, 22.05s/it, Seq rgbd_dataset_freiburg3_sitting_static ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.23]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  38%|███▊      | 3/8 [01:26<01:50, 22.05s/it, Seq rgbd_dataset_freiburg3_sitting_xyz ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.29]   [tum eval]:  50%|█████     | 4/8 [01:27<01:27, 21.82s/it, Seq rgbd_dataset_freiburg3_sitting_xyz ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.29]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  50%|█████     | 4/8 [01:48<01:27, 21.82s/it, Seq rgbd_dataset_freiburg3_walking_halfsphere ATE:  0.03 | RPE-trans:  0.02 | RPE-rot:  0.43][tum eval]:  62%|██████▎   | 5/8 [01:49<01:05, 21.89s/it, Seq rgbd_dataset_freiburg3_walking_halfsphere ATE:  0.03 | RPE-trans:  0.02 | RPE-rot:  0.43]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  62%|██████▎   | 5/8 [02:11<01:05, 21.89s/it, Seq rgbd_dataset_freiburg3_walking_rpy ATE:  0.06 | RPE-trans:  0.03 | RPE-rot:  0.49]       [tum eval]:  75%|███████▌  | 6/8 [02:12<00:44, 22.25s/it, Seq rgbd_dataset_freiburg3_walking_rpy ATE:  0.06 | RPE-trans:  0.03 | RPE-rot:  0.49]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  75%|███████▌  | 6/8 [02:33<00:44, 22.25s/it, Seq rgbd_dataset_freiburg3_walking_static ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.26][tum eval]:  88%|████████▊ | 7/8 [02:33<00:22, 22.11s/it, Seq rgbd_dataset_freiburg3_walking_static ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.26]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  88%|████████▊ | 7/8 [02:57<00:22, 22.11s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.03 | RPE-trans:  0.01 | RPE-rot:  0.34]   [tum eval]: 100%|██████████| 8/8 [02:57<00:00, 22.75s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.03 | RPE-trans:  0.01 | RPE-rot:  0.34][tum eval]: 100%|██████████| 8/8 [02:58<00:00, 22.26s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.03 | RPE-trans:  0.01 | RPE-rot:  0.34]
+[2026-09-06 23:53:40,471][relpose-dist-ttt3r][INFO] - tum - Average pose estimation metrics: {'ATE': 0.02709947676314091, 'RPE trans': 0.01202977145888277, 'RPE rot': 0.3534611308817541}
+... loading model from checkpoints/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+[2026-09-06 23:53:58,063][relpose-dist][INFO] - [3/3] Loaded Model cut3r from checkpoints/cut3r_512_dpt_4_64.pth
+[2026-09-06 23:53:59,494][relpose-dist-cut3r][INFO] - [1/2] Infering relpose(c2w) on sintel dataset..., output to outputs/relpose-distance/cut3r/sintel
+[sintel eval]:   0%|          | 0/14 [00:00<?, ?it/s]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:   0%|          | 0/14 [00:14<?, ?it/s, Seq alley_2 ATE:  0.03 | RPE-trans:  0.02 | RPE-rot:  0.17][sintel eval]:   7%|▋         | 1/14 [00:14<03:04, 14.16s/it, Seq alley_2 ATE:  0.03 | RPE-trans:  0.02 | RPE-rot:  0.17]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:   7%|▋         | 1/14 [00:22<03:04, 14.16s/it, Seq ambush_4 ATE:  0.17 | RPE-trans:  0.07 | RPE-rot:  0.84][sintel eval]:  14%|█▍        | 2/14 [00:22<02:08, 10.70s/it, Seq ambush_4 ATE:  0.17 | RPE-trans:  0.07 | RPE-rot:  0.84]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  14%|█▍        | 2/14 [00:33<02:08, 10.70s/it, Seq ambush_5 ATE:  0.09 | RPE-trans:  0.03 | RPE-rot:  0.57][sintel eval]:  21%|██▏       | 3/14 [00:33<01:58, 10.75s/it, Seq ambush_5 ATE:  0.09 | RPE-trans:  0.03 | RPE-rot:  0.57]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  21%|██▏       | 3/14 [00:37<01:58, 10.75s/it, Seq ambush_6 ATE:  0.29 | RPE-trans:  0.07 | RPE-rot:  1.84][sintel eval]:  29%|██▊       | 4/14 [00:38<01:23,  8.38s/it, Seq ambush_6 ATE:  0.29 | RPE-trans:  0.07 | RPE-rot:  1.84]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  29%|██▊       | 4/14 [00:49<01:23,  8.38s/it, Seq cave_2 ATE:  1.09 | RPE-trans:  0.25 | RPE-rot:  1.81]  [sintel eval]:  36%|███▌      | 5/14 [00:49<01:27,  9.68s/it, Seq cave_2 ATE:  1.09 | RPE-trans:  0.25 | RPE-rot:  1.81]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  36%|███▌      | 5/14 [01:00<01:27,  9.68s/it, Seq cave_4 ATE:  0.12 | RPE-trans:  0.05 | RPE-rot:  0.50][sintel eval]:  43%|████▎     | 6/14 [01:00<01:20, 10.12s/it, Seq cave_4 ATE:  0.12 | RPE-trans:  0.05 | RPE-rot:  0.50]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  43%|████▎     | 6/14 [01:12<01:20, 10.12s/it, Seq market_2 ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.03][sintel eval]:  50%|█████     | 7/14 [01:12<01:13, 10.49s/it, Seq market_2 ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.03]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  50%|█████     | 7/14 [01:25<01:13, 10.49s/it, Seq market_5 ATE:  0.30 | RPE-trans:  0.14 | RPE-rot:  0.50][sintel eval]:  57%|█████▋    | 8/14 [01:25<01:08, 11.40s/it, Seq market_5 ATE:  0.30 | RPE-trans:  0.14 | RPE-rot:  0.50]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  57%|█████▋    | 8/14 [01:37<01:08, 11.40s/it, Seq market_6 ATE:  0.10 | RPE-trans:  0.04 | RPE-rot:  0.39][sintel eval]:  64%|██████▍   | 9/14 [01:37<00:58, 11.69s/it, Seq market_6 ATE:  0.10 | RPE-trans:  0.04 | RPE-rot:  0.39]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  64%|██████▍   | 9/14 [01:50<00:58, 11.69s/it, Seq shaman_3 ATE:  0.02 | RPE-trans:  0.00 | RPE-rot:  0.21][sintel eval]:  71%|███████▏  | 10/14 [01:51<00:48, 12.16s/it, Seq shaman_3 ATE:  0.02 | RPE-trans:  0.00 | RPE-rot:  0.21]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  71%|███████▏  | 10/14 [02:05<00:48, 12.16s/it, Seq sleeping_1 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.26][sintel eval]:  79%|███████▊  | 11/14 [02:06<00:39, 13.02s/it, Seq sleeping_1 ATE:  0.01 | RPE-trans:  0.01 | RPE-rot:  0.26]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  79%|███████▊  | 11/14 [02:20<00:39, 13.02s/it, Seq sleeping_2 ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.13][sintel eval]:  86%|████████▌ | 12/14 [02:20<00:26, 13.36s/it, Seq sleeping_2 ATE:  0.02 | RPE-trans:  0.01 | RPE-rot:  0.13]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  86%|████████▌ | 12/14 [02:35<00:26, 13.36s/it, Seq temple_2 ATE:  0.12 | RPE-trans:  0.06 | RPE-rot:  0.25]  [sintel eval]:  93%|█████████▎| 13/14 [02:35<00:13, 13.95s/it, Seq temple_2 ATE:  0.12 | RPE-trans:  0.06 | RPE-rot:  0.25]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[sintel eval]:  93%|█████████▎| 13/14 [02:50<00:13, 13.95s/it, Seq temple_3 ATE:  0.59 | RPE-trans:  0.22 | RPE-rot:  0.81][sintel eval]: 100%|██████████| 14/14 [02:50<00:00, 14.34s/it, Seq temple_3 ATE:  0.59 | RPE-trans:  0.22 | RPE-rot:  0.81][sintel eval]: 100%|██████████| 14/14 [02:50<00:00, 12.21s/it, Seq temple_3 ATE:  0.59 | RPE-trans:  0.22 | RPE-rot:  0.81]
+[2026-09-06 23:56:52,388][relpose-dist-cut3r][INFO] - sintel - Average pose estimation metrics: {'ATE': 0.2109271060741238, 'RPE trans': 0.07024158292052457, 'RPE rot': 0.5943179248793758}
+[2026-09-06 23:56:54,636][relpose-dist-cut3r][INFO] - [2/2] Infering relpose(c2w) on tum dataset..., output to outputs/relpose-distance/cut3r/tum
+[tum eval]:   0%|          | 0/8 [00:00<?, ?it/s]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:   0%|          | 0/8 [00:25<?, ?it/s, Seq rgbd_dataset_freiburg3_sitting_halfsphere ATE:  0.06 | RPE-trans:  0.01 | RPE-rot:  0.36][tum eval]:  12%|█▎        | 1/8 [00:26<03:02, 26.10s/it, Seq rgbd_dataset_freiburg3_sitting_halfsphere ATE:  0.06 | RPE-trans:  0.01 | RPE-rot:  0.36]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  12%|█▎        | 1/8 [00:53<03:02, 26.10s/it, Seq rgbd_dataset_freiburg3_sitting_rpy ATE:  0.04 | RPE-trans:  0.01 | RPE-rot:  0.55]       [tum eval]:  25%|██▌       | 2/8 [00:53<02:40, 26.69s/it, Seq rgbd_dataset_freiburg3_sitting_rpy ATE:  0.04 | RPE-trans:  0.01 | RPE-rot:  0.55]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  25%|██▌       | 2/8 [01:19<02:40, 26.69s/it, Seq rgbd_dataset_freiburg3_sitting_static ATE:  0.02 | RPE-trans:  0.00 | RPE-rot:  0.24][tum eval]:  38%|███▊      | 3/8 [01:20<02:13, 26.76s/it, Seq rgbd_dataset_freiburg3_sitting_static ATE:  0.02 | RPE-trans:  0.00 | RPE-rot:  0.24]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  38%|███▊      | 3/8 [01:48<02:13, 26.76s/it, Seq rgbd_dataset_freiburg3_sitting_xyz ATE:  0.03 | RPE-trans:  0.01 | RPE-rot:  0.31]   [tum eval]:  50%|█████     | 4/8 [01:48<01:49, 27.42s/it, Seq rgbd_dataset_freiburg3_sitting_xyz ATE:  0.03 | RPE-trans:  0.01 | RPE-rot:  0.31]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):

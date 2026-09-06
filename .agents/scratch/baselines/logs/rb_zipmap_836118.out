@@ -1,0 +1,44 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14145x14145 matmul (~301 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[load] state_query ckpt: 0 missing / 0 unexpected
+[zipmap|breakfast_room|n100] ingest 27.2s
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/scripts/memory/recall_bench/run_zipmap.py", line 199, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/baris_bakay/lingbot-map/scripts/memory/recall_bench/run_zipmap.py", line 122, in main
+    out = model.render(info={"state_list": preds["state_list"]},
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/models/ZipMap.py", line 219, in render
+    aggregated_tokens_list, patch_start_idx, state_list = self.aggregator.render(ray_conditions=cur_ray_conditions, info=info)
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/models/aggregator_ttt.py", line 435, in render
+    tokens, global_idx, global_intermediates, state = self._process_global_attention(
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/models/aggregator_ttt.py", line 499, in _process_global_attention
+    tokens, state = self.global_blocks[global_idx](tokens, pos=pos, info=info)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/layers/block_ttt.py", line 109, in forward
+    residual, fast_weight = ttt_residual_func(x, info=info)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/layers/block_ttt.py", line 87, in ttt_residual_func
+    residual, fast_weight = self.ttt_block(self.norm1(x), info=info)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap/zipmap/layers/ttt.py", line 373, in forward
+    w0, w1, w2, q, k, v, lr0, lr1, lr2, info["ttt_op_order"],
+                                        ~~~~^^^^^^^^^^^^^^^^
+KeyError: 'ttt_op_order'

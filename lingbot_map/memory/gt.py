@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
 
 import cv2
+import zlib
+
 import lz4.block
 import numpy as np
 
@@ -54,29 +56,46 @@ OPENGL_TO_OPENCV = np.diag([1.0, -1.0, -1.0, 1.0])
 POSE_TRUST_THRESHOLD_DEG = 1.5
 
 
-def detect_depth_shape(path: Path | str) -> Tuple[int, int]:
-    """Infer (h, w) from the first frame by trying the known candidates."""
+def detect_depth_shape(path: Path | str) -> Tuple[int, int, str]:
+    """Infer (h, w, codec) from the first frame.
+
+    Two on-disk formats exist in ScanNet++ (found 2026-09-07 building the
+    big-run caches): the common one is lz4-block uint16 millimetres; a subset
+    of scenes (e.g. 02c2ddee2a) instead stores raw-deflate float32 METRES.
+    Same [u32 len][block] framing, different codec and dtype."""
     with open(path, "rb") as f:
         n = struct.unpack("<I", f.read(4))[0]
         buf = f.read(n)
     for h, w in DEPTH_SHAPE_CANDIDATES:
         try:
             if len(lz4.block.decompress(buf, uncompressed_size=h * w * 2)) == h * w * 2:
-                return h, w
+                return h, w, "lz4_u16mm"
         except lz4.block.LZ4BlockError:
             continue
+    try:
+        out = zlib.decompressobj(-15).decompress(buf)
+        for h, w in DEPTH_SHAPE_CANDIDATES:
+            if len(out) == h * w * 4:
+                return h, w, "deflate_f32m"
+    except zlib.error:
+        pass
     raise RuntimeError(f"{path}: no candidate depth shape decompresses "
-                       f"(tried {DEPTH_SHAPE_CANDIDATES})")
+                       f"(tried {DEPTH_SHAPE_CANDIDATES}, lz4 u16 and "
+                       f"raw-deflate f32)")
 
 
 def read_iphone_depth(path: Path | str, frame_ids: Sequence[int],
                       shape: Optional[Tuple[int, int]] = None) -> np.ndarray:
     """[L, h, w] float32 metres. 0 marks invalid. Shape is detected if not given."""
-    h, w = shape or detect_depth_shape(path)
+    if shape is not None and len(shape) == 2:
+        h, w = shape
+        codec = "lz4_u16mm"
+    else:
+        h, w, codec = shape or detect_depth_shape(path)
     want = set(frame_ids)
     order = {f: k for k, f in enumerate(frame_ids)}
     out = np.zeros((len(frame_ids), h, w), np.float32)
-    nbytes = h * w * 2
+    nbytes = h * w * (2 if codec == "lz4_u16mm" else 4)
     found = 0
     with open(path, "rb") as f:
         idx = 0
@@ -86,11 +105,15 @@ def read_iphone_depth(path: Path | str, frame_ids: Sequence[int],
                 break
             n = struct.unpack("<I", hdr)[0]
             if idx in want:
-                raw = lz4.block.decompress(f.read(n), uncompressed_size=nbytes)
-                out[order[idx]] = (
-                    np.frombuffer(raw, np.uint16).reshape(h, w).astype(np.float32)
-                    / MM_PER_M
-                )
+                if codec == "lz4_u16mm":
+                    raw = lz4.block.decompress(f.read(n), uncompressed_size=nbytes)
+                    frame = (np.frombuffer(raw, np.uint16).reshape(h, w)
+                             .astype(np.float32) / MM_PER_M)
+                else:
+                    raw = zlib.decompressobj(-15).decompress(f.read(n))
+                    frame = np.frombuffer(raw, np.float32).reshape(h, w).copy()
+                    np.nan_to_num(frame, copy=False)
+                out[order[idx]] = frame
                 found += 1
                 if found == len(frame_ids):
                     break
@@ -231,8 +254,10 @@ def prepare(scannetpp_root: Path | str, scene: str, frame_ids: Sequence[int],
             convention: str = "auto") -> dict:
     """Everything Loss 1 needs, in the model's canonical units."""
     iphone = Path(scannetpp_root) / "data" / scene / "iphone"
-    depth_shape = detect_depth_shape(iphone / "depth.bin")
-    depth_small = read_iphone_depth(iphone / "depth.bin", frame_ids, depth_shape)
+    dh, dw, dcodec = detect_depth_shape(iphone / "depth.bin")
+    depth_shape = (dh, dw)
+    depth_small = read_iphone_depth(iphone / "depth.bin", frame_ids,
+                                    (dh, dw, dcodec))
     c2w_raw, intr_full = read_iphone_meta(iphone / "pose_intrinsic_imu.json", frame_ids)
 
     c2w_rel = relative_to_first(c2w_raw)

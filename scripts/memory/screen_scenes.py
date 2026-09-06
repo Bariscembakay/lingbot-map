@@ -35,8 +35,9 @@ def score_scene(root: str, scene: str, stride: int, clip_len: int,
     if L < 128:
         return None
     ids = [i * stride for i in range(L)]
-    shape = gt.detect_depth_shape(iphone / "depth.bin")
-    depth = gt.read_iphone_depth(iphone / "depth.bin", ids, shape)
+    sh, sw, scodec = gt.detect_depth_shape(iphone / "depth.bin")
+    shape = (sh, sw)
+    depth = gt.read_iphone_depth(iphone / "depth.bin", ids, (sh, sw, scodec))
     c2w, intr = gt.read_iphone_meta(jp, ids)
     intr_s = gt.scale_intrinsics(intr, (1440, 1920), shape)
     c2w_rel = gt.relative_to_first(c2w @ gt.CONVENTIONS["opengl"])

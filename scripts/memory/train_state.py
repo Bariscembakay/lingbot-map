@@ -38,14 +38,17 @@ from lingbot_map.memory.probe_data import (  # noqa: E402
     build_raymap, gt_pointmaps, relative_c2w, true_rays)
 from lingbot_map.memory.recall_loss import probe_loss  # noqa: E402
 
-TAP23 = 3   # index into the cache's 4 tap layers (4, 11, 17, 23)
+TAP23 = 23  # tap layer id; its index is resolved per cache from meta.tap_layers
 
 
 class Clip:
     """One cached clip, subsampled, with everything a probe needs on device."""
 
     def __init__(self, path: Path, subsample: int, device, max_frames: int | None,
-                 taps: str = "23"):
+                 taps: str = "23", store: str = "gpu"):
+        # store="cpu": taps and gt stay in host RAM and move per access. At
+        # ~0.5 GB taps/clip a thousand-clip run cannot live on the GPU (or,
+        # x4 DDP ranks, even in materialised host copies without sharding).
         c = ClipCache(path)
         n = len(c)
         idx = list(range(0, n, subsample))
@@ -56,18 +59,24 @@ class Clip:
         self.device = device
         # fp16 on disk; cast on GPU rather than single-threaded on the CPU.
         if taps == "all":
+            assert len(c.meta.tap_layers) == 4, \
+                f"{path}: taps=all needs a full 4-tap cache, has {c.meta.tap_layers}"
             # channel-concat the four taps (4/11/17/23) -> 8192-d; sweep axis (b).
             # CPU-resident: at 32+8 clips this is ~105 GB, which no GPU holds --
             # consumers move one frame's stack to the device per step (~66 MB).
             t4 = torch.from_numpy(np.ascontiguousarray(c.taps[idx]))
             self.taps = t4.permute(0, 2, 1, 3).reshape(t4.shape[0], t4.shape[2], -1)
         else:
+            t23 = c.meta.tap_layers.index(TAP23)
             self.taps = torch.from_numpy(
-                np.ascontiguousarray(c.taps[idx][:, TAP23])).to(device)
+                np.ascontiguousarray(c.taps[idx][:, t23]))
+            if store == "gpu":
+                self.taps = self.taps.to(device)
+        gt_dev = device if store == "gpu" else "cpu"
         self.gt_depth = torch.from_numpy(
-            np.ascontiguousarray(c.gt_depth[idx])).to(device).float()
-        self.gt_c2w = torch.from_numpy(c.gt_c2w[idx]).to(device).float()
-        self.K = torch.from_numpy(c.gt_intrinsics[idx]).to(device).float()
+            np.ascontiguousarray(c.gt_depth[idx])).to(gt_dev).float()
+        self.gt_c2w = torch.from_numpy(c.gt_c2w[idx]).to(gt_dev).float()
+        self.K = torch.from_numpy(c.gt_intrinsics[idx]).to(gt_dev).float()
         self.h, self.w = c.meta.height, c.meta.width
         self.patch_hw = (c.meta.patch_h, c.meta.patch_w)
 
@@ -81,15 +90,20 @@ class Clip:
         """qs are ABSOLUTE frame indices; `anchor` is the stream's first frame
         (the coordinate origin), so a random training window anchors at its own
         start rather than the clip's."""
-        q = torch.tensor(qs, device=self.device)
-        c2w0 = self.gt_c2w[anchor][None]
-        rm = build_raymap(self.K[q], self.gt_c2w[q], c2w0, self.h, self.w, convention)
-        xs, xw, valid = gt_pointmaps(self.gt_depth[q], self.K[q], self.gt_c2w[q], c2w0)
+        q = torch.tensor(qs, device=self.gt_c2w.device)
+        dv = self.device
+        K, c2w, dep = (self.K[q].to(dv), self.gt_c2w[q].to(dv),
+                       self.gt_depth[q].to(dv))
+        c2w0 = self.gt_c2w[anchor][None].to(dv)
+        rm = build_raymap(K, c2w, c2w0, self.h, self.w, convention)
+        xs, xw, valid = gt_pointmaps(dep, K, c2w, c2w0)
         return rm, xs, xw, valid
 
     def probe_rays(self, qs, anchor: int = 0, unit: bool = True):
-        q = torch.tensor(qs, device=self.device)
-        return true_rays(self.K[q], self.gt_c2w[q], self.gt_c2w[anchor][None],
+        q = torch.tensor(qs, device=self.gt_c2w.device)
+        dv = self.device
+        return true_rays(self.K[q].to(dv), self.gt_c2w[q].to(dv),
+                         self.gt_c2w[anchor][None].to(dv),
                          self.h, self.w, unit=unit)
 
 
@@ -170,6 +184,9 @@ def main() -> int:
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
     # (a) tap 23 only vs (b) all four channel-concat; design doc "Sweep axes".
     ap.add_argument("--taps", default="23", choices=["23", "all"])
+    ap.add_argument("--clip-store", default="gpu", choices=["gpu", "cpu"],
+                    help="where clip taps/gt live; cpu for runs whose clip set "
+                         "cannot fit on the GPU (moved per access)")
     ap.add_argument("--read-depth", type=int, default=2)
     # dpt = CUT3R's two DPT heads. raydepth = one scalar ray distance on true
     # rays, ~0.8 M params -- the read-capacity axis at its head end.
@@ -236,15 +253,33 @@ def main() -> int:
     ap.add_argument("--viz-every", type=int, default=500)
     args = ap.parse_args()
 
-    torch.manual_seed(args.seed)
-    rng = np.random.default_rng(args.seed)
+    # ---- multi-GPU (torchrun) ----
+    # No DDP wrapper: tbptt runs several backward() calls per update and the
+    # blocks use gradient checkpointing, both of which fight DDP's autograd
+    # hooks. Instead: identical init (same torch seed), per-rank clip shards
+    # and rng, and an explicit grad all-reduce before every opt.step() --
+    # mathematically the same average gradient, none of the hook pitfalls.
+    ddp = "RANK" in os.environ and "WORLD_SIZE" in os.environ
+    rank, world = 0, 1
+    if ddp:
+        import torch.distributed as dist
+        dist.init_process_group("nccl")
+        rank, world = dist.get_rank(), dist.get_world_size()
+        torch.cuda.set_device(int(os.environ.get("LOCAL_RANK", rank)))
+    rank0 = rank == 0
+
+    torch.manual_seed(args.seed)          # same model init on every rank
+    rng = np.random.default_rng(args.seed + rank)  # different batches per rank
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / "config.json").write_text(
-        json.dumps({k: str(v) for k, v in vars(args).items()}, indent=2))
+    if rank0:
+        args.out.mkdir(parents=True, exist_ok=True)
+        (args.out / "config.json").write_text(
+            json.dumps({k: str(v) for k, v in vars(args).items()}, indent=2))
+    if ddp:
+        dist.barrier()
 
     run = None
-    if args.wandb != "off":
+    if args.wandb != "off" and rank0:
         try:
             import wandb
             # Run dirs live on persistent /group, not the run's /scratch out dir.
@@ -260,10 +295,19 @@ def main() -> int:
         except Exception as e:  # e.g. no ~/.netrc on msp3 -- never kill the run
             print(f"[wandb] disabled: {e}", flush=True)
 
-    clips = [Clip(p, args.subsample, device, args.max_frames, args.taps)
-             for p in expand_paths(args.clips)]
-    val_clips = [Clip(p, args.subsample, device, args.max_frames, args.taps)
-                 for p in expand_paths(args.val_clips)]
+    clip_paths = expand_paths(args.clips)
+    if world > 1:
+        shard = clip_paths[rank::world]
+        print(f"[ddp] rank {rank}/{world}: {len(shard)}/{len(clip_paths)} clips",
+              flush=True)
+        clip_paths = shard
+    clips = [Clip(p, args.subsample, device, args.max_frames, args.taps,
+                  store=args.clip_store)
+             for p in clip_paths]
+    # val runs on rank 0 only; other ranks skip the load entirely.
+    val_clips = [Clip(p, args.subsample, device, args.max_frames, args.taps,
+                      store=args.clip_store)
+                 for p in expand_paths(args.val_clips)] if rank0 else []
     assert len({(c.h, c.w, c.patch_hw) for c in clips + val_clips}) == 1
     print(f"[data] {len(clips)} train / {len(val_clips)} val clip(s), "
           f"{len(clips[0])} frames each, {clips[0].h}x{clips[0].w}, "
@@ -433,6 +477,12 @@ def main() -> int:
         if torch.is_tensor(window):
             (window / max(1, n_stops)).backward()
             loss_sum += float(window.detach())
+        if world > 1:
+            import torch.distributed as dist
+            for p in model.parameters():
+                if p.grad is not None:
+                    dist.all_reduce(p.grad)
+                    p.grad /= world
         gnorm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0))
         opt.step()
         sched.step()
@@ -445,7 +495,7 @@ def main() -> int:
                            if device.type == "cuda" else 0.0),
                "sec": time.time() - t0}
         stop = False
-        if val_clips and step % args.val_every == 0:
+        if rank0 and val_clips and step % args.val_every == 0:
             rec.update(evaluate(model, val_clips, N, args, device))
             print("[val] " + " ".join(f"{k}={v:.4f}" for k, v in rec.items()
                                       if k.startswith("val")), flush=True)
@@ -460,15 +510,22 @@ def main() -> int:
                       f"(best {best_val:.4f}); stopping at step {step}",
                       flush=True)
                 stop = True
+        if world > 1 and args.val_clips and step % args.val_every == 0:
+            import torch.distributed as dist
+            flag = torch.tensor([int(stop)], device=device)
+            dist.broadcast(flag, src=0)
+            stop = bool(flag.item())
         hist.append(rec)
         if run is not None:
             run.log(rec, step=step)
-        if step % args.log_every == 0:
+        if rank0 and step % args.log_every == 0:
             print(f"[{step:5d}] loss {rec['loss']:8.4f} | L21 self "
                   f"{rec['l21_self']:.4f} world {rec['l21_world']:.4f} | "
                   f"|g| {gnorm:7.3f} | |s| {rec['state_norm']:8.1f} | "
                   f"{rec['peak_gb']:5.1f}GB | {rec['sec']:6.1f}s", flush=True)
             (args.out / "history.json").write_text(json.dumps(hist))
+        assert not (args.train_plateau_decay and world > 1), \
+            "plateau decay decides from per-rank loss and would diverge ranks"
         if (args.train_plateau_decay and step and step % 250 == 0
                 and len(hist) >= 250):
             cur = float(np.mean([r["l21_self"] for r in hist[-250:]]))
@@ -486,22 +543,26 @@ def main() -> int:
                     print(f"[lr-decay] train L21 flat at {cur:.4f}; "
                           f"lr {lr0:.2e} -> {opt.param_groups[0]['lr']:.2e}",
                           flush=True)
-        if step and step % args.save_every == 0:
+        if rank0 and step and step % args.save_every == 0:
             save_ckpt(step)
-        if step % args.viz_every == 0:
+        if rank0 and step % args.viz_every == 0:
             dump_viz(model, clips[0], args, device, step, tag="train")
             if val_clips:
                 dump_viz(model, val_clips[0], args, device, step, tag="val")
         if stop:
             break
 
-    save_ckpt(step)
-    (args.out / "history.json").write_text(json.dumps(hist))
-    dump_viz(model, clips[0], args, device, args.updates, tag="train")
-    if val_clips:
-        dump_viz(model, val_clips[0], args, device, args.updates, tag="val")
-    if run is not None:
-        run.finish()
+    if rank0:
+        save_ckpt(step)
+        (args.out / "history.json").write_text(json.dumps(hist))
+        dump_viz(model, clips[0], args, device, args.updates, tag="train")
+        if val_clips:
+            dump_viz(model, val_clips[0], args, device, args.updates, tag="val")
+        if run is not None:
+            run.finish()
+    if ddp:
+        import torch.distributed as dist
+        dist.destroy_process_group()
     print(f"[done] {time.time()-t0:.0f}s", flush=True)
     return 0
 

@@ -1,0 +1,7 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+usage: run_cut3r_family.py [-h] --update-rule {cut3r,ttt3r}
+                           [--repo {CUT3R,TTT3R}] --scene SCENE
+                           [--manifest-dir MANIFEST_DIR]
+                           [--tiers TIERS [TIERS ...]] --out OUT
+run_cut3r_family.py: error: unrecognized arguments: 
