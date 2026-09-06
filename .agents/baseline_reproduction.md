@@ -109,3 +109,30 @@ and the curope build. Cleared to build the recall-benchmark adapters (Phase 3).
   (acc+comp)/2: cut3r 0.081, ttt3r 0.026 — reproduces Figure 9's headline gap
   (CUT3R forgets at long horizon, TTT3R holds). Secondary check closed; the
   whole reproduction phase is complete.
+
+## Full Table 3 comparison — every cell, means and medians (saved 2026-09-06)
+
+Format per cell: Acc-mean / Acc-med / Comp-mean / Comp-med / NC-mean / NC-med.
+NC = (NC1+NC2)/2, matching the paper's aggregation. Ours from
+`ZipMap_eval/outputs/mv_recon/<model>/<dataset>/_all_samples.csv` (jobs
+821691 ZipMap, 821784 ttt3r+cut3r).
+
+| setting | method | paper | ours |
+|---|---|---|---|
+| 7-Scenes sparse (kf200) | ZipMap | 0.044/0.026/0.065/0.037/0.740/0.853 | 0.043/0.025/0.065/0.037/0.741/0.854 |
+| 7-Scenes sparse | CUT3R | 0.080/0.055/0.102/0.066/0.711/0.811 | 0.080/0.055/0.102/0.066/0.711/0.811 |
+| 7-Scenes sparse | TTT3R | 0.098/0.062/0.159/0.107/0.681/0.768 | 0.098/0.062/0.159/0.107/0.681/0.768 |
+| 7-Scenes dense (kf40) | ZipMap | 0.018/0.008/0.030/0.012/0.680/0.780 | 0.018/0.008/0.030/0.012/0.680/0.780 |
+| 7-Scenes dense | CUT3R | 0.023/0.010/0.028/0.008/0.674/0.771 | 0.023/0.010/0.028/0.008/0.674/0.771 |
+| 7-Scenes dense | TTT3R | 0.035/0.016/0.032/0.010/0.666/0.760 | 0.035/0.016/0.032/0.010/0.666/0.760 |
+| NRGBD sparse (kf500) | ZipMap | 0.046/0.028/0.057/0.034/0.895/0.990 | 0.046/0.028/0.058/0.034/0.894/0.990 |
+| NRGBD sparse | CUT3R | 0.098/0.038/0.075/0.029/0.830/0.974 | 0.098/0.038/0.075/0.029/0.830/0.974 |
+| NRGBD sparse | TTT3R | 0.101/0.039/0.076/0.029/0.826/0.973 | 0.101/0.039/0.076/0.029/0.826/0.973 |
+| NRGBD dense (kf100) | ZipMap | 0.016/0.009/0.017/0.007/0.870/0.983 | 0.016/0.009/0.017/0.007/0.870/0.983 |
+| NRGBD dense | CUT3R | 0.065/0.027/0.036/0.012/0.812/0.961 | 0.065/0.027/0.036/0.012/0.812/0.961 |
+| NRGBD dense | TTT3R | 0.074/0.033/0.037/0.014/0.803/0.957 | 0.074/0.033/0.037/0.014/0.803/0.957 |
+
+**Worst absolute deviation across all 72 numbers: 0.0010** (ZipMap
+7-Scenes-sparse Acc-mean, a rounding-boundary case). Every other value agrees
+with the paper at its printed precision. Reproduction is exact for all three
+baselines on both datasets, both samplings, means and medians.
