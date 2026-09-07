@@ -31,6 +31,22 @@ sys.path.insert(0, str(Path.home() / "lingbot-map"))
 sys.path.insert(0, str(Path.home() / "lingbot-map/.agents/scratch/memory_eval"))
 
 
+def umeyama_sim3(src: np.ndarray, dst: np.ndarray):
+    """Similarity transform (s, R, t) minimising ||s R src + t - dst||^2."""
+    mu_s, mu_d = src.mean(0), dst.mean(0)
+    xs, xd = src - mu_s, dst - mu_d
+    cov = xd.T @ xs / len(src)
+    U, D, Vt = np.linalg.svd(cov)
+    S = np.eye(3)
+    if np.linalg.det(U) * np.linalg.det(Vt) < 0:
+        S[2, 2] = -1
+    R = U @ S @ Vt
+    var_s = (xs ** 2).sum() / len(src)
+    s = float(np.trace(np.diag(D) @ S) / var_s)
+    t = mu_d - s * R @ mu_s
+    return s, R, t
+
+
 def load_poses(p: Path) -> np.ndarray:
     vals = np.loadtxt(p).reshape(-1, 4, 4)
     return vals
@@ -162,6 +178,16 @@ def main() -> int:
                 per_q.append(pw[::9])
             P = np.concatenate(preds); C = np.concatenate(cols)
             G = np.concatenate(gts); GC = np.concatenate(gcols)
+            align = None
+            if mode == "selfpose":
+                # the cloud lives in the model's own (drifted) frame; fused
+                # metrics need it in the GT frame. One Sim(3) per scene-tier,
+                # fit on camera centres -- the per-scene alignment the
+                # benchmark spec prescribes for every method uniformly.
+                sA, RA, tA = umeyama_sim3(c2w_pred[:n, :3, 3], c2w_gt[:n, :3, 3])
+                P = (sA * (RA @ P.T)).T + tA
+                per_q = [(sA * (RA @ pq.T)).T + tA for pq in per_q]
+                align = {"scale": sA}
             tree = cKDTree(G[::2])
             d_acc, _ = tree.query(P, workers=-1)
             tree_p = cKDTree(P[::2])
@@ -178,7 +204,7 @@ def main() -> int:
                 "chamfer": float((d_acc.mean() + d_comp.mean()) / 2),
                 "depth_absrel": float(np.mean(depth_absrel)),
                 "depth_d125": float(np.mean(depth_d125)),
-                "n_queries": n, "lag": lag,
+                "n_queries": n, "lag": lag, "align": align,
             }
             clouds[mode] = (P, C, d_acc, G, GC)
             print(f"[{method}|{args.scene}|n{tier}|{mode}] acc {d_acc.mean():.4f} "

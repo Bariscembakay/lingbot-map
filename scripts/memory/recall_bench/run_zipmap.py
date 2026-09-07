@@ -62,6 +62,7 @@ def main() -> int:
     import cv2  # noqa: E402
     from scipy.spatial import cKDTree  # noqa: E402
     from scripts.memory.render_state import write_ply, heat  # noqa: E402
+    from scripts.memory.recall_bench.run_cut3r_family import umeyama_sim3  # noqa: E402
 
     man = json.loads((args.manifest_dir / f"{args.scene}.json").read_text())
     root = Path(man["root"])
@@ -155,9 +156,15 @@ def main() -> int:
             per_q.append((q, pw.reshape(-1, 3)[::9], d, gd, m))
             gts.append(gp[gv][::4]); gcols.append(grgb[gv][::4])
 
-        s = float(np.median(np.array(scale_num) / np.array(scale_den)))
-        print(f"[zipmap|{args.scene}|n{tier}] scale {s:.4f}", flush=True)
-        P = np.concatenate(preds_w) * s
+        # ZipMap's frame is its own AND up-to-scale: one Sim(3) per
+        # scene-tier, fit on camera centres (the uniform per-scene alignment
+        # of the benchmark spec). The per-view depth scale uses the same s.
+        sA, RA, tA = umeyama_sim3(c2w_pred[:n, :3, 3], c2w_gt[:n, :3, 3])
+        s = sA
+        med = float(np.median(np.array(scale_num) / np.array(scale_den)))
+        print(f"[zipmap|{args.scene}|n{tier}] sim3 scale {s:.4f} "
+              f"(median-depth scale {med:.4f})", flush=True)
+        P = (sA * (RA @ np.concatenate(preds_w).T)).T + tA
         C = np.concatenate(cols)
         G = np.concatenate(gts); GC = np.concatenate(gcols)
         for q, pq, d, gd, m in per_q:
@@ -172,7 +179,8 @@ def main() -> int:
         tree_p = cKDTree(P[::2])
         d_comp, _ = tree_p.query(G[::4], workers=-1)
         lag = [{"q": q, "age": n - 1 - q,
-                "acc_mean": float(tree.query(pq * s, workers=-1)[0].mean())}
+                "acc_mean": float(tree.query(
+                    (sA * (RA @ pq.T)).T + tA, workers=-1)[0].mean())}
                for q, pq, _, _, _ in per_q]
         res = {"acc_mean": float(d_acc.mean()), "acc_med": float(np.median(d_acc)),
                "comp_mean": float(d_comp.mean()),
