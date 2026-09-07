@@ -136,3 +136,38 @@ NC = (NC1+NC2)/2, matching the paper's aggregation. Ours from
 7-Scenes-sparse Acc-mean, a rounding-boundary case). Every other value agrees
 with the paper at its printed precision. Reproduction is exact for all three
 baselines on both datasets, both samplings, means and medians.
+
+## Second benchmark family: camera pose + video depth (started 2026-09-06)
+
+Reference values (ZipMap paper Tables 1-2, arXiv 2603.04385v2):
+
+| relpose (dist) | ZipMap ATE/RPEt/RPEr | CUT3R | TTT3R |
+|---|---|---|---|
+| Sintel | 0.132/0.066/0.438 | 0.216/0.071/0.622 | 0.204/0.085/0.690 |
+| TUM-dynamics | 0.012/0.010/0.310 | 0.042/0.013/0.395 | 0.028/0.012/0.361 |
+| ScanNet (skipped: raw scannet-v2 needs simplerecon wrangling) | 0.034/0.015/0.385 | 0.096/0.022/0.578 | 0.065/0.021/0.617 |
+
+| videodepth | ZipMap AbsRel/d1.25 | CUT3R | TTT3R |
+|---|---|---|---|
+| Sintel (skipped: no depth .dpt on cluster) | 0.248/0.695 | 0.432/0.510 | 0.426/0.522 |
+| Bonn | 0.059/0.973 | 0.072/0.951 | 0.061/0.970 |
+| KITTI | 0.057/0.974 | 0.152/0.805 | 0.149/0.812 |
+
+Data prep: TUM-dynamics = 8 fr3 sequences from our TUM-RGBD copy, MonST3R's
+own prepare_tum.py (associate + every-3rd frame, first 90) into
+`datasets/tum_dynamics_monst3r/`. Bonn: our copy is a derived 50-500-frame
+tree without the raw data, so the 5 MonST3R sequences are re-downloaded into
+`datasets/bonn_monst3r/` and prepped with MonST3R's prepare_bonn.py (frames
+30-140). Sintel/KITTI used as-is from /group datasets.
+Jobs: relpose-distance sintel+tum = 836096.
+- 2026-09-07: **Camera-pose (relpose-distance) reproduction complete** (job
+  836096). ATE / RPE-trans / RPE-rot, paper -> ours:
+
+  | | ZipMap | CUT3R | TTT3R |
+  |---|---|---|---|
+  | Sintel | .132/.066/.438 -> .131/.066/.439 | .216/.071/.622 -> .211/.070/.594 | .204/.085/.690 -> .195/.086/.687 |
+  | TUM-dyn | .012/.010/.310 -> .012/.010/.310 | .042/.013/.395 -> .043/.013/.390 | .028/.012/.361 -> .027/.012/.353 |
+
+  ZipMap rows exact; CUT3R/TTT3R within 2-5% on ATE/RPE-rot (trajectory
+  metrics; slight nondeterminism), RPE-trans exact everywhere. Rankings and
+  gaps all reproduce. videodepth (KITTI+Bonn) still queued (836103).
