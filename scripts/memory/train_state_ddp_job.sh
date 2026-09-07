@@ -59,7 +59,9 @@ case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
 SYNC_PID=$!
 trap 'kill "$SYNC_PID" 2>/dev/null || true' EXIT
 
-NPROC="${SLURM_GPUS_ON_NODE:-4}"
+# SLURM_GPUS_ON_NODE proved unreliable (smoke 835801 ran 1 rank on a 2-GPU
+# allocation); count the GPUs actually visible instead.
+NPROC=$(nvidia-smi -L | wc -l)
 # shellcheck disable=SC2086
 "$PY_ENV" -m torch.distributed.run --standalone --nproc_per_node="$NPROC" \
     scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@"

@@ -635,7 +635,7 @@ def dump_viz(model, clip, args, device, step, tag="train"):
         conf_self=out["conf_self"].float().cpu().numpy(),
         gt_world=xw.float().cpu().numpy(), gt_self=xs.float().cpu().numpy(),
         valid=valid.cpu().numpy(), ray_o=rm[:, :3].float().cpu().numpy(),
-        c2w_rel=relative_c2w(clip.gt_c2w[torch.tensor(qs, device=clip.device)],
+        c2w_rel=relative_c2w(clip.gt_c2w[torch.tensor(qs, device=clip.gt_c2w.device)],
                              clip.gt_c2w[0][None].expand(len(qs), -1, -1)
                              ).cpu().numpy(),
         scene=clip.meta.scene, frame_ids=np.array(clip.idx),
