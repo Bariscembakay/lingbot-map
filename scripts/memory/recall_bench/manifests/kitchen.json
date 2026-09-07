@@ -518,5 +518,6 @@
   "n100": 100,
   "n300": 300,
   "n500": 500
- }
+ },
+ "poses_convention": "opengl_c2w (runners apply diag(1,-1,-1,1) to get OpenCV)"
 }

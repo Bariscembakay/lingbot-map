@@ -86,6 +86,12 @@ def main() -> int:
     ids = man["ingest_frames"]
     focal = float(Path(root / man["focal"]).read_text().split()[0])
     poses = load_poses(root / man["poses"])
+    # NRGBD poses.txt is OpenGL c2w (verified: cross-frame depth consistency
+    # is 1.9mm with the gl->cv flip vs 137mm raw). Convert to OpenCV before
+    # anything touches geometry -- the tap-cache pipeline (gt.py
+    # OPENGL_TO_OPENCV) always did; the first runner revision did not, which
+    # left CUT3R self-consistently mirrored and threw ZipMap off by metres.
+    poses = poses @ np.diag([1.0, -1.0, -1.0, 1.0])
 
     frames = np.stack([cv2.cvtColor(cv2.imread(str(root / f"images/img{i}.png")),
                                     cv2.COLOR_BGR2RGB) for i in ids])
