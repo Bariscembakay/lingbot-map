@@ -88,3 +88,18 @@ objective (conf-weighted L21 on raymap probes of past cameras) unless noted.
 | `scenes96_96f_b4_write4_read2_lingbothead_unfrozenhead` | + unfrozen head from its plateau (compounding test) | done (early-stop) | **0.151** |
 | `scenes96_96f_b4_write4_read4_lingbothead` | A/B #1: 4-layer read (capacity symmetry with writer) | done (early-stop) | **0.158** |
 | `scenes96_96f_b4_write4_read2_tapsall_lingbothead` | A/B #2: all 4 taps to writer (8192-d in_proj) | done (early-stop) | 0.175 |
+
+## Architecture findings (as of 2026-09-08)
+
+1. **Data scaling works and compounds**: 32->96 scenes 0.207->0.167 (frozen
+   head); + unfrozen head -> **0.151** (campaign best so far).
+2. **Read capacity should match write capacity**: read4 beats read2 by ~0.01
+   at equal everything (0.158 vs 0.167, frozen head) — worth as much as the
+   32->96 data jump. tapsall (4 taps -> writer) *hurts* (0.175).
+3. **Write interconnection buys speed, not capability**: oneway trains ~2x
+   slower to the same level, then keeps going (0.1849@6200 vs interconnected
+   0.207 plateau). Basis for the big run's oneway choice.
+4. Deep interconnected read stacks are consistently worst (w12r12 0.216
+   frozen / 0.198 unfrozen).
+5. CUT3R-arch control (random decoder, same data/loss): 0.261 — our
+   write/read split beats the CUT3R layout on this objective at 96f.

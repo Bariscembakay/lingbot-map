@@ -1,0 +1,67 @@
+# nrgbd_recall_s2 — the recall benchmark
+
+Measures the *recall* ability of streaming 3D reconstruction systems: after
+ingesting a video stream, the model is queried with **camera poses only** (no
+images) for every past frame and must decode the geometry it saw there.
+Equivalently: standard streaming-reconstruction evaluation where the second
+pass hands the model raymaps instead of images.
+
+## Protocol (frozen; manifests/ is the source of truth)
+
+- **Scenes**: the 7 NRGBD scenes with >=1000 raw frames (whiteroom, kitchen,
+  grey_white_room, green_room, complete_kitchen, breakfast_room, staircase).
+  Every tier uses the identical 7-scene set — no per-tier scene dropping.
+- **Ingestion**: first 1000 raw frames, stride 2 → ingest indices 0,2,…,998.
+  Tiers n100 / n300 / n500 are *prefixes* of that one list.
+- **Queries**: after ingestion, EVERY ingested frame's camera, images withheld.
+- **GT**: raw `depth/` (16-bit mm, valid 1mm–10m — the variant every prior
+  CUT3R/ASVGGT/lingbot eval reads) + `poses.txt`.
+  **`poses.txt` is OpenGL c2w** — runners multiply by `diag(1,-1,-1,1)`
+  (proven: cross-frame depth reprojection 1.9mm with flip vs 137mm raw).
+
+## Query-pose semantics (the one subtle decision)
+
+A raymap query is only meaningful in *some* frame. Ours is posed (GT frame
+native); CUT3R/TTT3R/ZipMap reconstruct in their own frame-0-anchored,
+up-to-scale worlds. Protocols:
+
+- **selfpose (primary)**: query the pose the model itself estimated for frame
+  t — pure memory, uncontaminated by localisation error.
+- **gtpose (secondary, CUT3R-family only)**: GT poses relative to frame 0.
+
+Fused-cloud metrics use **one Sim(3) per (scene, tier)** — Umeyama on camera
+centres — applied uniformly to every method (near-identity for posed/metric
+systems; supplies scale for ZipMap). Per-view depth metrics are view-local and
+need no alignment (scale only).
+
+## Metrics per (method, scene, tier)
+
+- fused cloud vs GT cloud: Acc / Comp (bidirectional NN dist), Chamfer,
+  means + medians;
+- per-view depth: AbsRel, delta<1.25 (per-scene scale);
+- **recall-vs-lag curve**: per-query accuracy binned by frame age — the
+  headline forgetting plot.
+
+## Baselines and caveats
+
+| method | ingestion | query mechanism | caveat |
+|---|---|---|---|
+| CUT3R | sequential | native raymap revisit (state read-only) | ~metric |
+| TTT3R | sequential (TTT state rule) | same as CUT3R (same weights) | — |
+| ZipMap | **bidirectional** | state-query ckpt: 9-ch Plücker rays → render() | its state-query ckpt is a stage-2 fine-tune with no streaming variant; recorded in every metrics.json |
+| ours | sequential (posed) | GT raymap (native) | posed system — declared as its own column |
+
+All three baselines were reproduced against their papers before being scored
+here (`.agents/baseline_reproduction.md`): mv_recon 72/72 numbers, relpose all
+cells, videodepth 5/6 (ZipMap-KITTI checkpoint caveat).
+
+## Outputs
+
+`/group/compact-3dmem/campaigns/spatial_memory/recallbench/<method>/<scene>_n<tier>/`:
+`metrics.json`, `pred_cloud_rgb.ply` (coloured by the query frame's image),
+`pred_cloud_err.ply` (error heat), `gt_cloud_rgb.ply`. Viser walker sees them.
+
+Runners: `run_cut3r_family.py --update-rule {cut3r,ttt3r}`, `run_zipmap.py`;
+both resume per-tier (skip if metrics.json exists).
+
+Future work: VBR / HM3D long-loop extension.
