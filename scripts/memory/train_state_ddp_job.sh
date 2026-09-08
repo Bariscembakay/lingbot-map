@@ -41,6 +41,15 @@ done
 # 44.42 GiB a6000, which is what OOM-killed job 753366 at ~38 GiB of real use.
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
+# KEEPALIVE=1: reaper guard (covers every visible GPU). The big run's CPU-side
+# clip load (~450 GB from /group into host RAM) leaves the GPUs idle long
+# enough to look reaper-worthy.
+if [ "${KEEPALIVE:-0}" = "1" ]; then
+    "$PY_ENV" "$HOME/ASVGGT/scratch/lib/gpu_keep_alive.py" 0.03 &
+    KEEPALIVE_PID=$!
+    trap 'kill "$KEEPALIVE_PID" 2>/dev/null; kill "$SYNC_PID" 2>/dev/null' EXIT
+fi
+
 # Work on node-local /scratch, ship to sof1's /group at the end -- /group is the
 # system of record and /scratch is wiped.
 WORK="/scratch/$USER/train_state/$(basename "$OUT")"
