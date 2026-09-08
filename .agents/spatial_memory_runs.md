@@ -59,7 +59,7 @@ objective (conf-weighted L21 on raymap probes of past cameras) unless noted.
 
 | run | what it was | status | best val |
 |---|---|---|---|
-| `overfit1scene_96f_smallread` | 96-frame fixed-window write arm; later continued to 10k upd, then continued again with LR-plateau decay ("exact overfit" push) | running (LR-decay leg) | 0.011 (t) |
+| `overfit1scene_96f_smallread` | 96-frame fixed-window write arm; continued to 10k upd, then LR-plateau decay ("exact overfit" push, stopped by user at 13.5k) | done (cancelled) | 0.0075 (t) |
 | `overfit1scene_96f_smallread_nowrite` | no-write parity twin (96 frames) | done | 0.011 (t) |
 
 ## Era 4 — 96-frame 32-scene arms (random windows, early-stop on val plateau)
@@ -69,7 +69,7 @@ objective (conf-weighted L21 on raymap probes of past cameras) unless noted.
 | `scenes32_96f_b4_write4_read2_lingbothead` | 4-layer write, 2-block read, frozen lingbot head | done (early-stop) | 0.207 |
 | `scenes32_96f_b4_write12_read2_lingbothead` | 12-layer write, 2-block read, frozen lingbot head | done (early-stop) | 0.207 |
 | `scenes32_96f_b4_write12_read12_lingbothead` | 12-layer interconnected write+read, frozen lingbot head | done (timeout + resumed to early-stop) | 0.216 |
-| `scenes32_96f_b4_write4oneway_read2_lingbothead` | one-way 4-layer write (no interconnection) | running | 0.259 so far |
+| `scenes32_96f_b4_write4oneway_read2_lingbothead` | one-way 4-layer write (no interconnection) | done (early-stop) | **0.185** |
 | `scenes32_96f_b4_CUT3R_CONTROL_randomdec_frozenhead` | CUT3R arch, random decoder, frozen encoder+head, 96f | done (cancelled at 14/15 patience) | 0.261 |
 
 ## Era 5 — continue-runs: unfreeze the lingbot DPT trunk from each plateau
@@ -97,7 +97,7 @@ objective (conf-weighted L21 on raymap probes of past cameras) unless noted.
    at equal everything (0.158 vs 0.167, frozen head) — worth as much as the
    32->96 data jump. tapsall (4 taps -> writer) *hurts* (0.175).
 3. **Write interconnection buys speed, not capability**: oneway trains ~2x
-   slower to the same level, then keeps going (0.1849@6200 vs interconnected
+   slower to the same level, then keeps going (final 0.185 vs interconnected
    0.207 plateau). Basis for the big run's oneway choice.
 4. Deep interconnected read stacks are consistently worst (w12r12 0.216
    frozen / 0.198 unfrozen).
