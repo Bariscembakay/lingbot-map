@@ -125,6 +125,9 @@ def main() -> int:
 
     for tier in args.tiers:
         n = tier
+        if (args.out / method / f"{args.scene}_n{tier}" / "metrics.json").exists():
+            print(f"[skip] {args.scene}_n{tier} already done", flush=True)
+            continue
         views = [{
             "img": imgs[i:i + 1], "ray_map": torch.full((1, 6, H, W), torch.nan),
             "true_shape": torch.from_numpy(np.int32([[H, W]])),

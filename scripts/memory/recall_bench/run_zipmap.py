@@ -108,6 +108,9 @@ def main() -> int:
     dtype = torch.bfloat16
     for tier in args.tiers:
         n = tier
+        if (args.out / "zipmap" / f"{args.scene}_n{tier}" / "metrics.json").exists():
+            print(f"[skip] {args.scene}_n{tier} already done", flush=True)
+            continue
         images = images_all[:n].to("cuda")
         t0 = time.time()
         with torch.no_grad(), torch.amp.autocast("cuda", dtype=dtype):
