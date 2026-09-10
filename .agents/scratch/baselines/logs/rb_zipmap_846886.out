@@ -1,0 +1,8 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13745x13745 matmul (~276 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[load] state_query ckpt: 0 missing / 0 unexpected
+[skip] breakfast_room_n100 already done
+[skip] breakfast_room_n300 already done
+[skip] breakfast_room_n500 already done

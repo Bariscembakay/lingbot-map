@@ -1,0 +1,48 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14068x14068 matmul (~294 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[[36m2026-09-07 07:11:40,219[0m][[34mdinov2[0m][[32mINFO[0m] - [37musing MLP layer as FFN[0m
+[[36m2026-09-07 07:11:55,473[0m][[34mroot[0m][[32mINFO[0m] - [37mAggregator initialized with affine_invariant=True[0m
+Unexpected keys in state_dict: ['local_point_head.norm.weight', 'local_point_head.norm.bias', 'local_point_head.projects.0.weight', 'local_point_head.projects.0.bias', 'local_point_head.projects.1.weight', 'local_point_head.projects.1.bias', 'local_point_head.projects.2.weight', 'local_point_head.projects.2.bias', 'local_point_head.projects.3.weight', 'local_point_head.projects.3.bias', 'local_point_head.resize_layers.0.weight', 'local_point_head.resize_layers.0.bias', 'local_point_head.resize_layers.1.weight', 'local_point_head.resize_layers.1.bias', 'local_point_head.resize_layers.3.weight', 'local_point_head.resize_layers.3.bias', 'local_point_head.scratch.layer1_rn.weight', 'local_point_head.scratch.layer2_rn.weight', 'local_point_head.scratch.layer3_rn.weight', 'local_point_head.scratch.layer4_rn.weight', 'local_point_head.scratch.refinenet1.out_conv.weight', 'local_point_head.scratch.refinenet1.out_conv.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet2.out_conv.weight', 'local_point_head.scratch.refinenet2.out_conv.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet3.out_conv.weight', 'local_point_head.scratch.refinenet3.out_conv.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet4.out_conv.weight', 'local_point_head.scratch.refinenet4.out_conv.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.bias', 'local_point_head.scratch.output_conv1.weight', 'local_point_head.scratch.output_conv1.bias', 'local_point_head.scratch.output_conv2.0.weight', 'local_point_head.scratch.output_conv2.0.bias', 'local_point_head.scratch.output_conv2.2.weight', 'local_point_head.scratch.output_conv2.2.bias']
+[[36m2026-09-07 07:13:00,381[0m][[34mvideodepth-infer[0m][[32mINFO[0m] - [37m[1/3] Loaded Model ZipMap from checkpoints/checkpoint_aff_inv.pt[0m
+[[36m2026-09-07 07:13:02,066[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[1/2] Infering videodepth on kitti dataset..., output to outputs/videodepth/ZipMap/kitti[0m
+[[36m2026-09-07 07:13:17,870[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[1/26] Sequence 2011_09_26_drive_0002_sync_image_02 processed, time: 12.877533674240112, saving depth maps...[0m
+Error executing job with overrides: ['evaluation=videodepth', 'eval_models=[ZipMap,ttt3r,cut3r]', 'eval_datasets=[kitti,bonn]']
+Traceback (most recent call last):
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/videodepth/infer.py", line 116, in <module>
+    main()
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/main.py", line 94, in decorated_main
+    _run_hydra(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 394, in _run_hydra
+    _run_app(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 457, in _run_app
+    run_and_report(
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 223, in run_and_report
+    raise ex
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 220, in run_and_report
+    return func()
+           ^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/utils.py", line 458, in <lambda>
+    lambda: hydra.run(
+            ^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/_internal/hydra.py", line 132, in run
+    _ = ret.return_value
+        ^^^^^^^^^^^^^^^^
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 260, in return_value
+    raise self._return_value
+  File "/scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages/hydra/core/utils.py", line 186, in run_job
+    ret.return_value = task_function(task_cfg)
+                       ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/videodepth/infer.py", line 107, in main
+    raise e  # Rethrow if it's not an expected exception
+    ^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/videodepth/infer.py", line 88, in main
+    save_depth_maps(depth_maps, save_dir, conf_self=conf_self)
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/videodepth/utils.py", line 19, in save_depth_maps
+    colored_depth = colorize_optimized(
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/baris_bakay/lingbot-map/ZipMap_eval/videodepth/utils.py", line 142, in colorize_optimized
+    cmap = mpl.cm.get_cmap(cmap_name)
+           ^^^^^^^^^^^^^^^
+AttributeError: module 'matplotlib.cm' has no attribute 'get_cmap'

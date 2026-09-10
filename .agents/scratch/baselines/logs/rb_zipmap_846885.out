@@ -1,0 +1,14 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13672x13672 matmul (~271 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[load] state_query ckpt: 0 missing / 0 unexpected
+[zipmap|complete_kitchen|n100] ingest 19.1s
+[zipmap|complete_kitchen|n100] sim3 scale 2.4402 (median-depth scale 2.4572)
+[zipmap|complete_kitchen|n100] acc 0.0537 comp 0.0208 absrel 0.0473 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/complete_kitchen_n100
+[zipmap|complete_kitchen|n300] ingest 22.7s
+[zipmap|complete_kitchen|n300] sim3 scale 2.5686 (median-depth scale 2.5581)
+[zipmap|complete_kitchen|n300] acc 0.1675 comp 0.1898 absrel 0.2036 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/complete_kitchen_n300
+[zipmap|complete_kitchen|n500] ingest 37.8s
+[zipmap|complete_kitchen|n500] sim3 scale 2.8492 (median-depth scale 2.8236)
+[zipmap|complete_kitchen|n500] acc 0.1707 comp 0.0611 absrel 0.1763 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/complete_kitchen_n500

@@ -1,6 +1,6 @@
 [setup_cut3r_env] cut3r env already exists, skipping install.
 [setup_cut3r_env] Done.
-GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13228x13228 matmul (~246 ms/call, target 300 ms)
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13931x13931 matmul (~287 ms/call, target 300 ms)
 GPU keep-alive started on 1 visible GPU(s)
 /home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
   with torch.cuda.amp.autocast(enabled=not inference):
@@ -13,19 +13,18 @@ Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch versi
 instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
 <All keys matched successfully>
 >> Inference with model on 100 image/raymaps
-[cut3r|breakfast_room|n100] ingest 60s
+[ttt3r|complete_kitchen|n100] ingest 59s
 /home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
   with torch.cuda.amp.autocast(enabled=False):
-[cut3r|breakfast_room|n100|selfpose] acc 0.0724 comp 1.5036 absrel 0.0988
-[cut3r|breakfast_room|n100|gtpose] acc 0.0848 comp 0.2957 absrel 0.1893
-[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/cut3r/breakfast_room_n100
+[ttt3r|complete_kitchen|n100|selfpose] acc 0.1818 comp 0.1588 absrel 0.1983
+[ttt3r|complete_kitchen|n100|gtpose] acc 0.2998 comp 0.3057 absrel 0.2069
+[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/ttt3r/complete_kitchen_n100
 >> Inference with model on 300 image/raymaps
-[cut3r|breakfast_room|n300] ingest 177s
-[cut3r|breakfast_room|n300|selfpose] acc 0.1015 comp 1.8989 absrel 0.1352
-[cut3r|breakfast_room|n300|gtpose] acc 0.0570 comp 0.3358 absrel 0.2322
-[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/cut3r/breakfast_room_n300
+[ttt3r|complete_kitchen|n300] ingest 169s
+[ttt3r|complete_kitchen|n300|selfpose] acc 0.1403 comp 0.0628 absrel 0.2009
+[ttt3r|complete_kitchen|n300|gtpose] acc 0.2430 comp 0.2345 absrel 0.2106
+[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/ttt3r/complete_kitchen_n300
 >> Inference with model on 500 image/raymaps
-[cut3r|breakfast_room|n500] ingest 288s
-[cut3r|breakfast_room|n500|selfpose] acc 0.1661 comp 1.4693 absrel 0.2010
-[cut3r|breakfast_room|n500|gtpose] acc 0.0595 comp 0.4462 absrel 0.2367
-[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/cut3r/breakfast_room_n500
+[ttt3r|complete_kitchen|n500] ingest 288s
+[ttt3r|complete_kitchen|n500|selfpose] acc 0.2503 comp 0.2009 absrel 0.1718
+[2026-09-10T01:46:29.054] error: *** JOB 843493 ON gcp-eu1-a100-80g-g5j6 CANCELLED AT 2026-09-10T01:46:29 DUE TO TIME LIMIT ***

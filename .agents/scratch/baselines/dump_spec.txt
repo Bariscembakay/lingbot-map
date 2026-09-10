@@ -1,0 +1,14 @@
+cut3r,whiteroom
+cut3r,kitchen
+cut3r,grey_white_room
+cut3r,green_room
+cut3r,complete_kitchen
+cut3r,breakfast_room
+cut3r,staircase
+ttt3r,whiteroom
+ttt3r,kitchen
+ttt3r,grey_white_room
+ttt3r,green_room
+ttt3r,complete_kitchen
+ttt3r,breakfast_room
+ttt3r,staircase

@@ -1,0 +1,14 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14139x14139 matmul (~300 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[load] state_query ckpt: 0 missing / 0 unexpected
+[zipmap|staircase|n100] ingest 18.9s
+[zipmap|staircase|n100] sim3 scale 3.1793 (median-depth scale 3.2830)
+[zipmap|staircase|n100] acc 0.0807 comp 0.0883 absrel 0.0979 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/staircase_n100
+[zipmap|staircase|n300] ingest 22.7s
+[zipmap|staircase|n300] sim3 scale 2.8518 (median-depth scale 3.3228)
+[zipmap|staircase|n300] acc 0.1757 comp 0.1120 absrel 0.2120 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/staircase_n300
+[zipmap|staircase|n500] ingest 37.9s
+[zipmap|staircase|n500] sim3 scale 2.9348 (median-depth scale 3.3745)
+[zipmap|staircase|n500] acc 0.1579 comp 0.1330 absrel 0.2033 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/staircase_n500

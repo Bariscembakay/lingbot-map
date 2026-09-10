@@ -1,0 +1,724 @@
+[setup_zipmap_eval_env] env exists, skipping.
+[setup_zipmap_eval_env] Pinning matplotlib<3.9 ...
+Collecting matplotlib<3.9
+  Downloading matplotlib-3.8.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.8 kB)
+Requirement already satisfied: contourpy>=1.0.1 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (0.12.1)
+Requirement already satisfied: fonttools>=4.22.0 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (4.64.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (1.5.1)
+Requirement already satisfied: numpy>=1.21 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (1.26.4)
+Requirement already satisfied: packaging>=20.0 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (26.3)
+Requirement already satisfied: pillow>=8 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (12.3.0)
+Requirement already satisfied: pyparsing>=2.3.1 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (3.3.2)
+Requirement already satisfied: python-dateutil>=2.7 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from matplotlib<3.9) (2.9.0.post0)
+Requirement already satisfied: six>=1.5 in /scratch/baris_bakay/micromamba/envs/zipmap_eval/lib/python3.11/site-packages (from python-dateutil>=2.7->matplotlib<3.9) (1.17.0)
+Downloading matplotlib-3.8.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 61.5 MB/s  0:00:00
+Installing collected packages: matplotlib
+  Attempting uninstall: matplotlib
+    Found existing installation: matplotlib 3.11.1
+    Uninstalling matplotlib-3.11.1:
+      Successfully uninstalled matplotlib-3.11.1
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+zipmap 0.0.1 requires fvcore, which is not installed.
+zipmap 0.0.1 requires gradio<6,>=5, which is not installed.
+zipmap 0.0.1 requires iopath, which is not installed.
+zipmap 0.0.1 requires lpips, which is not installed.
+zipmap 0.0.1 requires onnxruntime-gpu, which is not installed.
+zipmap 0.0.1 requires opencv-python-headless, which is not installed.
+zipmap 0.0.1 requires trimesh, which is not installed.
+zipmap 0.0.1 requires viser==0.2.23, which is not installed.
+zipmap 0.0.1 requires wandb, which is not installed.
+zipmap 0.0.1 requires wcmatch, which is not installed.
+zipmap 0.0.1 requires pydantic==2.10.6, but you have pydantic 2.13.5 which is incompatible.
+zipmap 0.0.1 requires torch==2.6.0, but you have torch 2.5.1 which is incompatible.
+zipmap 0.0.1 requires torchvision==0.21.0, but you have torchvision 0.20.1 which is incompatible.
+Successfully installed matplotlib-3.8.4
+[setup_zipmap_eval_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14108x14108 matmul (~298 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[[36m2026-09-07 09:30:42,589[0m][[34mdinov2[0m][[32mINFO[0m] - [37musing MLP layer as FFN[0m
+[[36m2026-09-07 09:30:57,915[0m][[34mroot[0m][[32mINFO[0m] - [37mAggregator initialized with affine_invariant=True[0m
+Unexpected keys in state_dict: ['local_point_head.norm.weight', 'local_point_head.norm.bias', 'local_point_head.projects.0.weight', 'local_point_head.projects.0.bias', 'local_point_head.projects.1.weight', 'local_point_head.projects.1.bias', 'local_point_head.projects.2.weight', 'local_point_head.projects.2.bias', 'local_point_head.projects.3.weight', 'local_point_head.projects.3.bias', 'local_point_head.resize_layers.0.weight', 'local_point_head.resize_layers.0.bias', 'local_point_head.resize_layers.1.weight', 'local_point_head.resize_layers.1.bias', 'local_point_head.resize_layers.3.weight', 'local_point_head.resize_layers.3.bias', 'local_point_head.scratch.layer1_rn.weight', 'local_point_head.scratch.layer2_rn.weight', 'local_point_head.scratch.layer3_rn.weight', 'local_point_head.scratch.layer4_rn.weight', 'local_point_head.scratch.refinenet1.out_conv.weight', 'local_point_head.scratch.refinenet1.out_conv.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet1.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet2.out_conv.weight', 'local_point_head.scratch.refinenet2.out_conv.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet2.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet3.out_conv.weight', 'local_point_head.scratch.refinenet3.out_conv.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit1.conv2.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet3.resConfUnit2.conv2.bias', 'local_point_head.scratch.refinenet4.out_conv.weight', 'local_point_head.scratch.refinenet4.out_conv.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv1.bias', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.weight', 'local_point_head.scratch.refinenet4.resConfUnit2.conv2.bias', 'local_point_head.scratch.output_conv1.weight', 'local_point_head.scratch.output_conv1.bias', 'local_point_head.scratch.output_conv2.0.weight', 'local_point_head.scratch.output_conv2.0.bias', 'local_point_head.scratch.output_conv2.2.weight', 'local_point_head.scratch.output_conv2.2.bias']
+[[36m2026-09-07 09:33:09,602[0m][[34mvideodepth-infer[0m][[32mINFO[0m] - [37m[1/3] Loaded Model ZipMap from checkpoints/checkpoint_aff_inv.pt[0m
+[[36m2026-09-07 09:33:11,149[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[1/2] Infering videodepth on kitti dataset..., output to outputs/videodepth/ZipMap/kitti[0m
+[[36m2026-09-07 09:33:27,097[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[1/26] Sequence 2011_09_26_drive_0002_sync_image_02 processed, time: 13.515682220458984, saving depth maps...[0m
+[[36m2026-09-07 09:33:33,498[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[2/26] Sequence 2011_09_26_drive_0002_sync_image_03 processed, time: 0.5677080154418945, saving depth maps...[0m
+[[36m2026-09-07 09:33:42,507[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[3/26] Sequence 2011_09_26_drive_0005_sync_image_02 processed, time: 0.7863788604736328, saving depth maps...[0m
+[[36m2026-09-07 09:33:57,125[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[4/26] Sequence 2011_09_26_drive_0005_sync_image_03 processed, time: 0.784442663192749, saving depth maps...[0m
+[[36m2026-09-07 09:34:09,077[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[5/26] Sequence 2011_09_26_drive_0013_sync_image_02 processed, time: 0.8146181106567383, saving depth maps...[0m
+[[36m2026-09-07 09:34:21,601[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[6/26] Sequence 2011_09_26_drive_0013_sync_image_03 processed, time: 0.7618656158447266, saving depth maps...[0m
+[[36m2026-09-07 09:34:33,150[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[7/26] Sequence 2011_09_26_drive_0020_sync_image_02 processed, time: 0.5175387859344482, saving depth maps...[0m
+[[36m2026-09-07 09:34:38,208[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[8/26] Sequence 2011_09_26_drive_0020_sync_image_03 processed, time: 0.4281747341156006, saving depth maps...[0m
+[[36m2026-09-07 09:35:05,191[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[9/26] Sequence 2011_09_26_drive_0023_sync_image_02 processed, time: 2.2780869007110596, saving depth maps...[0m
+[[36m2026-09-07 09:35:46,702[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[10/26] Sequence 2011_09_26_drive_0023_sync_image_03 processed, time: 2.1939733028411865, saving depth maps...[0m
+[[36m2026-09-07 09:36:34,921[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[11/26] Sequence 2011_09_26_drive_0036_sync_image_02 processed, time: 2.7769272327423096, saving depth maps...[0m
+[[36m2026-09-07 09:37:26,776[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[12/26] Sequence 2011_09_26_drive_0036_sync_image_03 processed, time: 2.755661725997925, saving depth maps...[0m
+[[36m2026-09-07 09:37:53,825[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[13/26] Sequence 2011_09_26_drive_0079_sync_image_02 processed, time: 0.5625965595245361, saving depth maps...[0m
+[[36m2026-09-07 09:38:00,842[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[14/26] Sequence 2011_09_26_drive_0079_sync_image_03 processed, time: 0.5601401329040527, saving depth maps...[0m
+[[36m2026-09-07 09:38:17,507[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[15/26] Sequence 2011_09_26_drive_0095_sync_image_02 processed, time: 1.261007308959961, saving depth maps...[0m
+[[36m2026-09-07 09:38:40,017[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[16/26] Sequence 2011_09_26_drive_0095_sync_image_03 processed, time: 1.2608792781829834, saving depth maps...[0m
+[[36m2026-09-07 09:38:52,960[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[17/26] Sequence 2011_09_26_drive_0113_sync_image_02 processed, time: 0.5620863437652588, saving depth maps...[0m
+[[36m2026-09-07 09:39:01,732[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[18/26] Sequence 2011_09_26_drive_0113_sync_image_03 processed, time: 0.5620551109313965, saving depth maps...[0m
+[[36m2026-09-07 09:39:08,462[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[19/26] Sequence 2011_09_28_drive_0037_sync_image_02 processed, time: 0.49459171295166016, saving depth maps...[0m
+[[36m2026-09-07 09:39:14,639[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[20/26] Sequence 2011_09_28_drive_0037_sync_image_03 processed, time: 0.4758908748626709, saving depth maps...[0m
+[[36m2026-09-07 09:39:20,284[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[21/26] Sequence 2011_09_29_drive_0026_sync_image_02 processed, time: 0.4726574420928955, saving depth maps...[0m
+[[36m2026-09-07 09:39:25,480[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[22/26] Sequence 2011_09_29_drive_0026_sync_image_03 processed, time: 0.47467637062072754, saving depth maps...[0m
+[[36m2026-09-07 09:39:39,926[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[23/26] Sequence 2011_09_30_drive_0016_sync_image_02 processed, time: 1.187420129776001, saving depth maps...[0m
+[[36m2026-09-07 09:40:03,085[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[24/26] Sequence 2011_09_30_drive_0016_sync_image_03 processed, time: 1.1845874786376953, saving depth maps...[0m
+[[36m2026-09-07 09:40:46,824[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[25/26] Sequence 2011_10_03_drive_0047_sync_image_02 processed, time: 3.374382734298706, saving depth maps...[0m
+[[36m2026-09-07 09:41:52,754[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[26/26] Sequence 2011_10_03_drive_0047_sync_image_03 processed, time: 3.39463472366333, saving depth maps...[0m
+[[36m2026-09-07 09:42:20,696[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[2/2] Infering videodepth on bonn dataset..., output to outputs/videodepth/ZipMap/bonn[0m
+[[36m2026-09-07 09:42:46,736[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[1/5] Sequence rgbd_bonn_balloon2 processed, time: 7.230496644973755, saving depth maps...[0m
+[[36m2026-09-07 09:43:44,359[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[2/5] Sequence rgbd_bonn_crowd2 processed, time: 7.25235652923584, saving depth maps...[0m
+[[36m2026-09-07 09:44:39,781[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[3/5] Sequence rgbd_bonn_crowd3 processed, time: 7.225369691848755, saving depth maps...[0m
+[[36m2026-09-07 09:45:35,890[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[4/5] Sequence rgbd_bonn_person_tracking2 processed, time: 7.241510391235352, saving depth maps...[0m
+[[36m2026-09-07 09:46:31,491[0m][[34mvideodepth-infer-ZipMap[0m][[32mINFO[0m] - [37m[5/5] Sequence rgbd_bonn_synchronous processed, time: 7.22011661529541, saving depth maps...[0m
+... loading model from checkpoints/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+[[36m2026-09-07 09:47:24,012[0m][[34mvideodepth-infer[0m][[32mINFO[0m] - [37m[2/3] Loaded Model ttt3r from checkpoints/cut3r_512_dpt_4_64.pth[0m
+[[36m2026-09-07 09:47:24,495[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[1/2] Infering videodepth on kitti dataset..., output to outputs/videodepth/ttt3r/kitti[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:47:29,676[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[1/26] Sequence 2011_09_26_drive_0002_sync_image_02 processed, time: 1.9469716548919678, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:47:37,356[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[2/26] Sequence 2011_09_26_drive_0002_sync_image_03 processed, time: 1.591817855834961, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:47:48,035[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[3/26] Sequence 2011_09_26_drive_0005_sync_image_02 processed, time: 2.9643616676330566, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:48:01,195[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[4/26] Sequence 2011_09_26_drive_0005_sync_image_03 processed, time: 2.8703434467315674, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:48:14,577[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[5/26] Sequence 2011_09_26_drive_0013_sync_image_02 processed, time: 3.4028844833374023, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:48:27,391[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[6/26] Sequence 2011_09_26_drive_0013_sync_image_03 processed, time: 2.8436269760131836, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:48:37,159[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[7/26] Sequence 2011_09_26_drive_0020_sync_image_02 processed, time: 1.3604981899261475, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:48:43,039[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[8/26] Sequence 2011_09_26_drive_0020_sync_image_03 processed, time: 1.211033582687378, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:49:08,267[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[9/26] Sequence 2011_09_26_drive_0023_sync_image_02 processed, time: 8.605875730514526, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:49:48,423[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[10/26] Sequence 2011_09_26_drive_0023_sync_image_03 processed, time: 8.693572759628296, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:50:34,387[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[11/26] Sequence 2011_09_26_drive_0036_sync_image_02 processed, time: 11.290396451950073, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:51:23,670[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[12/26] Sequence 2011_09_26_drive_0036_sync_image_03 processed, time: 11.13282060623169, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:51:51,261[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[13/26] Sequence 2011_09_26_drive_0079_sync_image_02 processed, time: 1.8169426918029785, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:51:59,645[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[14/26] Sequence 2011_09_26_drive_0079_sync_image_03 processed, time: 1.8049790859222412, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:52:15,748[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[15/26] Sequence 2011_09_26_drive_0095_sync_image_02 processed, time: 4.9523584842681885, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:52:38,537[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[16/26] Sequence 2011_09_26_drive_0095_sync_image_03 processed, time: 4.958054780960083, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:52:53,555[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[17/26] Sequence 2011_09_26_drive_0113_sync_image_02 processed, time: 2.026118516921997, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:53:01,951[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[18/26] Sequence 2011_09_26_drive_0113_sync_image_03 processed, time: 1.8243505954742432, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:53:08,777[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[19/26] Sequence 2011_09_28_drive_0037_sync_image_02 processed, time: 1.4697442054748535, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:53:15,479[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[20/26] Sequence 2011_09_28_drive_0037_sync_image_03 processed, time: 1.4646327495574951, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:53:22,237[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[21/26] Sequence 2011_09_29_drive_0026_sync_image_02 processed, time: 1.4903223514556885, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:53:28,999[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[22/26] Sequence 2011_09_29_drive_0026_sync_image_03 processed, time: 1.4824273586273193, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:53:43,850[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[23/26] Sequence 2011_09_30_drive_0016_sync_image_02 processed, time: 4.678907632827759, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:54:06,246[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[24/26] Sequence 2011_09_30_drive_0016_sync_image_03 processed, time: 4.72641921043396, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:54:50,722[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[25/26] Sequence 2011_10_03_drive_0047_sync_image_02 processed, time: 13.813881158828735, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:55:52,598[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[26/26] Sequence 2011_10_03_drive_0047_sync_image_03 processed, time: 13.887351274490356, saving depth maps...[0m
+[[36m2026-09-07 09:56:20,015[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[2/2] Infering videodepth on bonn dataset..., output to outputs/videodepth/ttt3r/bonn[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:56:52,529[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[1/5] Sequence rgbd_bonn_balloon2 processed, time: 15.839844703674316, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:57:58,317[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[2/5] Sequence rgbd_bonn_crowd2 processed, time: 15.932713985443115, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 09:59:03,145[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[3/5] Sequence rgbd_bonn_crowd3 processed, time: 15.797096490859985, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:00:07,783[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[4/5] Sequence rgbd_bonn_person_tracking2 processed, time: 15.783849716186523, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:183: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:01:10,850[0m][[34mvideodepth-infer-ttt3r[0m][[32mINFO[0m] - [37m[5/5] Sequence rgbd_bonn_synchronous processed, time: 15.757134199142456, saving depth maps...[0m
+... loading model from checkpoints/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+[[36m2026-09-07 10:01:57,771[0m][[34mvideodepth-infer[0m][[32mINFO[0m] - [37m[3/3] Loaded Model cut3r from checkpoints/cut3r_512_dpt_4_64.pth[0m
+[[36m2026-09-07 10:01:57,998[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[1/2] Infering videodepth on kitti dataset..., output to outputs/videodepth/cut3r/kitti[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:02:02,840[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[1/26] Sequence 2011_09_26_drive_0002_sync_image_02 processed, time: 1.6634387969970703, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:02:10,494[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[2/26] Sequence 2011_09_26_drive_0002_sync_image_03 processed, time: 1.5737438201904297, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:02:20,376[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[3/26] Sequence 2011_09_26_drive_0005_sync_image_02 processed, time: 2.9681155681610107, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:02:33,570[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[4/26] Sequence 2011_09_26_drive_0005_sync_image_03 processed, time: 2.8852550983428955, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:02:47,575[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[5/26] Sequence 2011_09_26_drive_0013_sync_image_02 processed, time: 2.7373576164245605, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:03:00,053[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[6/26] Sequence 2011_09_26_drive_0013_sync_image_03 processed, time: 2.785226345062256, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:03:09,299[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[7/26] Sequence 2011_09_26_drive_0020_sync_image_02 processed, time: 1.3507869243621826, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:03:15,194[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[8/26] Sequence 2011_09_26_drive_0020_sync_image_03 processed, time: 1.266874074935913, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:03:39,492[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[9/26] Sequence 2011_09_26_drive_0023_sync_image_02 processed, time: 8.470565557479858, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:04:18,122[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[10/26] Sequence 2011_09_26_drive_0023_sync_image_03 processed, time: 8.609466791152954, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:05:03,113[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[11/26] Sequence 2011_09_26_drive_0036_sync_image_02 processed, time: 10.889612674713135, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:05:54,761[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[12/26] Sequence 2011_09_26_drive_0036_sync_image_03 processed, time: 11.201553583145142, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:06:21,575[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[13/26] Sequence 2011_09_26_drive_0079_sync_image_02 processed, time: 1.8161344528198242, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:06:30,408[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[14/26] Sequence 2011_09_26_drive_0079_sync_image_03 processed, time: 1.8278226852416992, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:06:47,176[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[15/26] Sequence 2011_09_26_drive_0095_sync_image_02 processed, time: 5.061331748962402, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:07:09,788[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[16/26] Sequence 2011_09_26_drive_0095_sync_image_03 processed, time: 4.938440799713135, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:07:24,805[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[17/26] Sequence 2011_09_26_drive_0113_sync_image_02 processed, time: 1.8135933876037598, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:07:32,935[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[18/26] Sequence 2011_09_26_drive_0113_sync_image_03 processed, time: 1.7433948516845703, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:07:40,505[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[19/26] Sequence 2011_09_28_drive_0037_sync_image_02 processed, time: 1.4963350296020508, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:07:47,545[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[20/26] Sequence 2011_09_28_drive_0037_sync_image_03 processed, time: 1.5032436847686768, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:07:54,375[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[21/26] Sequence 2011_09_29_drive_0026_sync_image_02 processed, time: 1.5559818744659424, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:08:01,355[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[22/26] Sequence 2011_09_29_drive_0026_sync_image_03 processed, time: 1.8051445484161377, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:08:16,229[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[23/26] Sequence 2011_09_30_drive_0016_sync_image_02 processed, time: 4.695106267929077, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:08:38,181[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[24/26] Sequence 2011_09_30_drive_0016_sync_image_03 processed, time: 4.6916515827178955, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:09:16,782[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[25/26] Sequence 2011_10_03_drive_0047_sync_image_02 processed, time: 13.764343023300171, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:10:17,758[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[26/26] Sequence 2011_10_03_drive_0047_sync_image_03 processed, time: 13.763484239578247, saving depth maps...[0m
+[[36m2026-09-07 10:10:44,709[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[2/2] Infering videodepth on bonn dataset..., output to outputs/videodepth/cut3r/bonn[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:11:13,548[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[1/5] Sequence rgbd_bonn_balloon2 processed, time: 15.633974313735962, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:12:16,628[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[2/5] Sequence rgbd_bonn_crowd2 processed, time: 15.869545459747314, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:13:19,488[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[3/5] Sequence rgbd_bonn_crowd3 processed, time: 15.662947177886963, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:14:24,382[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[4/5] Sequence rgbd_bonn_person_tracking2 processed, time: 15.67956805229187, saving depth maps...[0m
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[[36m2026-09-07 10:15:25,893[0m][[34mvideodepth-infer-cut3r[0m][[32mINFO[0m] - [37m[5/5] Sequence rgbd_bonn_synchronous processed, time: 15.67082691192627, saving depth maps...[0m
+[[36m2026-09-07 10:16:03,092[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[1/3] Start evaluating ZipMap on 2 datasets...[0m
+[[36m2026-09-07 10:16:07,955[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[1/2] Start evaluating dataset: kitti, 26 sequences in total[0m
+[[36m2026-09-07 10:16:08,094[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[1/26] Evaluating 2011_09_26_drive_0002_sync_image_02 in kitti, 12 images in total[0m
+[[36m2026-09-07 10:16:16,151[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0002_sync_image_02 - videodepth metrics: {'Abs Rel': 0.042338500821649035, 'Sq Rel': 0.08670282558136859, 'RMSE': 1.9069345351976053, 'Log RMSE': 0.05907351503324937, 'δ < 1.': 0.0, 'δ < 1.25': 0.9914174675941467, 'δ < 1.25^2': 0.9992396831512451, 'δ < 1.25^3': 0.9999480247497559, 'valid_pixels': 1346806, 'fps': 0.8878575127961604, 'total_time': 13.515682220458984, 'infer_time': 13.515682220458984}[0m
+[[36m2026-09-07 10:16:16,291[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[2/26] Evaluating 2011_09_26_drive_0002_sync_image_03 in kitti, 11 images in total[0m
+[[36m2026-09-07 10:16:19,083[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0002_sync_image_03 - videodepth metrics: {'Abs Rel': 0.04356219390337116, 'Sq Rel': 0.10178430597713266, 'RMSE': 2.1087919312233248, 'Log RMSE': 0.06308299831043572, 'δ < 1.': 0.0, 'δ < 1.25': 0.9893673062324524, 'δ < 1.25^2': 0.9988303184509277, 'δ < 1.25^3': 0.999877393245697, 'valid_pixels': 1174677, 'fps': 19.376157638778064, 'total_time': 0.5677080154418945, 'infer_time': 0.5677080154418945}[0m
+[[36m2026-09-07 10:16:19,223[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[3/26] Evaluating 2011_09_26_drive_0005_sync_image_02 in kitti, 24 images in total[0m
+[[36m2026-09-07 10:16:25,248[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0005_sync_image_02 - videodepth metrics: {'Abs Rel': 0.043602426668133916, 'Sq Rel': 0.19277275427957966, 'RMSE': 2.5567399018648995, 'Log RMSE': 0.08826405070233476, 'δ < 1.': 0.0, 'δ < 1.25': 0.9780277013778687, 'δ < 1.25^2': 0.9921721816062927, 'δ < 1.25^3': 0.9964951276779175, 'valid_pixels': 1344692, 'fps': 30.519640349366586, 'total_time': 0.7863788604736328, 'infer_time': 0.7863788604736328}[0m
+[[36m2026-09-07 10:16:25,462[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[4/26] Evaluating 2011_09_26_drive_0005_sync_image_03 in kitti, 24 images in total[0m
+[[36m2026-09-07 10:16:31,434[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0005_sync_image_03 - videodepth metrics: {'Abs Rel': 0.04380638624970309, 'Sq Rel': 0.2474971247719358, 'RMSE': 3.1987864038036586, 'Log RMSE': 0.10333385701394666, 'δ < 1.': 0.0, 'δ < 1.25': 0.9746462106704712, 'δ < 1.25^2': 0.9885540008544922, 'δ < 1.25^3': 0.9942742586135864, 'valid_pixels': 1273894, 'fps': 30.594970322391617, 'total_time': 0.784442663192749, 'infer_time': 0.784442663192749}[0m
+[[36m2026-09-07 10:16:31,539[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[5/26] Evaluating 2011_09_26_drive_0013_sync_image_02 in kitti, 22 images in total[0m
+[[36m2026-09-07 10:16:36,824[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0013_sync_image_02 - videodepth metrics: {'Abs Rel': 0.05671659717389847, 'Sq Rel': 0.19849746909542157, 'RMSE': 2.8982726691102836, 'Log RMSE': 0.09942900028713374, 'δ < 1.': 0.0, 'δ < 1.25': 0.9769675731658936, 'δ < 1.25^2': 0.9928284287452698, 'δ < 1.25^3': 0.9962457418441772, 'valid_pixels': 1513477, 'fps': 27.00651963441346, 'total_time': 0.8146181106567383, 'infer_time': 0.8146181106567383}[0m
+[[36m2026-09-07 10:16:36,965[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[6/26] Evaluating 2011_09_26_drive_0013_sync_image_03 in kitti, 23 images in total[0m
+[[36m2026-09-07 10:16:41,241[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0013_sync_image_03 - videodepth metrics: {'Abs Rel': 0.06552388169285957, 'Sq Rel': 0.2553098030845309, 'RMSE': 3.413976456764231, 'Log RMSE': 0.11127779268967956, 'δ < 1.': 0.0, 'δ < 1.25': 0.9718196392059326, 'δ < 1.25^2': 0.9908103942871094, 'δ < 1.25^3': 0.9957533478736877, 'valid_pixels': 1509419, 'fps': 30.18905108940834, 'total_time': 0.7618656158447266, 'infer_time': 0.7618656158447266}[0m
+[[36m2026-09-07 10:16:41,380[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[7/26] Evaluating 2011_09_26_drive_0020_sync_image_02 in kitti, 9 images in total[0m
+[[36m2026-09-07 10:16:44,383[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0020_sync_image_02 - videodepth metrics: {'Abs Rel': 0.05373940293343915, 'Sq Rel': 0.33711369780415595, 'RMSE': 4.503799191891135, 'Log RMSE': 0.10933027886230426, 'δ < 1.': 0.0, 'δ < 1.25': 0.9700939655303955, 'δ < 1.25^2': 0.9856597185134888, 'δ < 1.25^3': 0.991837203502655, 'valid_pixels': 356617, 'fps': 17.39000099045706, 'total_time': 0.5175387859344482, 'infer_time': 0.5175387859344482}[0m
+[[36m2026-09-07 10:16:45,245[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[8/26] Evaluating 2011_09_26_drive_0020_sync_image_03 in kitti, 8 images in total[0m
+[[36m2026-09-07 10:16:47,819[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0020_sync_image_03 - videodepth metrics: {'Abs Rel': 0.05417526009833077, 'Sq Rel': 0.47393320070489364, 'RMSE': 5.422067566931685, 'Log RMSE': 0.13188946139159072, 'δ < 1.': 0.0, 'δ < 1.25': 0.9583423733711243, 'δ < 1.25^2': 0.9823411703109741, 'δ < 1.25^3': 0.9878385066986084, 'valid_pixels': 308515, 'fps': 18.68396092199154, 'total_time': 0.4281747341156006, 'infer_time': 0.4281747341156006}[0m
+[[36m2026-09-07 10:16:47,985[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[9/26] Evaluating 2011_09_26_drive_0023_sync_image_02 in kitti, 77 images in total[0m
+[[36m2026-09-07 10:17:01,030[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0023_sync_image_02 - videodepth metrics: {'Abs Rel': 0.1025081476397079, 'Sq Rel': 0.5030092504873145, 'RMSE': 4.709997858919941, 'Log RMSE': 0.14691672754917934, 'δ < 1.': 0.0, 'δ < 1.25': 0.9395737648010254, 'δ < 1.25^2': 0.9796339869499207, 'δ < 1.25^3': 0.9936558604240417, 'valid_pixels': 4897625, 'fps': 33.80029092655156, 'total_time': 2.2780869007110596, 'infer_time': 2.2780869007110596}[0m
+[[36m2026-09-07 10:17:01,171[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[10/26] Evaluating 2011_09_26_drive_0023_sync_image_03 in kitti, 78 images in total[0m
+[[36m2026-09-07 10:17:13,560[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0023_sync_image_03 - videodepth metrics: {'Abs Rel': 0.09815828222831775, 'Sq Rel': 0.5746638944277886, 'RMSE': 5.191038006252763, 'Log RMSE': 0.15621666076988666, 'δ < 1.': 0.0, 'δ < 1.25': 0.9321783781051636, 'δ < 1.25^2': 0.9717053174972534, 'δ < 1.25^3': 0.9892322421073914, 'valid_pixels': 4750578, 'fps': 35.55193670724722, 'total_time': 2.1939733028411865, 'infer_time': 2.1939733028411865}[0m
+[[36m2026-09-07 10:17:13,700[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[11/26] Evaluating 2011_09_26_drive_0036_sync_image_02 in kitti, 102 images in total[0m
+[[36m2026-09-07 10:17:29,718[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0036_sync_image_02 - videodepth metrics: {'Abs Rel': 0.12059172337758851, 'Sq Rel': 0.6044440384279528, 'RMSE': 4.804014065037773, 'Log RMSE': 0.17238229020374363, 'δ < 1.': 0.0, 'δ < 1.25': 0.8945125937461853, 'δ < 1.25^2': 0.976094126701355, 'δ < 1.25^3': 0.9917213320732117, 'valid_pixels': 8104765, 'fps': 36.731246968712085, 'total_time': 2.7769272327423096, 'infer_time': 2.7769272327423096}[0m
+[[36m2026-09-07 10:17:29,859[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[12/26] Evaluating 2011_09_26_drive_0036_sync_image_03 in kitti, 101 images in total[0m
+[[36m2026-09-07 10:17:45,641[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0036_sync_image_03 - videodepth metrics: {'Abs Rel': 0.11750901421491942, 'Sq Rel': 0.5860208581295802, 'RMSE': 4.882700300784822, 'Log RMSE': 0.16911779742199987, 'δ < 1.': 0.0, 'δ < 1.25': 0.9063943028450012, 'δ < 1.25^2': 0.979479968547821, 'δ < 1.25^3': 0.991490364074707, 'valid_pixels': 7618662, 'fps': 36.651813626879125, 'total_time': 2.755661725997925, 'infer_time': 2.755661725997925}[0m
+[[36m2026-09-07 10:17:45,782[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[13/26] Evaluating 2011_09_26_drive_0079_sync_image_02 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:17:47,565[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0079_sync_image_02 - videodepth metrics: {'Abs Rel': 0.0492268232123226, 'Sq Rel': 0.4151224786492663, 'RMSE': 4.85456441321012, 'Log RMSE': 0.15776659983589825, 'δ < 1.': 0.0, 'δ < 1.25': 0.9696742296218872, 'δ < 1.25^2': 0.9860236644744873, 'δ < 1.25^3': 0.9921530485153198, 'valid_pixels': 890794, 'fps': 23.10714450686761, 'total_time': 0.5625965595245361, 'infer_time': 0.5625965595245361}[0m
+[[36m2026-09-07 10:17:47,706[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[14/26] Evaluating 2011_09_26_drive_0079_sync_image_03 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:17:49,678[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0079_sync_image_03 - videodepth metrics: {'Abs Rel': 0.06843611913853295, 'Sq Rel': 0.959627817891101, 'RMSE': 7.35650835337613, 'Log RMSE': 0.2640807579787679, 'δ < 1.': 0.0, 'δ < 1.25': 0.9511620998382568, 'δ < 1.25^2': 0.9670429229736328, 'δ < 1.25^3': 0.976679801940918, 'valid_pixels': 884211, 'fps': 23.2084780867269, 'total_time': 0.5601401329040527, 'infer_time': 0.5601401329040527}[0m
+[[36m2026-09-07 10:17:49,819[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[15/26] Evaluating 2011_09_26_drive_0095_sync_image_02 in kitti, 43 images in total[0m
+[[36m2026-09-07 10:17:55,339[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0095_sync_image_02 - videodepth metrics: {'Abs Rel': 0.06423314085307788, 'Sq Rel': 0.1660817648271958, 'RMSE': 2.419177557053984, 'Log RMSE': 0.08946436133902197, 'δ < 1.': 0.0, 'δ < 1.25': 0.9819815754890442, 'δ < 1.25^2': 0.9962835311889648, 'δ < 1.25^3': 0.9988255500793457, 'valid_pixels': 3271434, 'fps': 34.09972305034857, 'total_time': 1.261007308959961, 'infer_time': 1.261007308959961}[0m
+[[36m2026-09-07 10:17:55,479[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[16/26] Evaluating 2011_09_26_drive_0095_sync_image_03 in kitti, 43 images in total[0m
+[[36m2026-09-07 10:18:03,501[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0095_sync_image_03 - videodepth metrics: {'Abs Rel': 0.05830055969944687, 'Sq Rel': 0.18794610800486256, 'RMSE': 2.883413656175809, 'Log RMSE': 0.09144882780255066, 'δ < 1.': 0.0, 'δ < 1.25': 0.9839525818824768, 'δ < 1.25^2': 0.9940761923789978, 'δ < 1.25^3': 0.9973462820053101, 'valid_pixels': 3068461, 'fps': 34.10318556584264, 'total_time': 1.2608792781829834, 'infer_time': 1.2608792781829834}[0m
+[[36m2026-09-07 10:18:03,642[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[17/26] Evaluating 2011_09_26_drive_0113_sync_image_02 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:18:05,385[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0113_sync_image_02 - videodepth metrics: {'Abs Rel': 0.06308546547923818, 'Sq Rel': 0.5521149054238174, 'RMSE': 5.323915065533509, 'Log RMSE': 0.17077208590650078, 'δ < 1.': 0.0, 'δ < 1.25': 0.9600616693496704, 'δ < 1.25^2': 0.9708710312843323, 'δ < 1.25^3': 0.9782415628433228, 'valid_pixels': 515294, 'fps': 23.128119272417553, 'total_time': 0.5620863437652588, 'infer_time': 0.5620863437652588}[0m
+[[36m2026-09-07 10:18:05,525[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[18/26] Evaluating 2011_09_26_drive_0113_sync_image_03 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:18:07,990[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0113_sync_image_03 - videodepth metrics: {'Abs Rel': 0.07380570895991348, 'Sq Rel': 0.6330087598205711, 'RMSE': 5.583477590904098, 'Log RMSE': 0.1870140293204198, 'δ < 1.': 0.0, 'δ < 1.25': 0.9477726817131042, 'δ < 1.25^2': 0.9633169770240784, 'δ < 1.25^3': 0.9731736183166504, 'valid_pixels': 493880, 'fps': 23.129404478605938, 'total_time': 0.5620551109313965, 'infer_time': 0.5620551109313965}[0m
+[[36m2026-09-07 10:18:08,130[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[19/26] Evaluating 2011_09_28_drive_0037_sync_image_02 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:18:09,574[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_28_drive_0037_sync_image_02 - videodepth metrics: {'Abs Rel': 0.11728484628115639, 'Sq Rel': 1.5311194460683888, 'RMSE': 8.680040407586521, 'Log RMSE': 0.27976168188120926, 'δ < 1.': 0.0, 'δ < 1.25': 0.882449746131897, 'δ < 1.25^2': 0.9152283072471619, 'δ < 1.25^3': 0.935258150100708, 'valid_pixels': 630411, 'fps': 20.21869703461321, 'total_time': 0.49459171295166016, 'infer_time': 0.49459171295166016}[0m
+[[36m2026-09-07 10:18:09,715[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[20/26] Evaluating 2011_09_28_drive_0037_sync_image_03 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:18:11,668[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_28_drive_0037_sync_image_03 - videodepth metrics: {'Abs Rel': 0.1337090616830469, 'Sq Rel': 1.908383995133569, 'RMSE': 9.594392747011888, 'Log RMSE': 0.33387704034854254, 'δ < 1.': 0.0, 'δ < 1.25': 0.8745235204696655, 'δ < 1.25^2': 0.9022435545921326, 'δ < 1.25^3': 0.9182639122009277, 'valid_pixels': 589250, 'fps': 21.013220736551688, 'total_time': 0.4758908748626709, 'infer_time': 0.4758908748626709}[0m
+[[36m2026-09-07 10:18:11,808[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[21/26] Evaluating 2011_09_29_drive_0026_sync_image_02 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:18:13,478[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_29_drive_0026_sync_image_02 - videodepth metrics: {'Abs Rel': 0.041301827512794966, 'Sq Rel': 0.12703385967586991, 'RMSE': 2.097768752684486, 'Log RMSE': 0.07180317681414214, 'δ < 1.': 0.0, 'δ < 1.25': 0.9864038825035095, 'δ < 1.25^2': 0.9958803057670593, 'δ < 1.25^3': 0.9984220862388611, 'valid_pixels': 666072, 'fps': 21.15697143309681, 'total_time': 0.4726574420928955, 'infer_time': 0.4726574420928955}[0m
+[[36m2026-09-07 10:18:13,618[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[22/26] Evaluating 2011_09_29_drive_0026_sync_image_03 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:18:15,666[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_29_drive_0026_sync_image_03 - videodepth metrics: {'Abs Rel': 0.03795634204166555, 'Sq Rel': 0.1401075757857307, 'RMSE': 2.3720895810163163, 'Log RMSE': 0.0763358435745639, 'δ < 1.': 0.0, 'δ < 1.25': 0.9825275540351868, 'δ < 1.25^2': 0.9960593581199646, 'δ < 1.25^3': 0.9979588985443115, 'valid_pixels': 642783, 'fps': 21.06698504272109, 'total_time': 0.47467637062072754, 'infer_time': 0.47467637062072754}[0m
+[[36m2026-09-07 10:18:15,807[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[23/26] Evaluating 2011_09_30_drive_0016_sync_image_02 in kitti, 40 images in total[0m
+[[36m2026-09-07 10:18:23,627[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_30_drive_0016_sync_image_02 - videodepth metrics: {'Abs Rel': 0.08524895182163461, 'Sq Rel': 0.27449376573775824, 'RMSE': 2.9916841979654007, 'Log RMSE': 0.12158617012209857, 'δ < 1.': 0.0, 'δ < 1.25': 0.9501402974128723, 'δ < 1.25^2': 0.9912909865379333, 'δ < 1.25^3': 0.996005117893219, 'valid_pixels': 3384073, 'fps': 33.686476249603196, 'total_time': 1.187420129776001, 'infer_time': 1.187420129776001}[0m
+[[36m2026-09-07 10:18:23,767[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[24/26] Evaluating 2011_09_30_drive_0016_sync_image_03 in kitti, 40 images in total[0m
+[[36m2026-09-07 10:18:29,735[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_30_drive_0016_sync_image_03 - videodepth metrics: {'Abs Rel': 0.08305127608230878, 'Sq Rel': 0.28473764766786164, 'RMSE': 3.1660801550282875, 'Log RMSE': 0.12132043651735583, 'δ < 1.': 0.0, 'δ < 1.25': 0.9583847522735596, 'δ < 1.25^2': 0.9886365532875061, 'δ < 1.25^3': 0.9970138072967529, 'valid_pixels': 3207482, 'fps': 33.76702921594358, 'total_time': 1.1845874786376953, 'infer_time': 1.1845874786376953}[0m
+[[36m2026-09-07 10:18:29,878[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[25/26] Evaluating 2011_10_03_drive_0047_sync_image_02 in kitti, 125 images in total[0m
+[[36m2026-09-07 10:18:51,065[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_10_03_drive_0047_sync_image_02 - videodepth metrics: {'Abs Rel': 0.09243603631313942, 'Sq Rel': 0.32548464285792006, 'RMSE': 3.3191009411162686, 'Log RMSE': 0.12449683525908968, 'δ < 1.': 0.0, 'δ < 1.25': 0.9549798369407654, 'δ < 1.25^2': 0.9921101331710815, 'δ < 1.25^3': 0.9975813031196594, 'valid_pixels': 10599179, 'fps': 37.04381211101076, 'total_time': 3.374382734298706, 'infer_time': 3.374382734298706}[0m
+[[36m2026-09-07 10:18:51,205[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[26/26] Evaluating 2011_10_03_drive_0047_sync_image_03 in kitti, 126 images in total[0m
+[[36m2026-09-07 10:19:14,874[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - seq 2011_10_03_drive_0047_sync_image_03 - videodepth metrics: {'Abs Rel': 0.08861848093542858, 'Sq Rel': 0.3092650688897461, 'RMSE': 3.425714928738979, 'Log RMSE': 0.12152614738826605, 'δ < 1.': 0.0, 'δ < 1.25': 0.962460994720459, 'δ < 1.25^2': 0.9913698434829712, 'δ < 1.25^3': 0.9971228241920471, 'valid_pixels': 10085255, 'fps': 37.1173956130475, 'total_time': 3.39463472366333, 'infer_time': 3.39463472366333}[0m
+[[36m2026-09-07 10:19:15,026[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mkitti - Average Videodepth Metrics: {'Abs Rel': 0.08860559604133496, 'Sq Rel': 0.4092963328018982, 'RMSE': 3.916236195443908, 'Log RMSE': 0.1352800693664995, 'δ < 1.': 0.0, 'δ < 1.25': 0.9463394381963265, 'δ < 1.25^2': 0.9848896071223796, 'δ < 1.25^3': 0.9934597796930013, 'fps': 27.047311118707302, 'total_time': 1.6926409372916589, 'infer_time': 1.6926409372916589}[0m
+[[36m2026-09-07 10:19:16,478[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[2/2] Start evaluating dataset: bonn, 5 sequences in total[0m
+[[36m2026-09-07 10:19:16,618[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[1/5] Evaluating rgbd_bonn_balloon2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:19:23,949[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_balloon2 - videodepth metrics: {'Abs Rel': 0.06098912180391349, 'Sq Rel': 0.07291310269023975, 'RMSE': 0.2983000845295034, 'Log RMSE': 0.14472921629042945, 'δ < 1.': 0.0, 'δ < 1.25': 0.9718553423881531, 'δ < 1.25^2': 0.9801852703094482, 'δ < 1.25^3': 0.9841444492340088, 'valid_pixels': 28980804, 'fps': 15.213339470458918, 'total_time': 7.230496644973755, 'infer_time': 7.230496644973755}[0m
+[[36m2026-09-07 10:19:24,089[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[2/5] Evaluating rgbd_bonn_crowd2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:19:33,534[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_crowd2 - videodepth metrics: {'Abs Rel': 0.07424267942823233, 'Sq Rel': 0.05314022640262454, 'RMSE': 0.2547712299567389, 'Log RMSE': 0.13705001872070405, 'δ < 1.': 0.0, 'δ < 1.25': 0.9777528643608093, 'δ < 1.25^2': 0.9850003719329834, 'δ < 1.25^3': 0.9889914393424988, 'valid_pixels': 27662654, 'fps': 15.167483776696013, 'total_time': 7.25235652923584, 'infer_time': 7.25235652923584}[0m
+[[36m2026-09-07 10:19:33,673[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[3/5] Evaluating rgbd_bonn_crowd3 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:19:41,682[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_crowd3 - videodepth metrics: {'Abs Rel': 0.07431520906364655, 'Sq Rel': 0.07421160087710374, 'RMSE': 0.3811323032665056, 'Log RMSE': 0.1590839682591036, 'δ < 1.': 0.0, 'δ < 1.25': 0.9388933777809143, 'δ < 1.25^2': 0.9631417393684387, 'δ < 1.25^3': 0.9790165424346924, 'valid_pixels': 28224769, 'fps': 15.224134499871425, 'total_time': 7.225369691848755, 'infer_time': 7.225369691848755}[0m
+[[36m2026-09-07 10:19:41,822[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[4/5] Evaluating rgbd_bonn_person_tracking2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:19:50,198[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_person_tracking2 - videodepth metrics: {'Abs Rel': 0.03009235408136899, 'Sq Rel': 0.00729605953235797, 'RMSE': 0.13346153636293293, 'Log RMSE': 0.051758442073250165, 'δ < 1.': 0.0, 'δ < 1.25': 0.9936860799789429, 'δ < 1.25^2': 0.9978100657463074, 'δ < 1.25^3': 0.9992284178733826, 'valid_pixels': 29064292, 'fps': 15.190201222819036, 'total_time': 7.241510391235352, 'infer_time': 7.241510391235352}[0m
+[[36m2026-09-07 10:19:50,338[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37m[5/5] Evaluating rgbd_bonn_synchronous in bonn, 110 images in total[0m
+[[36m2026-09-07 10:19:59,389[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_synchronous - videodepth metrics: {'Abs Rel': 0.05529270577054921, 'Sq Rel': 0.03244885464107459, 'RMSE': 0.21012155961019469, 'Log RMSE': 0.10964475988417256, 'δ < 1.': 0.0, 'δ < 1.25': 0.9813365936279297, 'δ < 1.25^2': 0.9858720302581787, 'δ < 1.25^3': 0.98990797996521, 'valid_pixels': 28269265, 'fps': 15.235210989109401, 'total_time': 7.22011661529541, 'infer_time': 7.22011661529541}[0m
+[[36m2026-09-07 10:19:59,530[0m][[34mmonodepth-eval-ZipMap[0m][[32mINFO[0m] - [37mbonn - Average Videodepth Metrics: {'Abs Rel': 0.05876501567082004, 'Sq Rel': 0.047868917044841586, 'RMSE': 0.2550526581225629, 'Log RMSE': 0.1201078025967417, 'δ < 1.': 0.0, 'δ < 1.25': 0.972806949357475, 'δ < 1.25^2': 0.9824718906477102, 'δ < 1.25^3': 0.9882982808911273, 'fps': 15.206073991790959, 'total_time': 7.233969974517822, 'infer_time': 7.233969974517822}[0m
+[[36m2026-09-07 10:19:59,749[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[2/3] Start evaluating ttt3r on 2 datasets...[0m
+[[36m2026-09-07 10:20:01,414[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[1/2] Start evaluating dataset: kitti, 26 sequences in total[0m
+[[36m2026-09-07 10:20:01,553[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[1/26] Evaluating 2011_09_26_drive_0002_sync_image_02 in kitti, 12 images in total[0m
+[[36m2026-09-07 10:20:01,874[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0002_sync_image_02 - videodepth metrics: {'Abs Rel': 0.09582025949177712, 'Sq Rel': 0.326863920442286, 'RMSE': 3.5518875003303596, 'Log RMSE': 0.12409217163948533, 'δ < 1.': 0.0, 'δ < 1.25': 0.9565832018852234, 'δ < 1.25^2': 0.9918592572212219, 'δ < 1.25^3': 0.9993429183959961, 'valid_pixels': 1346806, 'fps': 6.1634179264237146, 'total_time': 1.9469716548919678, 'infer_time': 1.9469716548919678}[0m
+[[36m2026-09-07 10:20:02,016[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[2/26] Evaluating 2011_09_26_drive_0002_sync_image_03 in kitti, 11 images in total[0m
+[[36m2026-09-07 10:20:02,328[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0002_sync_image_03 - videodepth metrics: {'Abs Rel': 0.1426502314513019, 'Sq Rel': 0.6880844805445696, 'RMSE': 5.284685637932188, 'Log RMSE': 0.18162125924881498, 'δ < 1.': 0.0, 'δ < 1.25': 0.8261666893959045, 'δ < 1.25^2': 0.9699951410293579, 'δ < 1.25^3': 0.9950003027915955, 'valid_pixels': 1174677, 'fps': 6.910338365459619, 'total_time': 1.591817855834961, 'infer_time': 1.591817855834961}[0m
+[[36m2026-09-07 10:20:02,409[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[3/26] Evaluating 2011_09_26_drive_0005_sync_image_02 in kitti, 24 images in total[0m
+[[36m2026-09-07 10:20:02,801[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0005_sync_image_02 - videodepth metrics: {'Abs Rel': 0.096634843867242, 'Sq Rel': 0.5936590220598335, 'RMSE': 4.381313422955425, 'Log RMSE': 0.1629029342057079, 'δ < 1.': 0.0, 'δ < 1.25': 0.9053589701652527, 'δ < 1.25^2': 0.9668957591056824, 'δ < 1.25^3': 0.9910410642623901, 'valid_pixels': 1344692, 'fps': 8.096178095287272, 'total_time': 2.9643616676330566, 'infer_time': 2.9643616676330566}[0m
+[[36m2026-09-07 10:20:02,944[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[4/26] Evaluating 2011_09_26_drive_0005_sync_image_03 in kitti, 24 images in total[0m
+[[36m2026-09-07 10:20:03,367[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0005_sync_image_03 - videodepth metrics: {'Abs Rel': 0.10110405355315216, 'Sq Rel': 0.5948024819656655, 'RMSE': 4.5091135060147565, 'Log RMSE': 0.16938877827379695, 'δ < 1.': 0.0, 'δ < 1.25': 0.9122980237007141, 'δ < 1.25^2': 0.9626193046569824, 'δ < 1.25^3': 0.9892643690109253, 'valid_pixels': 1273894, 'fps': 8.361368750951588, 'total_time': 2.8703434467315674, 'infer_time': 2.8703434467315674}[0m
+[[36m2026-09-07 10:20:03,692[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[5/26] Evaluating 2011_09_26_drive_0013_sync_image_02 in kitti, 22 images in total[0m
+[[36m2026-09-07 10:20:04,500[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0013_sync_image_02 - videodepth metrics: {'Abs Rel': 0.17574539366532804, 'Sq Rel': 1.202006462806629, 'RMSE': 7.480768870852818, 'Log RMSE': 0.2326539558737099, 'δ < 1.': 0.0, 'δ < 1.25': 0.77573162317276, 'δ < 1.25^2': 0.936517059803009, 'δ < 1.25^3': 0.9788454174995422, 'valid_pixels': 1513477, 'fps': 6.465103387354292, 'total_time': 3.4028844833374023, 'infer_time': 3.4028844833374023}[0m
+[[36m2026-09-07 10:20:04,639[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[6/26] Evaluating 2011_09_26_drive_0013_sync_image_03 in kitti, 23 images in total[0m
+[[36m2026-09-07 10:20:05,066[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0013_sync_image_03 - videodepth metrics: {'Abs Rel': 0.1896965373125114, 'Sq Rel': 1.321528295231423, 'RMSE': 7.747986562464573, 'Log RMSE': 0.24589999783405375, 'δ < 1.': 0.0, 'δ < 1.25': 0.7182127833366394, 'δ < 1.25^2': 0.933143138885498, 'δ < 1.25^3': 0.9729995727539062, 'valid_pixels': 1509419, 'fps': 8.08826199568778, 'total_time': 2.8436269760131836, 'infer_time': 2.8436269760131836}[0m
+[[36m2026-09-07 10:20:05,208[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[7/26] Evaluating 2011_09_26_drive_0020_sync_image_02 in kitti, 9 images in total[0m
+[[36m2026-09-07 10:20:05,470[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0020_sync_image_02 - videodepth metrics: {'Abs Rel': 0.12512590650881325, 'Sq Rel': 0.6821885585028225, 'RMSE': 5.507332669648118, 'Log RMSE': 0.18339360441994063, 'δ < 1.': 0.0, 'δ < 1.25': 0.8740301132202148, 'δ < 1.25^2': 0.9628901481628418, 'δ < 1.25^3': 0.9868065714836121, 'valid_pixels': 356617, 'fps': 6.615223795695422, 'total_time': 1.3604981899261475, 'infer_time': 1.3604981899261475}[0m
+[[36m2026-09-07 10:20:05,611[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[8/26] Evaluating 2011_09_26_drive_0020_sync_image_03 in kitti, 8 images in total[0m
+[[36m2026-09-07 10:20:05,862[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0020_sync_image_03 - videodepth metrics: {'Abs Rel': 0.141141882969711, 'Sq Rel': 0.7851274995334722, 'RMSE': 5.908571324822655, 'Log RMSE': 0.20011964486326123, 'δ < 1.': 0.0, 'δ < 1.25': 0.8248609900474548, 'δ < 1.25^2': 0.9604848623275757, 'δ < 1.25^3': 0.9856051802635193, 'valid_pixels': 308515, 'fps': 6.605927460944044, 'total_time': 1.211033582687378, 'infer_time': 1.211033582687378}[0m
+[[36m2026-09-07 10:20:06,004[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[9/26] Evaluating 2011_09_26_drive_0023_sync_image_02 in kitti, 77 images in total[0m
+[[36m2026-09-07 10:20:07,080[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0023_sync_image_02 - videodepth metrics: {'Abs Rel': 0.1423917272759542, 'Sq Rel': 0.8535431304313241, 'RMSE': 5.811169089092328, 'Log RMSE': 0.19401191416468908, 'δ < 1.': 0.0, 'δ < 1.25': 0.8350669741630554, 'δ < 1.25^2': 0.961932361125946, 'δ < 1.25^3': 0.9879037141799927, 'valid_pixels': 4897625, 'fps': 8.947375306266053, 'total_time': 8.605875730514526, 'infer_time': 8.605875730514526}[0m
+[[36m2026-09-07 10:20:07,220[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[10/26] Evaluating 2011_09_26_drive_0023_sync_image_03 in kitti, 78 images in total[0m
+[[36m2026-09-07 10:20:08,308[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0023_sync_image_03 - videodepth metrics: {'Abs Rel': 0.16543220451322707, 'Sq Rel': 0.9670046244007401, 'RMSE': 6.348204922778838, 'Log RMSE': 0.21359732623134012, 'δ < 1.': 0.0, 'δ < 1.25': 0.822311282157898, 'δ < 1.25^2': 0.9533229470252991, 'δ < 1.25^3': 0.9829928278923035, 'valid_pixels': 4750578, 'fps': 8.972145532872377, 'total_time': 8.693572759628296, 'infer_time': 8.693572759628296}[0m
+[[36m2026-09-07 10:20:08,448[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[11/26] Evaluating 2011_09_26_drive_0036_sync_image_02 in kitti, 102 images in total[0m
+[[36m2026-09-07 10:20:09,867[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0036_sync_image_02 - videodepth metrics: {'Abs Rel': 0.16791470796169533, 'Sq Rel': 1.0099103379560574, 'RMSE': 6.4396238243681525, 'Log RMSE': 0.21706190908418974, 'δ < 1.': 0.0, 'δ < 1.25': 0.7830202579498291, 'δ < 1.25^2': 0.9575531482696533, 'δ < 1.25^3': 0.9851582646369934, 'valid_pixels': 8104765, 'fps': 9.034226604361852, 'total_time': 11.290396451950073, 'infer_time': 11.290396451950073}[0m
+[[36m2026-09-07 10:20:09,940[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[12/26] Evaluating 2011_09_26_drive_0036_sync_image_03 in kitti, 101 images in total[0m
+[[36m2026-09-07 10:20:11,303[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0036_sync_image_03 - videodepth metrics: {'Abs Rel': 0.17823321945727424, 'Sq Rel': 1.1896645290532966, 'RMSE': 7.216946529253608, 'Log RMSE': 0.23459872612291668, 'δ < 1.': 0.0, 'δ < 1.25': 0.7591086030006409, 'δ < 1.25^2': 0.9469095468521118, 'δ < 1.25^3': 0.978976845741272, 'valid_pixels': 7618662, 'fps': 9.072274095880465, 'total_time': 11.13282060623169, 'infer_time': 11.13282060623169}[0m
+[[36m2026-09-07 10:20:11,443[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[13/26] Evaluating 2011_09_26_drive_0079_sync_image_02 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:11,815[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0079_sync_image_02 - videodepth metrics: {'Abs Rel': 0.19330710888309263, 'Sq Rel': 1.1339786570520594, 'RMSE': 6.916787154669517, 'Log RMSE': 0.2435244642126958, 'δ < 1.': 0.0, 'δ < 1.25': 0.7093614935874939, 'δ < 1.25^2': 0.9460368752479553, 'δ < 1.25^3': 0.9745148420333862, 'valid_pixels': 890794, 'fps': 7.1548761877018325, 'total_time': 1.8169426918029785, 'infer_time': 1.8169426918029785}[0m
+[[36m2026-09-07 10:20:11,958[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[14/26] Evaluating 2011_09_26_drive_0079_sync_image_03 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:12,271[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0079_sync_image_03 - videodepth metrics: {'Abs Rel': 0.20218421660046923, 'Sq Rel': 1.3469886403615519, 'RMSE': 7.651602759348808, 'Log RMSE': 0.2669049261261435, 'δ < 1.': 0.0, 'δ < 1.25': 0.6644070148468018, 'δ < 1.25^2': 0.9351761341094971, 'δ < 1.25^3': 0.966367781162262, 'valid_pixels': 884211, 'fps': 7.202299517702025, 'total_time': 1.8049790859222412, 'infer_time': 1.8049790859222412}[0m
+[[36m2026-09-07 10:20:12,413[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[15/26] Evaluating 2011_09_26_drive_0095_sync_image_02 in kitti, 43 images in total[0m
+[[36m2026-09-07 10:20:13,121[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0095_sync_image_02 - videodepth metrics: {'Abs Rel': 0.09026165858741117, 'Sq Rel': 0.29761095764839784, 'RMSE': 3.037380420200385, 'Log RMSE': 0.11869453113772273, 'δ < 1.': 0.0, 'δ < 1.25': 0.9490317702293396, 'δ < 1.25^2': 0.9932888150215149, 'δ < 1.25^3': 0.9984474182128906, 'valid_pixels': 3271434, 'fps': 8.682731699773976, 'total_time': 4.9523584842681885, 'infer_time': 4.9523584842681885}[0m
+[[36m2026-09-07 10:20:13,230[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[16/26] Evaluating 2011_09_26_drive_0095_sync_image_03 in kitti, 43 images in total[0m
+[[36m2026-09-07 10:20:13,897[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0095_sync_image_03 - videodepth metrics: {'Abs Rel': 0.09301549995406419, 'Sq Rel': 0.4009525857473057, 'RMSE': 3.80563737898605, 'Log RMSE': 0.1326591008616659, 'δ < 1.': 0.0, 'δ < 1.25': 0.9287183880805969, 'δ < 1.25^2': 0.9873692393302917, 'δ < 1.25^3': 0.9973756074905396, 'valid_pixels': 3068461, 'fps': 8.672756131119922, 'total_time': 4.958054780960083, 'infer_time': 4.958054780960083}[0m
+[[36m2026-09-07 10:20:14,039[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[17/26] Evaluating 2011_09_26_drive_0113_sync_image_02 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:14,339[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0113_sync_image_02 - videodepth metrics: {'Abs Rel': 0.20537813756375312, 'Sq Rel': 0.9578482383495017, 'RMSE': 5.659172704634822, 'Log RMSE': 0.2494716321260536, 'δ < 1.': 0.0, 'δ < 1.25': 0.5733833909034729, 'δ < 1.25^2': 0.9698230624198914, 'δ < 1.25^3': 0.9826817512512207, 'valid_pixels': 515294, 'fps': 6.416209067448389, 'total_time': 2.026118516921997, 'infer_time': 2.026118516921997}[0m
+[[36m2026-09-07 10:20:14,479[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[18/26] Evaluating 2011_09_26_drive_0113_sync_image_03 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:14,779[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0113_sync_image_03 - videodepth metrics: {'Abs Rel': 0.2063616387154167, 'Sq Rel': 0.9590537418134438, 'RMSE': 5.668493440249884, 'Log RMSE': 0.24857838013627617, 'δ < 1.': 0.0, 'δ < 1.25': 0.5993986129760742, 'δ < 1.25^2': 0.9639467000961304, 'δ < 1.25^3': 0.9819571375846863, 'valid_pixels': 493880, 'fps': 7.125823310634339, 'total_time': 1.8243505954742432, 'infer_time': 1.8243505954742432}[0m
+[[36m2026-09-07 10:20:14,921[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[19/26] Evaluating 2011_09_28_drive_0037_sync_image_02 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:15,200[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_28_drive_0037_sync_image_02 - videodepth metrics: {'Abs Rel': 0.2032140329566494, 'Sq Rel': 1.9194575019723172, 'RMSE': 9.337945948646793, 'Log RMSE': 0.3222564169647721, 'δ < 1.': 0.0, 'δ < 1.25': 0.7504960894584656, 'δ < 1.25^2': 0.8962724208831787, 'δ < 1.25^3': 0.924788773059845, 'valid_pixels': 630411, 'fps': 6.803905035141228, 'total_time': 1.4697442054748535, 'infer_time': 1.4697442054748535}[0m
+[[36m2026-09-07 10:20:15,342[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[20/26] Evaluating 2011_09_28_drive_0037_sync_image_03 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:15,619[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_28_drive_0037_sync_image_03 - videodepth metrics: {'Abs Rel': 0.19669326414632254, 'Sq Rel': 1.9037156660334675, 'RMSE': 9.3129047697821, 'Log RMSE': 0.32259510904606586, 'δ < 1.': 0.0, 'δ < 1.25': 0.7969146966934204, 'δ < 1.25^2': 0.8968790769577026, 'δ < 1.25^3': 0.9233381152153015, 'valid_pixels': 589250, 'fps': 6.827650141662658, 'total_time': 1.4646327495574951, 'infer_time': 1.4646327495574951}[0m
+[[36m2026-09-07 10:20:15,761[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[21/26] Evaluating 2011_09_29_drive_0026_sync_image_02 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:16,016[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_29_drive_0026_sync_image_02 - videodepth metrics: {'Abs Rel': 0.1270510988451261, 'Sq Rel': 0.7119180169417203, 'RMSE': 4.593248201596493, 'Log RMSE': 0.1717175616418696, 'δ < 1.': 0.0, 'δ < 1.25': 0.8436700105667114, 'δ < 1.25^2': 0.9715661406517029, 'δ < 1.25^3': 0.9956205487251282, 'valid_pixels': 666072, 'fps': 6.709957741848529, 'total_time': 1.4903223514556885, 'infer_time': 1.4903223514556885}[0m
+[[36m2026-09-07 10:20:16,197[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[22/26] Evaluating 2011_09_29_drive_0026_sync_image_03 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:16,839[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_29_drive_0026_sync_image_03 - videodepth metrics: {'Abs Rel': 0.10140412117484177, 'Sq Rel': 0.48881252610516834, 'RMSE': 4.076330529485983, 'Log RMSE': 0.15178535179652028, 'δ < 1.': 0.0, 'δ < 1.25': 0.8820270895957947, 'δ < 1.25^2': 0.9837316870689392, 'δ < 1.25^3': 0.9948241114616394, 'valid_pixels': 642783, 'fps': 6.745693097069986, 'total_time': 1.4824273586273193, 'infer_time': 1.4824273586273193}[0m
+[[36m2026-09-07 10:20:17,099[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[23/26] Evaluating 2011_09_30_drive_0016_sync_image_02 in kitti, 40 images in total[0m
+[[36m2026-09-07 10:20:17,718[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_30_drive_0016_sync_image_02 - videodepth metrics: {'Abs Rel': 0.1706695684236776, 'Sq Rel': 0.835326850989815, 'RMSE': 5.720157438065421, 'Log RMSE': 0.20273695778874717, 'δ < 1.': 0.0, 'δ < 1.25': 0.8033813238143921, 'δ < 1.25^2': 0.969399631023407, 'δ < 1.25^3': 0.992910623550415, 'valid_pixels': 3384073, 'fps': 8.54900398532242, 'total_time': 4.678907632827759, 'infer_time': 4.678907632827759}[0m
+[[36m2026-09-07 10:20:17,858[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[24/26] Evaluating 2011_09_30_drive_0016_sync_image_03 in kitti, 40 images in total[0m
+[[36m2026-09-07 10:20:18,509[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_30_drive_0016_sync_image_03 - videodepth metrics: {'Abs Rel': 0.18503506188526286, 'Sq Rel': 0.9867035567488721, 'RMSE': 6.271786687041751, 'Log RMSE': 0.22129447176407277, 'δ < 1.': 0.0, 'δ < 1.25': 0.7230618596076965, 'δ < 1.25^2': 0.9606360793113708, 'δ < 1.25^3': 0.9888737797737122, 'valid_pixels': 3207482, 'fps': 8.46306648206251, 'total_time': 4.72641921043396, 'infer_time': 4.72641921043396}[0m
+[[36m2026-09-07 10:20:18,649[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[25/26] Evaluating 2011_10_03_drive_0047_sync_image_02 in kitti, 125 images in total[0m
+[[36m2026-09-07 10:20:20,422[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_10_03_drive_0047_sync_image_02 - videodepth metrics: {'Abs Rel': 0.13049969598098826, 'Sq Rel': 1.1072866639391121, 'RMSE': 6.85683525237044, 'Log RMSE': 0.1803602586206324, 'δ < 1.': 0.0, 'δ < 1.25': 0.8562721014022827, 'δ < 1.25^2': 0.9719889760017395, 'δ < 1.25^3': 0.9924880266189575, 'valid_pixels': 10599179, 'fps': 9.048868928491537, 'total_time': 13.813881158828735, 'infer_time': 13.813881158828735}[0m
+[[36m2026-09-07 10:20:20,563[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[26/26] Evaluating 2011_10_03_drive_0047_sync_image_03 in kitti, 126 images in total[0m
+[[36m2026-09-07 10:20:22,248[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_10_03_drive_0047_sync_image_03 - videodepth metrics: {'Abs Rel': 0.15416542478939171, 'Sq Rel': 1.2549192355569316, 'RMSE': 7.215522499501775, 'Log RMSE': 0.20863123431352013, 'δ < 1.': 0.0, 'δ < 1.25': 0.813802182674408, 'δ < 1.25^2': 0.9508274793624878, 'δ < 1.25^3': 0.9897311329841614, 'valid_pixels': 10085255, 'fps': 9.07300445632488, 'total_time': 13.887351274490356, 'infer_time': 13.887351274490356}[0m
+[[36m2026-09-07 10:20:22,389[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mkitti - Average Videodepth Metrics: {'Abs Rel': 0.15097037031897573, 'Sq Rel': 0.9846191005606438, 'RMSE': 6.255535824661828, 'Log RMSE': 0.20092968415892848, 'δ < 1.': 0.0, 'δ < 1.25': 0.8170105209509149, 'δ < 1.25^2': 0.9604109595109621, 'δ < 1.25^3': 0.9868724691662737, 'fps': 7.723372580749565, 'total_time': 4.5504112885548516, 'infer_time': 4.5504112885548516}[0m
+[[36m2026-09-07 10:20:22,963[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[2/2] Start evaluating dataset: bonn, 5 sequences in total[0m
+[[36m2026-09-07 10:20:23,102[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[1/5] Evaluating rgbd_bonn_balloon2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:24,269[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_balloon2 - videodepth metrics: {'Abs Rel': 0.0470738096439322, 'Sq Rel': 0.03117760387572445, 'RMSE': 0.2272294045004782, 'Log RMSE': 0.10730328263437895, 'δ < 1.': 0.0, 'δ < 1.25': 0.9753624796867371, 'δ < 1.25^2': 0.9884102940559387, 'δ < 1.25^3': 0.9916741251945496, 'valid_pixels': 28980804, 'fps': 6.944512528868649, 'total_time': 15.839844703674316, 'infer_time': 15.839844703674316}[0m
+[[36m2026-09-07 10:20:24,409[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[2/5] Evaluating rgbd_bonn_crowd2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:25,618[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_crowd2 - videodepth metrics: {'Abs Rel': 0.07761918351216268, 'Sq Rel': 0.035264193958538026, 'RMSE': 0.2413766007465965, 'Log RMSE': 0.12953247301015264, 'δ < 1.': 0.0, 'δ < 1.25': 0.9640648365020752, 'δ < 1.25^2': 0.9885883331298828, 'δ < 1.25^3': 0.9926357865333557, 'valid_pixels': 27662654, 'fps': 6.904034058510134, 'total_time': 15.932713985443115, 'infer_time': 15.932713985443115}[0m
+[[36m2026-09-07 10:20:25,758[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[3/5] Evaluating rgbd_bonn_crowd3 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:26,938[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_crowd3 - videodepth metrics: {'Abs Rel': 0.08475725170817582, 'Sq Rel': 0.07357198844459542, 'RMSE': 0.38906440980179174, 'Log RMSE': 0.17096545107134659, 'δ < 1.': 0.0, 'δ < 1.25': 0.9331998825073242, 'δ < 1.25^2': 0.9610890746116638, 'δ < 1.25^3': 0.9782141447067261, 'valid_pixels': 28224769, 'fps': 6.9633049379450656, 'total_time': 15.797096490859985, 'infer_time': 15.797096490859985}[0m
+[[36m2026-09-07 10:20:27,163[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[4/5] Evaluating rgbd_bonn_person_tracking2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:28,373[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_person_tracking2 - videodepth metrics: {'Abs Rel': 0.035359969998482864, 'Sq Rel': 0.009242112484371023, 'RMSE': 0.16686868324002568, 'Log RMSE': 0.060606921257041195, 'δ < 1.': 0.0, 'δ < 1.25': 0.992102324962616, 'δ < 1.25^2': 0.9971195459365845, 'δ < 1.25^3': 0.9986692667007446, 'valid_pixels': 29064292, 'fps': 6.969148970494423, 'total_time': 15.783849716186523, 'infer_time': 15.783849716186523}[0m
+[[36m2026-09-07 10:20:28,513[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37m[5/5] Evaluating rgbd_bonn_synchronous in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:29,874[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_synchronous - videodepth metrics: {'Abs Rel': 0.06230922994626665, 'Sq Rel': 0.021788774696938802, 'RMSE': 0.19375476440687564, 'Log RMSE': 0.10445930713201076, 'δ < 1.': 0.0, 'δ < 1.25': 0.986229658126831, 'δ < 1.25^2': 0.9910968542098999, 'δ < 1.25^3': 0.9938176870346069, 'valid_pixels': 28269265, 'fps': 6.9809648512092055, 'total_time': 15.757134199142456, 'infer_time': 15.757134199142456}[0m
+[[36m2026-09-07 10:20:30,014[0m][[34mmonodepth-eval-ttt3r[0m][[32mINFO[0m] - [37mbonn - Average Videodepth Metrics: {'Abs Rel': 0.06112997812366251, 'Sq Rel': 0.034037362736398416, 'RMSE': 0.24311148046613373, 'Log RMSE': 0.11415393241736085, 'δ < 1.': 0.0, 'δ < 1.25': 0.9703779187194607, 'δ < 1.25^2': 0.9853362485599936, 'δ < 1.25^3': 0.9910454623212701, 'fps': 6.952393069405495, 'total_time': 15.82212781906128, 'infer_time': 15.82212781906128}[0m
+[[36m2026-09-07 10:20:30,270[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[3/3] Start evaluating cut3r on 2 datasets...[0m
+[[36m2026-09-07 10:20:31,421[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[1/2] Start evaluating dataset: kitti, 26 sequences in total[0m
+[[36m2026-09-07 10:20:31,561[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[1/26] Evaluating 2011_09_26_drive_0002_sync_image_02 in kitti, 12 images in total[0m
+[[36m2026-09-07 10:20:31,816[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0002_sync_image_02 - videodepth metrics: {'Abs Rel': 0.09257794730571989, 'Sq Rel': 0.3108124279522351, 'RMSE': 3.4488486402969962, 'Log RMSE': 0.1201671831284438, 'δ < 1.': 0.0, 'δ < 1.25': 0.9594292044639587, 'δ < 1.25^2': 0.9920916557312012, 'δ < 1.25^3': 0.9994252920150757, 'valid_pixels': 1346806, 'fps': 7.213971455795698, 'total_time': 1.6634387969970703, 'infer_time': 1.6634387969970703}[0m
+[[36m2026-09-07 10:20:31,955[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[2/26] Evaluating 2011_09_26_drive_0002_sync_image_03 in kitti, 11 images in total[0m
+[[36m2026-09-07 10:20:32,259[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0002_sync_image_03 - videodepth metrics: {'Abs Rel': 0.14055519898333277, 'Sq Rel': 0.6448860227922204, 'RMSE': 5.046269906967146, 'Log RMSE': 0.17673277291352002, 'δ < 1.': 0.0, 'δ < 1.25': 0.8420042395591736, 'δ < 1.25^2': 0.9733449816703796, 'δ < 1.25^3': 0.9948998689651489, 'valid_pixels': 1174677, 'fps': 6.989701791914871, 'total_time': 1.5737438201904297, 'infer_time': 1.5737438201904297}[0m
+[[36m2026-09-07 10:20:32,400[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[3/26] Evaluating 2011_09_26_drive_0005_sync_image_02 in kitti, 24 images in total[0m
+[[36m2026-09-07 10:20:32,829[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0005_sync_image_02 - videodepth metrics: {'Abs Rel': 0.09928854148299127, 'Sq Rel': 0.6206329880124837, 'RMSE': 4.433424548399549, 'Log RMSE': 0.16694101636193484, 'δ < 1.': 0.0, 'δ < 1.25': 0.901089608669281, 'δ < 1.25^2': 0.9649257659912109, 'δ < 1.25^3': 0.9908648133277893, 'valid_pixels': 1344692, 'fps': 8.08593851851596, 'total_time': 2.9681155681610107, 'infer_time': 2.9681155681610107}[0m
+[[36m2026-09-07 10:20:32,946[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[4/26] Evaluating 2011_09_26_drive_0005_sync_image_03 in kitti, 24 images in total[0m
+[[36m2026-09-07 10:20:33,369[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0005_sync_image_03 - videodepth metrics: {'Abs Rel': 0.10487658834885556, 'Sq Rel': 0.6363190270036598, 'RMSE': 4.621255471701051, 'Log RMSE': 0.17638810165237184, 'δ < 1.': 0.0, 'δ < 1.25': 0.9078227877616882, 'δ < 1.25^2': 0.9599943161010742, 'δ < 1.25^3': 0.9871017336845398, 'valid_pixels': 1273894, 'fps': 8.31815530411299, 'total_time': 2.8852550983428955, 'infer_time': 2.8852550983428955}[0m
+[[36m2026-09-07 10:20:33,511[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[5/26] Evaluating 2011_09_26_drive_0013_sync_image_02 in kitti, 22 images in total[0m
+[[36m2026-09-07 10:20:33,925[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0013_sync_image_02 - videodepth metrics: {'Abs Rel': 0.17346946280635075, 'Sq Rel': 1.1178679367290725, 'RMSE': 7.140502568094135, 'Log RMSE': 0.22412939510318508, 'δ < 1.': 0.0, 'δ < 1.25': 0.7821936011314392, 'δ < 1.25^2': 0.943668782711029, 'δ < 1.25^3': 0.9828421473503113, 'valid_pixels': 1513477, 'fps': 8.036947700218878, 'total_time': 2.7373576164245605, 'infer_time': 2.7373576164245605}[0m
+[[36m2026-09-07 10:20:34,054[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[6/26] Evaluating 2011_09_26_drive_0013_sync_image_03 in kitti, 23 images in total[0m
+[[36m2026-09-07 10:20:34,477[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0013_sync_image_03 - videodepth metrics: {'Abs Rel': 0.19573796820376832, 'Sq Rel': 1.278000973575371, 'RMSE': 7.47067858747613, 'Log RMSE': 0.24385004437013805, 'δ < 1.': 0.0, 'δ < 1.25': 0.6939617395401001, 'δ < 1.25^2': 0.9343423247337341, 'δ < 1.25^3': 0.9785725474357605, 'valid_pixels': 1509419, 'fps': 8.25785668758131, 'total_time': 2.785226345062256, 'infer_time': 2.785226345062256}[0m
+[[36m2026-09-07 10:20:34,631[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[7/26] Evaluating 2011_09_26_drive_0020_sync_image_02 in kitti, 9 images in total[0m
+[[36m2026-09-07 10:20:34,902[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0020_sync_image_02 - videodepth metrics: {'Abs Rel': 0.12721381732260137, 'Sq Rel': 0.6617418617179814, 'RMSE': 5.365990234719158, 'Log RMSE': 0.1823433102492962, 'δ < 1.': 0.0, 'δ < 1.25': 0.8682620525360107, 'δ < 1.25^2': 0.9662803411483765, 'δ < 1.25^3': 0.988301157951355, 'valid_pixels': 356617, 'fps': 6.662782884317331, 'total_time': 1.3507869243621826, 'infer_time': 1.3507869243621826}[0m
+[[36m2026-09-07 10:20:35,058[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[8/26] Evaluating 2011_09_26_drive_0020_sync_image_03 in kitti, 8 images in total[0m
+[[36m2026-09-07 10:20:35,308[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0020_sync_image_03 - videodepth metrics: {'Abs Rel': 0.1461296774096081, 'Sq Rel': 0.7956643834027242, 'RMSE': 5.845351124918007, 'Log RMSE': 0.203307157511959, 'δ < 1.': 0.0, 'δ < 1.25': 0.7915627956390381, 'δ < 1.25^2': 0.9616971611976624, 'δ < 1.25^3': 0.9861659407615662, 'valid_pixels': 308515, 'fps': 6.314755474339226, 'total_time': 1.266874074935913, 'infer_time': 1.266874074935913}[0m
+[[36m2026-09-07 10:20:35,724[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[9/26] Evaluating 2011_09_26_drive_0023_sync_image_02 in kitti, 77 images in total[0m
+[[36m2026-09-07 10:20:36,773[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0023_sync_image_02 - videodepth metrics: {'Abs Rel': 0.14162296151896542, 'Sq Rel': 0.8638657326167061, 'RMSE': 5.804502150124839, 'Log RMSE': 0.1946952673405214, 'δ < 1.': 0.0, 'δ < 1.25': 0.8368257880210876, 'δ < 1.25^2': 0.961029052734375, 'δ < 1.25^3': 0.9873589873313904, 'valid_pixels': 4897625, 'fps': 9.090302114716039, 'total_time': 8.470565557479858, 'infer_time': 8.470565557479858}[0m
+[[36m2026-09-07 10:20:36,913[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[10/26] Evaluating 2011_09_26_drive_0023_sync_image_03 in kitti, 78 images in total[0m
+[[36m2026-09-07 10:20:37,996[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0023_sync_image_03 - videodepth metrics: {'Abs Rel': 0.15771021223879256, 'Sq Rel': 0.9559968492206151, 'RMSE': 6.224365236970846, 'Log RMSE': 0.20966172498522115, 'δ < 1.': 0.0, 'δ < 1.25': 0.8216686248779297, 'δ < 1.25^2': 0.9544360637664795, 'δ < 1.25^3': 0.9838950037956238, 'valid_pixels': 4750578, 'fps': 9.059794513657039, 'total_time': 8.609466791152954, 'infer_time': 8.609466791152954}[0m
+[[36m2026-09-07 10:20:38,136[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[11/26] Evaluating 2011_09_26_drive_0036_sync_image_02 in kitti, 102 images in total[0m
+[[36m2026-09-07 10:20:39,540[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0036_sync_image_02 - videodepth metrics: {'Abs Rel': 0.15805527443090014, 'Sq Rel': 0.9571294875726293, 'RMSE': 6.252391559489274, 'Log RMSE': 0.2098286540781036, 'δ < 1.': 0.0, 'δ < 1.25': 0.802247941493988, 'δ < 1.25^2': 0.9620149731636047, 'δ < 1.25^3': 0.9844426512718201, 'valid_pixels': 8104765, 'fps': 9.366724331422283, 'total_time': 10.889612674713135, 'infer_time': 10.889612674713135}[0m
+[[36m2026-09-07 10:20:39,688[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[12/26] Evaluating 2011_09_26_drive_0036_sync_image_03 in kitti, 101 images in total[0m
+[[36m2026-09-07 10:20:41,057[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0036_sync_image_03 - videodepth metrics: {'Abs Rel': 0.17329130793735875, 'Sq Rel': 1.1305087332066779, 'RMSE': 7.005273240094723, 'Log RMSE': 0.22833227812736706, 'δ < 1.': 0.0, 'δ < 1.25': 0.7763939499855042, 'δ < 1.25^2': 0.9517127871513367, 'δ < 1.25^3': 0.9799026250839233, 'valid_pixels': 7618662, 'fps': 9.016606424306502, 'total_time': 11.201553583145142, 'infer_time': 11.201553583145142}[0m
+[[36m2026-09-07 10:20:41,196[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[13/26] Evaluating 2011_09_26_drive_0079_sync_image_02 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:41,512[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0079_sync_image_02 - videodepth metrics: {'Abs Rel': 0.18532554546176103, 'Sq Rel': 1.1553950689186716, 'RMSE': 7.072436679046672, 'Log RMSE': 0.24247308987165977, 'δ < 1.': 0.0, 'δ < 1.25': 0.734620988368988, 'δ < 1.25^2': 0.9422975182533264, 'δ < 1.25^3': 0.9726850390434265, 'valid_pixels': 890794, 'fps': 7.15806034064027, 'total_time': 1.8161344528198242, 'infer_time': 1.8161344528198242}[0m
+[[36m2026-09-07 10:20:41,651[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[14/26] Evaluating 2011_09_26_drive_0079_sync_image_03 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:41,965[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0079_sync_image_03 - videodepth metrics: {'Abs Rel': 0.20140978507142857, 'Sq Rel': 1.3443581077573385, 'RMSE': 7.657695951049875, 'Log RMSE': 0.2660648255280055, 'δ < 1.': 0.0, 'δ < 1.25': 0.6755344867706299, 'δ < 1.25^2': 0.9345857501029968, 'δ < 1.25^3': 0.9665781259536743, 'valid_pixels': 884211, 'fps': 7.11228726121263, 'total_time': 1.8278226852416992, 'infer_time': 1.8278226852416992}[0m
+[[36m2026-09-07 10:20:42,108[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[15/26] Evaluating 2011_09_26_drive_0095_sync_image_02 in kitti, 43 images in total[0m
+[[36m2026-09-07 10:20:42,780[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0095_sync_image_02 - videodepth metrics: {'Abs Rel': 0.08695803464676917, 'Sq Rel': 0.29409246343802914, 'RMSE': 3.095343342083042, 'Log RMSE': 0.11556861910390749, 'δ < 1.': 0.0, 'δ < 1.25': 0.9568561911582947, 'δ < 1.25^2': 0.9932426810264587, 'δ < 1.25^3': 0.9982526898384094, 'valid_pixels': 3271434, 'fps': 8.495787696353872, 'total_time': 5.061331748962402, 'infer_time': 5.061331748962402}[0m
+[[36m2026-09-07 10:20:42,920[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[16/26] Evaluating 2011_09_26_drive_0095_sync_image_03 in kitti, 43 images in total[0m
+[[36m2026-09-07 10:20:43,604[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0095_sync_image_03 - videodepth metrics: {'Abs Rel': 0.093604895489883, 'Sq Rel': 0.39215622377019577, 'RMSE': 3.7217309313135956, 'Log RMSE': 0.13096829713260408, 'δ < 1.': 0.0, 'δ < 1.25': 0.9367194175720215, 'δ < 1.25^2': 0.988593339920044, 'δ < 1.25^3': 0.9975297451019287, 'valid_pixels': 3068461, 'fps': 8.707201674362036, 'total_time': 4.938440799713135, 'infer_time': 4.938440799713135}[0m
+[[36m2026-09-07 10:20:43,747[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[17/26] Evaluating 2011_09_26_drive_0113_sync_image_02 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:44,048[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0113_sync_image_02 - videodepth metrics: {'Abs Rel': 0.20720473544480317, 'Sq Rel': 0.9744821014508774, 'RMSE': 5.708033615313335, 'Log RMSE': 0.2518311058393932, 'δ < 1.': 0.0, 'δ < 1.25': 0.561068058013916, 'δ < 1.25^2': 0.9695979952812195, 'δ < 1.25^3': 0.9820238947868347, 'valid_pixels': 515294, 'fps': 7.168089654967514, 'total_time': 1.8135933876037598, 'infer_time': 1.8135933876037598}[0m
+[[36m2026-09-07 10:20:44,189[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[18/26] Evaluating 2011_09_26_drive_0113_sync_image_03 in kitti, 13 images in total[0m
+[[36m2026-09-07 10:20:44,488[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_26_drive_0113_sync_image_03 - videodepth metrics: {'Abs Rel': 0.2113458731688407, 'Sq Rel': 0.969308449821629, 'RMSE': 5.643075073097113, 'Log RMSE': 0.25111401317735066, 'δ < 1.': 0.0, 'δ < 1.25': 0.5598687529563904, 'δ < 1.25^2': 0.9647181034088135, 'δ < 1.25^3': 0.9822000861167908, 'valid_pixels': 493880, 'fps': 7.456715836598139, 'total_time': 1.7433948516845703, 'infer_time': 1.7433948516845703}[0m
+[[36m2026-09-07 10:20:44,780[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[19/26] Evaluating 2011_09_28_drive_0037_sync_image_02 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:45,059[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_28_drive_0037_sync_image_02 - videodepth metrics: {'Abs Rel': 0.20661188689951143, 'Sq Rel': 1.9304209016060563, 'RMSE': 9.34789664758494, 'Log RMSE': 0.3239474769660276, 'δ < 1.': 0.0, 'δ < 1.25': 0.7295954823493958, 'δ < 1.25^2': 0.8963311314582825, 'δ < 1.25^3': 0.9246206283569336, 'valid_pixels': 630411, 'fps': 6.682995320011651, 'total_time': 1.4963350296020508, 'infer_time': 1.4963350296020508}[0m
+[[36m2026-09-07 10:20:45,200[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[20/26] Evaluating 2011_09_28_drive_0037_sync_image_03 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:45,478[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_28_drive_0037_sync_image_03 - videodepth metrics: {'Abs Rel': 0.19182528188755527, 'Sq Rel': 1.9036294376926493, 'RMSE': 9.341415612969609, 'Log RMSE': 0.32249576810926206, 'δ < 1.': 0.0, 'δ < 1.25': 0.798681378364563, 'δ < 1.25^2': 0.8958234786987305, 'δ < 1.25^3': 0.9231141209602356, 'valid_pixels': 589250, 'fps': 6.6522813974361235, 'total_time': 1.5032436847686768, 'infer_time': 1.5032436847686768}[0m
+[[36m2026-09-07 10:20:45,619[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[21/26] Evaluating 2011_09_29_drive_0026_sync_image_02 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:45,899[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_29_drive_0026_sync_image_02 - videodepth metrics: {'Abs Rel': 0.13729588815131036, 'Sq Rel': 0.8064497625173348, 'RMSE': 4.842795334981398, 'Log RMSE': 0.18207788320485968, 'δ < 1.': 0.0, 'δ < 1.25': 0.8190315365791321, 'δ < 1.25^2': 0.9671927094459534, 'δ < 1.25^3': 0.9954614639282227, 'valid_pixels': 666072, 'fps': 6.426810083139488, 'total_time': 1.5559818744659424, 'infer_time': 1.5559818744659424}[0m
+[[36m2026-09-07 10:20:46,042[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[22/26] Evaluating 2011_09_29_drive_0026_sync_image_03 in kitti, 10 images in total[0m
+[[36m2026-09-07 10:20:46,323[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_29_drive_0026_sync_image_03 - videodepth metrics: {'Abs Rel': 0.09835776910598738, 'Sq Rel': 0.48427027078899526, 'RMSE': 4.085258741745628, 'Log RMSE': 0.1498591985592825, 'δ < 1.': 0.0, 'δ < 1.25': 0.8948463201522827, 'δ < 1.25^2': 0.9844053387641907, 'δ < 1.25^3': 0.9945456385612488, 'valid_pixels': 642783, 'fps': 5.5397225716766885, 'total_time': 1.8051445484161377, 'infer_time': 1.8051445484161377}[0m
+[[36m2026-09-07 10:20:46,464[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[23/26] Evaluating 2011_09_30_drive_0016_sync_image_02 in kitti, 40 images in total[0m
+[[36m2026-09-07 10:20:47,114[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_30_drive_0016_sync_image_02 - videodepth metrics: {'Abs Rel': 0.15496133845144275, 'Sq Rel': 0.756695157080549, 'RMSE': 5.496720944772018, 'Log RMSE': 0.19070384698423568, 'δ < 1.': 0.0, 'δ < 1.25': 0.8423583507537842, 'δ < 1.25^2': 0.9713490605354309, 'δ < 1.25^3': 0.9934898018836975, 'valid_pixels': 3384073, 'fps': 8.519508977513143, 'total_time': 4.695106267929077, 'infer_time': 4.695106267929077}[0m
+[[36m2026-09-07 10:20:47,253[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[24/26] Evaluating 2011_09_30_drive_0016_sync_image_03 in kitti, 40 images in total[0m
+[[36m2026-09-07 10:20:47,936[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_09_30_drive_0016_sync_image_03 - videodepth metrics: {'Abs Rel': 0.16830422163469644, 'Sq Rel': 0.8726092742676265, 'RMSE': 5.929199557511245, 'Log RMSE': 0.2061205134320746, 'δ < 1.': 0.0, 'δ < 1.25': 0.7874372601509094, 'δ < 1.25^2': 0.9661378860473633, 'δ < 1.25^3': 0.9911139011383057, 'valid_pixels': 3207482, 'fps': 8.525782295374077, 'total_time': 4.6916515827178955, 'infer_time': 4.6916515827178955}[0m
+[[36m2026-09-07 10:20:48,008[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[25/26] Evaluating 2011_10_03_drive_0047_sync_image_02 in kitti, 125 images in total[0m
+[[36m2026-09-07 10:20:49,762[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_10_03_drive_0047_sync_image_02 - videodepth metrics: {'Abs Rel': 0.14854161884596492, 'Sq Rel': 1.2479834853593594, 'RMSE': 7.116908820109518, 'Log RMSE': 0.20451847392051975, 'δ < 1.': 0.0, 'δ < 1.25': 0.8104857802391052, 'δ < 1.25^2': 0.9542151093482971, 'δ < 1.25^3': 0.9913100600242615, 'valid_pixels': 10599179, 'fps': 9.081435981971751, 'total_time': 13.764343023300171, 'infer_time': 13.764343023300171}[0m
+[[36m2026-09-07 10:20:49,902[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[26/26] Evaluating 2011_10_03_drive_0047_sync_image_03 in kitti, 126 images in total[0m
+[[36m2026-09-07 10:20:51,639[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - seq 2011_10_03_drive_0047_sync_image_03 - videodepth metrics: {'Abs Rel': 0.16956472281284604, 'Sq Rel': 1.3822459258135953, 'RMSE': 7.4361905733204, 'Log RMSE': 0.2262251863198679, 'δ < 1.': 0.0, 'δ < 1.25': 0.7686758041381836, 'δ < 1.25^2': 0.9379865527153015, 'δ < 1.25^3': 0.9885382056236267, 'valid_pixels': 10085255, 'fps': 9.15465864651297, 'total_time': 13.763484239578247, 'infer_time': 13.763484239578247}[0m
+[[36m2026-09-07 10:20:51,779[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mkitti - Average Videodepth Metrics: {'Abs Rel': 0.15209111569043282, 'Sq Rel': 1.0002306440380573, 'RMSE': 6.234346580980498, 'Log RMSE': 0.20369694950341244, 'δ < 1.': 0.0, 'δ < 1.25': 0.8128974324858885, 'δ < 1.25^2': 0.9575310340539203, 'δ < 1.25^3': 0.9868357921876783, 'fps': 7.811341343794942, 'total_time': 4.4953078856835, 'infer_time': 4.4953078856835}[0m
+[[36m2026-09-07 10:20:52,206[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[2/2] Start evaluating dataset: bonn, 5 sequences in total[0m
+[[36m2026-09-07 10:20:52,334[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[1/5] Evaluating rgbd_bonn_balloon2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:53,523[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_balloon2 - videodepth metrics: {'Abs Rel': 0.049370193711390196, 'Sq Rel': 0.030984534300629515, 'RMSE': 0.22952175713131123, 'Log RMSE': 0.10773557708781537, 'δ < 1.': 0.0, 'δ < 1.25': 0.9761323928833008, 'δ < 1.25^2': 0.9881699681282043, 'δ < 1.25^3': 0.991935133934021, 'valid_pixels': 28980804, 'fps': 7.035958854259747, 'total_time': 15.633974313735962, 'infer_time': 15.633974313735962}[0m
+[[36m2026-09-07 10:20:53,683[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[2/5] Evaluating rgbd_bonn_crowd2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:54,939[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_crowd2 - videodepth metrics: {'Abs Rel': 0.09485806108245624, 'Sq Rel': 0.04106607442363576, 'RMSE': 0.27017026944699873, 'Log RMSE': 0.14486228263451414, 'δ < 1.': 0.0, 'δ < 1.25': 0.9371880292892456, 'δ < 1.25^2': 0.985608696937561, 'δ < 1.25^3': 0.992350161075592, 'valid_pixels': 27662654, 'fps': 6.931515479067256, 'total_time': 15.869545459747314, 'infer_time': 15.869545459747314}[0m
+[[36m2026-09-07 10:20:55,079[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[3/5] Evaluating rgbd_bonn_crowd3 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:56,284[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_crowd3 - videodepth metrics: {'Abs Rel': 0.08466387447829236, 'Sq Rel': 0.0742588021126898, 'RMSE': 0.38976002370325674, 'Log RMSE': 0.17174568111449107, 'δ < 1.': 0.0, 'δ < 1.25': 0.9344372153282166, 'δ < 1.25^2': 0.9607894420623779, 'δ < 1.25^3': 0.9780924320220947, 'valid_pixels': 28224769, 'fps': 7.022943942203842, 'total_time': 15.662947177886963, 'infer_time': 15.662947177886963}[0m
+[[36m2026-09-07 10:20:56,425[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[4/5] Evaluating rgbd_bonn_person_tracking2 in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:57,644[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_person_tracking2 - videodepth metrics: {'Abs Rel': 0.03767078883379879, 'Sq Rel': 0.009912596046672027, 'RMSE': 0.17249640557653792, 'Log RMSE': 0.06283647973478422, 'δ < 1.': 0.0, 'δ < 1.25': 0.9917227029800415, 'δ < 1.25^2': 0.9969267845153809, 'δ < 1.25^3': 0.998745322227478, 'valid_pixels': 29064292, 'fps': 7.015499383219386, 'total_time': 15.67956805229187, 'infer_time': 15.67956805229187}[0m
+[[36m2026-09-07 10:20:57,783[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37m[5/5] Evaluating rgbd_bonn_synchronous in bonn, 110 images in total[0m
+[[36m2026-09-07 10:20:58,962[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mbonn - seq rgbd_bonn_synchronous - videodepth metrics: {'Abs Rel': 0.0940214201879428, 'Sq Rel': 0.045350660645553716, 'RMSE': 0.3104332104027565, 'Log RMSE': 0.1385254692487825, 'δ < 1.': 0.0, 'δ < 1.25': 0.9134251475334167, 'δ < 1.25^2': 0.9909921884536743, 'δ < 1.25^3': 0.9937422871589661, 'valid_pixels': 28269265, 'fps': 7.019412607785528, 'total_time': 15.67082691192627, 'infer_time': 15.67082691192627}[0m
+[[36m2026-09-07 10:20:59,103[0m][[34mmonodepth-eval-cut3r[0m][[32mINFO[0m] - [37mbonn - Average Videodepth Metrics: {'Abs Rel': 0.07170953058877695, 'Sq Rel': 0.04008404907956174, 'RMSE': 0.27366353552019707, 'Log RMSE': 0.12460696003988846, 'δ < 1.': 0.0, 'δ < 1.25': 0.9510011496532408, 'δ < 1.25^2': 0.9845879608918043, 'δ < 1.25^3': 0.9910194905899509, 'fps': 7.005066053307152, 'total_time': 15.703372383117676, 'infer_time': 15.703372383117676}[0m
+=== videodepth exit 0 ===

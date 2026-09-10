@@ -63,6 +63,11 @@ def main() -> int:
                     "lingbot-map/scripts/memory/recall_bench/manifests")
     ap.add_argument("--tiers", type=int, nargs="+", default=[100, 300, 500])
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--dump-dir", type=Path, default=None,
+                    help="GPU phase only: write raw predictions here and skip "
+                         "scoring. The CPU-only scorer (run_recall_score.py) "
+                         "turns them into metrics + clouds, so the hours of "
+                         "KDTree work no longer occupy a GPU.")
     args = ap.parse_args()
 
     # the vendored tree must be importable as `src.dust3r`; TTT3R's fork keeps
@@ -125,7 +130,10 @@ def main() -> int:
 
     for tier in args.tiers:
         n = tier
-        if (args.out / method / f"{args.scene}_n{tier}" / "metrics.json").exists():
+        done = ((args.dump_dir / method / f"{args.scene}_n{tier}.npz").exists()
+                if args.dump_dir else
+                (args.out / method / f"{args.scene}_n{tier}" / "metrics.json").exists())
+        if done:
             print(f"[skip] {args.scene}_n{tier} already done", flush=True)
             continue
         views = [{
@@ -149,9 +157,27 @@ def main() -> int:
 
         res = {"selfpose": {}, "gtpose": {}}
         clouds = {}
+        dumped: dict = {}
+        # gt_points(ids[q], c2w_gt[q]) does not depend on the query mode, yet the
+        # mode loop below called it twice per view -- two depth PNG reads, two
+        # RGB reads and two 307k-point unprojections where one suffices. That
+        # redundancy, not the GPU, is what put the n500 cells over a 10h wall
+        # (ingest is ~3 min of a ~10h cell). Cache the small derived products
+        # only (~1.7 GB at n500), never the full-resolution arrays.
+        gtq: dict = {}
+
+        def gt_for(q, W, H):
+            hit = gtq.get(q)
+            if hit is None:
+                gp, gv, grgb, gdep = gt_points(ids[q], c2w_gt[q])
+                hit = (gp[gv][::4], grgb[gv][::4],
+                       cv2.resize(gdep, (W, H), interpolation=cv2.INTER_NEAREST))
+                gtq[q] = hit
+            return hit
         for mode in ("selfpose", "gtpose"):
             preds, gts, cols, gcols, per_q = [], [], [], [], []
             depth_absrel, depth_d125 = [], []
+            dump_pw, dump_zs = [], []
             for q in range(n):
                 if mode == "selfpose":
                     rm = get_ray_map(np.eye(4), c2w_pred[q], K_final[q], H, W)
@@ -171,9 +197,14 @@ def main() -> int:
                 out = inference_step(view, state, model, "cuda")["pred"]
                 pw = out["pts3d_in_other_view"][0].numpy().reshape(-1, 3)
                 zs = out["pts3d_in_self_view"][0].numpy()[..., 2]
-                gp, gv, grgb, gdep = gt_points(ids[q], c2w_gt[q])
+                if args.dump_dir:
+                    # ::3 matches the scorer's fused-cloud subsample, and its
+                    # own ::3 reproduces the ::9 lag-curve subset exactly.
+                    dump_pw.append(pw[::3].astype(np.float32))
+                    dump_zs.append(zs.astype(np.float16))
+                    continue
+                gp_sub, grgb_sub, gd = gt_for(q, W, H)
                 # per-view depth: pred z vs GT depth, both at model res
-                gd = cv2.resize(gdep, (W, H), interpolation=cv2.INTER_NEAREST)
                 m = (gd > dmin) & (gd < dmax)
                 if m.sum() > 100:
                     r = np.abs(zs[m] - gd[m]) / gd[m]
@@ -182,9 +213,13 @@ def main() -> int:
                         (np.maximum(zs[m] / gd[m], gd[m] / zs[m]) < 1.25).mean()))
                 preds.append(pw[::3])
                 cols.append(rgb_small[q].reshape(-1, 3)[::3])
-                gts.append(gp[gv][::4])
-                gcols.append(grgb[gv][::4])
+                gts.append(gp_sub)
+                gcols.append(grgb_sub)
                 per_q.append(pw[::9])
+            if args.dump_dir:
+                dumped[f"pw_{mode}"] = np.stack(dump_pw)
+                dumped[f"zs_{mode}"] = np.stack(dump_zs)
+                continue
             P = np.concatenate(preds); C = np.concatenate(cols)
             G = np.concatenate(gts); GC = np.concatenate(gcols)
             align = None
@@ -219,6 +254,15 @@ def main() -> int:
             print(f"[{method}|{args.scene}|n{tier}|{mode}] acc {d_acc.mean():.4f} "
                   f"comp {d_comp.mean():.4f} absrel {np.mean(depth_absrel):.4f}",
                   flush=True)
+
+        if args.dump_dir:
+            dd = args.dump_dir / method
+            dd.mkdir(parents=True, exist_ok=True)
+            f = dd / f"{args.scene}_n{tier}.npz"
+            np.savez(f, c2w_pred=c2w_pred.astype(np.float64),
+                     hw=np.int32([H, W]), tier=np.int32(tier), **dumped)
+            print(f"[dump] -> {f} ({f.stat().st_size/1e9:.2f} GB)", flush=True)
+            continue
 
         od = args.out / method / f"{args.scene}_n{tier}"
         od.mkdir(parents=True, exist_ok=True)

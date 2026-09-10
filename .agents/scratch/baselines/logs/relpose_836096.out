@@ -277,3 +277,24 @@ instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_siz
   with torch.cuda.amp.autocast(enabled=False):
 /home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
   with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  50%|█████     | 4/8 [02:15<01:49, 27.42s/it, Seq rgbd_dataset_freiburg3_walking_halfsphere ATE:  0.04 | RPE-trans:  0.02 | RPE-rot:  0.44][tum eval]:  62%|██████▎   | 5/8 [02:16<01:22, 27.63s/it, Seq rgbd_dataset_freiburg3_walking_halfsphere ATE:  0.04 | RPE-trans:  0.02 | RPE-rot:  0.44]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  62%|██████▎   | 5/8 [02:43<01:22, 27.63s/it, Seq rgbd_dataset_freiburg3_walking_rpy ATE:  0.08 | RPE-trans:  0.03 | RPE-rot:  0.56]       [tum eval]:  75%|███████▌  | 6/8 [02:43<00:55, 27.59s/it, Seq rgbd_dataset_freiburg3_walking_rpy ATE:  0.08 | RPE-trans:  0.03 | RPE-rot:  0.56]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  75%|███████▌  | 6/8 [03:09<00:55, 27.59s/it, Seq rgbd_dataset_freiburg3_walking_static ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.27][tum eval]:  88%|████████▊ | 7/8 [03:09<00:26, 26.96s/it, Seq rgbd_dataset_freiburg3_walking_static ATE:  0.01 | RPE-trans:  0.00 | RPE-rot:  0.27]/home/baris_bakay/lingbot-map/ZipMap_eval/models/fastmodel.py:151: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/ZipMap_eval/models/ttt3r/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[tum eval]:  88%|████████▊ | 7/8 [03:34<00:26, 26.96s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.05 | RPE-trans:  0.02 | RPE-rot:  0.39]   [tum eval]: 100%|██████████| 8/8 [03:34<00:00, 26.35s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.05 | RPE-trans:  0.02 | RPE-rot:  0.39][tum eval]: 100%|██████████| 8/8 [03:34<00:00, 26.86s/it, Seq rgbd_dataset_freiburg3_walking_xyz ATE:  0.05 | RPE-trans:  0.02 | RPE-rot:  0.39]
+[2026-09-07 00:00:32,890][relpose-dist-cut3r][INFO] - tum - Average pose estimation metrics: {'ATE': 0.04272744369325294, 'RPE trans': 0.012523616701280792, 'RPE rot': 0.3902959331058862}
+=== relpose/eval_dist.py exit 0 ===

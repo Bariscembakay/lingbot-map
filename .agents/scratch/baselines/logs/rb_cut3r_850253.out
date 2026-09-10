@@ -1,0 +1,22 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 14041x14041 matmul (~295 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+... loading model from /home/baris_bakay/lingbot-map/TTT3R/src/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+[skip] whiteroom_n100 already done
+[skip] whiteroom_n300 already done
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+>> Inference with model on 500 image/raymaps
+[cut3r|whiteroom|n500] ingest 295s
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[cut3r|whiteroom|n500|selfpose] acc 0.3723 comp 0.3228 absrel 0.1849
+[2026-09-10T07:03:58.062] error: *** JOB 850253 ON gcp-eu1-a100-80g-g5j6 CANCELLED AT 2026-09-10T07:03:58 DUE TO TIME LIMIT ***

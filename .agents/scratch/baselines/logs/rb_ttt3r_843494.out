@@ -1,0 +1,692 @@
+[setup_cut3r_env] Building cut3r env on gcp-eu1-a100-80g-g5j6 ...
+Fetch Shard Index for conda-forge/linux-64                                                      ⧖ Starting
+Fetch Shard Index for conda-forge/linux-64                                                ✔ Done (0.1 sec)
+Fetch Shard Index for conda-forge/noarch                                                        ⧖ Starting
+Fetch Shard Index for conda-forge/noarch                                                  ✔ Done (0.1 sec)
+Fetching and Parsing Packages' Shards                                                           ⧖ Starting
+Fetching and Parsing Packages' Shards                                                     ✔ Done (2.9 sec)
+
+Resolving Environment                                                                           ⧖ Starting
+Resolving Environment                                                                     ✔ Done (0.2 sec)
+
+Transaction
+
+  Prefix: /scratch/baris_bakay/micromamba/envs/cut3r
+
+  Updating specs:
+
+   - python=3.11
+   - pip
+
+
+  Package               Version  Build                 Channel          Size
+──────────────────────────────────────────────────────────────────────────────
+  Install:
+──────────────────────────────────────────────────────────────────────────────
+
+  + _openmp_mutex           4.5  20_gnu                conda-forge      29kB
+  + bzip2                 1.0.8  hda65f42_10           conda-forge     258kB
+  + ca-certificates   2026.7.22  hbd8a1cb_0            conda-forge     132kB
+  + ld_impl_linux-64     2.46.1  default_hbd61a6d_102  conda-forge     745kB
+  + libexpat              2.8.1  hecca717_1            conda-forge      78kB
+  + libffi                3.7.0  h81df57d_1            conda-forge      68kB
+  + libgcc               16.2.0  ha9f2e26_4            conda-forge       1MB
+  + libgomp              16.2.0  he0feb66_4            conda-forge     640kB
+  + liblzma               5.8.3  hb03c661_1            conda-forge     113kB
+  + libnsl                2.0.1  hb9d3cd8_1            conda-forge      34kB
+  + libpython           3.11.16  h0c77377_2_cpython    conda-forge       8MB
+  + libsqlite            3.53.4  h0737f62_1            conda-forge     969kB
+  + libstdcxx            16.2.0  h934c35e_4            conda-forge       7MB
+  + libuuid              2.42.3  hcfc3c73_0            conda-forge      40kB
+  + libxcrypt            4.4.38  h280c20c_0            conda-forge     102kB
+  + libzlib               1.3.2  h25fd6f3_3            conda-forge      64kB
+  + ncurses                 6.6  hdb14827_1            conda-forge     911kB
+  + openssl               3.6.4  h781a0a9_0            conda-forge       3MB
+  + packaging              26.3  pyhc364b38_0          conda-forge     116kB
+  + pip                  26.2.1  pyh8b19718_0          conda-forge       1MB
+  + python              3.11.16  h5f976f7_2_cpython    conda-forge      23MB
+  + readline                8.3  hd6e31c0_1            conda-forge     349kB
+  + setuptools           84.0.0  pyh332efcf_0          conda-forge     524kB
+  + tk                   8.6.13  noxft_h1df4ec4_4      conda-forge       4MB
+  + tzdata                2026c  h151e31d_0            conda-forge     119kB
+  + wheel                0.48.0  pyhd8ed1ab_0          conda-forge      35kB
+  + zstd                  1.5.7  hb78ec9c_7            conda-forge     601kB
+
+  Summary:
+
+  Install: 27 packages
+
+  Total download: 53MB
+
+──────────────────────────────────────────────────────────────────────────────
+
+
+warning  libmamba Security Warning: This transaction includes executing package scripts (pre/post-link/unlink) if present. These scripts can contain arbitrary code. Please ensure you trust the package sources.
+
+Transaction starting
+Linking libzlib-1.3.2-h25fd6f3_3
+Linking libgomp-16.2.0-he0feb66_4
+Linking zstd-1.5.7-hb78ec9c_7
+Linking _openmp_mutex-4.5-20_gnu
+Linking ld_impl_linux-64-2.46.1-default_hbd61a6d_102
+Linking libgcc-16.2.0-ha9f2e26_4
+Linking bzip2-1.0.8-hda65f42_10
+Linking libnsl-2.0.1-hb9d3cd8_1
+Linking libexpat-2.8.1-hecca717_1
+Linking libffi-3.7.0-h81df57d_1
+Linking libsqlite-3.53.4-h0737f62_1
+Linking liblzma-5.8.3-hb03c661_1
+Linking ncurses-6.6-hdb14827_1
+Linking tk-8.6.13-noxft_h1df4ec4_4
+Linking libstdcxx-16.2.0-h934c35e_4
+Linking libuuid-2.42.3-hcfc3c73_0
+Linking libxcrypt-4.4.38-h280c20c_0
+Linking readline-8.3-hd6e31c0_1
+Linking libpython-3.11.16-h0c77377_2_cpython
+Linking tzdata-2026c-h151e31d_0
+Linking ca-certificates-2026.7.22-hbd8a1cb_0
+Linking openssl-3.6.4-h781a0a9_0
+Linking python-3.11.16-h5f976f7_2_cpython
+Linking packaging-26.3-pyhc364b38_0
+Linking setuptools-84.0.0-pyh332efcf_0
+Linking wheel-0.48.0-pyhd8ed1ab_0
+Linking pip-26.2.1-pyh8b19718_0
+
+Transaction finished
+
+
+To activate this environment, use:
+
+    micromamba activate cut3r
+
+Or to execute a single command in this environment, use:
+
+    micromamba run -n cut3r mycommand
+
+Looking in indexes: https://download.pytorch.org/whl/cu128
+Collecting torch==2.8.0
+  Downloading torch-2.8.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (30 kB)
+Collecting torchvision==0.23.0
+  Downloading torchvision-0.23.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (6.1 kB)
+Collecting filelock (from torch==2.8.0)
+  Downloading filelock-3.32.3-py3-none-any.whl.metadata (2.0 kB)
+Collecting typing-extensions>=4.10.0 (from torch==2.8.0)
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting sympy>=1.13.3 (from torch==2.8.0)
+  Downloading sympy-1.14.0-py3-none-any.whl.metadata (12 kB)
+Collecting networkx (from torch==2.8.0)
+  Downloading networkx-3.6.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting jinja2 (from torch==2.8.0)
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting fsspec (from torch==2.8.0)
+  Downloading fsspec-2026.7.0-py3-none-any.whl.metadata (10 kB)
+Collecting nvidia-cuda-nvrtc-cu12==12.8.93 (from torch==2.8.0)
+  Downloading nvidia_cuda_nvrtc_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (88.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 88.0/88.0 MB 299.8 MB/s  0:00:00
+Collecting nvidia-cuda-runtime-cu12==12.8.90 (from torch==2.8.0)
+  Downloading nvidia_cuda_runtime_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (954 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 954.8/954.8 kB 554.6 MB/s  0:00:00
+Collecting nvidia-cuda-cupti-cu12==12.8.90 (from torch==2.8.0)
+  Downloading nvidia_cuda_cupti_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.2/10.2 MB 337.0 MB/s  0:00:00
+Collecting nvidia-cudnn-cu12==9.10.2.21 (from torch==2.8.0)
+  Downloading nvidia_cudnn_cu12-9.10.2.21-py3-none-manylinux_2_27_x86_64.whl (706.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 706.8/706.8 MB 327.8 MB/s  0:00:02
+Collecting nvidia-cublas-cu12==12.8.4.1 (from torch==2.8.0)
+  Downloading nvidia_cublas_cu12-12.8.4.1-py3-none-manylinux_2_27_x86_64.whl (594.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 594.3/594.3 MB 328.2 MB/s  0:00:01
+Collecting nvidia-cufft-cu12==11.3.3.83 (from torch==2.8.0)
+  Downloading nvidia_cufft_cu12-11.3.3.83-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (193.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 193.1/193.1 MB 344.3 MB/s  0:00:00
+Collecting nvidia-curand-cu12==10.3.9.90 (from torch==2.8.0)
+  Downloading nvidia_curand_cu12-10.3.9.90-py3-none-manylinux_2_27_x86_64.whl (63.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 63.6/63.6 MB 312.1 MB/s  0:00:00
+Collecting nvidia-cusolver-cu12==11.7.3.90 (from torch==2.8.0)
+  Downloading nvidia_cusolver_cu12-11.7.3.90-py3-none-manylinux_2_27_x86_64.whl (267.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 267.5/267.5 MB 257.3 MB/s  0:00:01
+Collecting nvidia-cusparse-cu12==12.5.8.93 (from torch==2.8.0)
+  Downloading nvidia_cusparse_cu12-12.5.8.93-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (288.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 288.2/288.2 MB 332.8 MB/s  0:00:00
+Collecting nvidia-cusparselt-cu12==0.7.1 (from torch==2.8.0)
+  Downloading nvidia_cusparselt_cu12-0.7.1-py3-none-manylinux2014_x86_64.whl (287.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 287.2/287.2 MB 309.4 MB/s  0:00:00
+Collecting nvidia-nccl-cu12==2.27.3 (from torch==2.8.0)
+  Downloading nvidia_nccl_cu12-2.27.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (322.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 322.4/322.4 MB 315.5 MB/s  0:00:01
+Collecting nvidia-nvtx-cu12==12.8.90 (from torch==2.8.0)
+  Downloading nvidia_nvtx_cu12-12.8.90-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (89 kB)
+Collecting nvidia-nvjitlink-cu12==12.8.93 (from torch==2.8.0)
+  Downloading nvidia_nvjitlink_cu12-12.8.93-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl (39.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 39.3/39.3 MB 344.2 MB/s  0:00:00
+Collecting nvidia-cufile-cu12==1.13.1.3 (from torch==2.8.0)
+  Downloading nvidia_cufile_cu12-1.13.1.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 559.7 MB/s  0:00:00
+Collecting triton==3.4.0 (from torch==2.8.0)
+  Downloading triton-3.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (1.7 kB)
+Collecting numpy (from torchvision==0.23.0)
+  Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+Collecting pillow!=8.3.*,>=5.3.0 (from torchvision==0.23.0)
+  Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.1 kB)
+Requirement already satisfied: setuptools>=40.8.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from triton==3.4.0->torch==2.8.0) (84.0.0)
+Collecting mpmath<1.4,>=1.1.0 (from sympy>=1.13.3->torch==2.8.0)
+  Downloading mpmath-1.3.0-py3-none-any.whl.metadata (8.6 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->torch==2.8.0)
+  Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Downloading torch-2.8.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl (889.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 889.2/889.2 MB 107.8 MB/s  0:00:05
+Downloading torchvision-0.23.0%2Bcu128-cp311-cp311-manylinux_2_28_x86_64.whl (8.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.6/8.6 MB 204.5 MB/s  0:00:00
+Downloading triton-3.4.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (155.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 155.5/155.5 MB 141.2 MB/s  0:00:01
+Downloading pillow-12.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.9/6.9 MB 149.7 MB/s  0:00:00
+Downloading sympy-1.14.0-py3-none-any.whl (6.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.3/6.3 MB 235.2 MB/s  0:00:00
+Downloading mpmath-1.3.0-py3-none-any.whl (536 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 536.2/536.2 kB 121.2 MB/s  0:00:00
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Downloading filelock-3.32.3-py3-none-any.whl (98 kB)
+Downloading fsspec-2026.7.0-py3-none-any.whl (206 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading networkx-3.6.1-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 233.6 MB/s  0:00:00
+Downloading numpy-2.4.6-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.9/16.9 MB 255.3 MB/s  0:00:00
+Installing collected packages: nvidia-cusparselt-cu12, mpmath, typing-extensions, triton, sympy, pillow, nvidia-nvtx-cu12, nvidia-nvjitlink-cu12, nvidia-nccl-cu12, nvidia-curand-cu12, nvidia-cufile-cu12, nvidia-cuda-runtime-cu12, nvidia-cuda-nvrtc-cu12, nvidia-cuda-cupti-cu12, nvidia-cublas-cu12, numpy, networkx, MarkupSafe, fsspec, filelock, nvidia-cusparse-cu12, nvidia-cufft-cu12, nvidia-cudnn-cu12, jinja2, nvidia-cusolver-cu12, torch, torchvision
+
+Successfully installed MarkupSafe-3.0.3 filelock-3.32.3 fsspec-2026.7.0 jinja2-3.1.6 mpmath-1.3.0 networkx-3.6.1 numpy-2.4.6 nvidia-cublas-cu12-12.8.4.1 nvidia-cuda-cupti-cu12-12.8.90 nvidia-cuda-nvrtc-cu12-12.8.93 nvidia-cuda-runtime-cu12-12.8.90 nvidia-cudnn-cu12-9.10.2.21 nvidia-cufft-cu12-11.3.3.83 nvidia-cufile-cu12-1.13.1.3 nvidia-curand-cu12-10.3.9.90 nvidia-cusolver-cu12-11.7.3.90 nvidia-cusparse-cu12-12.5.8.93 nvidia-cusparselt-cu12-0.7.1 nvidia-nccl-cu12-2.27.3 nvidia-nvjitlink-cu12-12.8.93 nvidia-nvtx-cu12-12.8.90 pillow-12.3.0 sympy-1.14.0 torch-2.8.0+cu128 torchvision-0.23.0+cu128 triton-3.4.0 typing-extensions-4.16.0
+Collecting roma
+  Downloading roma-1.6.1-py3-none-any.whl.metadata (5.2 kB)
+Collecting einops
+  Using cached einops-0.8.2-py3-none-any.whl.metadata (13 kB)
+Collecting trimesh
+  Using cached trimesh-5.1.0-py3-none-any.whl.metadata (13 kB)
+Collecting huggingface-hub>=0.22 (from huggingface-hub[torch]>=0.22)
+  Using cached huggingface_hub-1.30.0-py3-none-any.whl.metadata (16 kB)
+Collecting hydra-core
+  Using cached hydra_core-1.3.6-py3-none-any.whl.metadata (5.7 kB)
+Collecting omegaconf
+  Using cached omegaconf-2.3.1-py3-none-any.whl.metadata (4.5 kB)
+Collecting accelerate
+  Downloading accelerate-1.15.0-py3-none-any.whl.metadata (19 kB)
+Collecting transformers
+  Downloading transformers-5.17.0-py3-none-any.whl.metadata (32 kB)
+Collecting scikit-learn
+  Downloading scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (11 kB)
+Collecting h5py
+  Downloading h5py-3.16.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (3.0 kB)
+Collecting opencv-python
+  Downloading opencv_python-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl.metadata (19 kB)
+Collecting scipy
+  Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (62 kB)
+Collecting matplotlib
+  Using cached matplotlib-3.11.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (80 kB)
+Collecting tqdm
+  Using cached tqdm-4.70.0-py3-none-any.whl.metadata (57 kB)
+Collecting pillow==10.3.0
+  Downloading pillow-10.3.0-cp311-cp311-manylinux_2_28_x86_64.whl.metadata (9.2 kB)
+Collecting tensorboard
+  Downloading tensorboard-2.21.0-py3-none-any.whl.metadata (1.8 kB)
+Requirement already satisfied: torch>=2.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from roma) (2.8.0+cu128)
+Requirement already satisfied: numpy in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from roma) (2.4.6)
+Collecting click<9.0.0,>=8.4.2 (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: filelock>=3.10.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22) (3.32.3)
+Requirement already satisfied: fsspec>=2023.5.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22) (2026.7.0)
+Collecting hf-xet<2.0.0,>=1.5.2 (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting httpx<1,>=0.23.0 (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Requirement already satisfied: packaging>=20.9 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22) (26.3)
+Collecting pyyaml>=5.1 (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+Requirement already satisfied: typing-extensions>=4.1.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from huggingface-hub>=0.22->huggingface-hub[torch]>=0.22) (4.16.0)
+Collecting anyio (from httpx<1,>=0.23.0->huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+Collecting certifi (from httpx<1,>=0.23.0->huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx<1,>=0.23.0->huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting idna (from httpx<1,>=0.23.0->huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Collecting h11>=0.16 (from httpcore==1.*->httpx<1,>=0.23.0->huggingface-hub>=0.22->huggingface-hub[torch]>=0.22)
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting antlr4-python3-runtime==4.9.* (from hydra-core)
+  Using cached antlr4_python3_runtime-4.9.3-py3-none-any.whl
+Collecting psutil (from accelerate)
+  Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl.metadata (22 kB)
+Collecting safetensors>=0.4.3 (from accelerate)
+  Using cached safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.2 kB)
+Collecting regex>=2025.10.22 (from transformers)
+  Downloading regex-2026.9.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (40 kB)
+Collecting tokenizers<0.24.0,>=0.23.1 (from transformers)
+  Downloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.8 kB)
+Collecting typer (from transformers)
+  Using cached typer-0.27.2-py3-none-any.whl.metadata (16 kB)
+Collecting joblib>=1.4.0 (from scikit-learn)
+  Downloading joblib-1.6.0-py3-none-any.whl.metadata (6.5 kB)
+Collecting narwhals>=2.0.1 (from scikit-learn)
+  Downloading narwhals-2.26.0-py3-none-any.whl.metadata (15 kB)
+Collecting threadpoolctl>=3.5.0 (from scikit-learn)
+  Downloading threadpoolctl-3.6.0-py3-none-any.whl.metadata (13 kB)
+Collecting contourpy>=1.0.1 (from matplotlib)
+  Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting cycler>=0.10 (from matplotlib)
+  Using cached cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.28.2 (from matplotlib)
+  Using cached fonttools-4.64.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (123 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib)
+  Using cached kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (5.2 kB)
+Collecting pyparsing>=3 (from matplotlib)
+  Using cached pyparsing-3.3.2-py3-none-any.whl.metadata (5.8 kB)
+Collecting python-dateutil>=2.7 (from matplotlib)
+  Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting absl-py>=0.4 (from tensorboard)
+  Downloading absl_py-2.5.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting grpcio<2.0,>=1.74.0 (from tensorboard)
+  Downloading grpcio-1.83.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+Collecting markdown>=2.6.8 (from tensorboard)
+  Downloading markdown-3.10.3-py3-none-any.whl.metadata (5.1 kB)
+Collecting protobuf<8.0.0,>=6.31.1 (from tensorboard)
+  Using cached protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+Requirement already satisfied: setuptools>=41.0.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from tensorboard) (84.0.0)
+Collecting tensorboard-data-server<0.8.0,>=0.7.0 (from tensorboard)
+  Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl.metadata (1.1 kB)
+Collecting werkzeug>=1.0.1 (from tensorboard)
+  Downloading werkzeug-3.1.8-py3-none-any.whl.metadata (4.0 kB)
+Collecting cloudpickle>=3.0 (from joblib>=1.4.0->scikit-learn)
+  Downloading cloudpickle-3.1.2-py3-none-any.whl.metadata (7.1 kB)
+Collecting six>=1.5 (from python-dateutil>=2.7->matplotlib)
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Requirement already satisfied: sympy>=1.13.3 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (1.14.0)
+Requirement already satisfied: networkx in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (3.6.1)
+Requirement already satisfied: jinja2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (3.1.6)
+Requirement already satisfied: nvidia-cuda-nvrtc-cu12==12.8.93 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.8.93)
+Requirement already satisfied: nvidia-cuda-runtime-cu12==12.8.90 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.8.90)
+Requirement already satisfied: nvidia-cuda-cupti-cu12==12.8.90 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.8.90)
+Requirement already satisfied: nvidia-cudnn-cu12==9.10.2.21 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (9.10.2.21)
+Requirement already satisfied: nvidia-cublas-cu12==12.8.4.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.8.4.1)
+Requirement already satisfied: nvidia-cufft-cu12==11.3.3.83 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (11.3.3.83)
+Requirement already satisfied: nvidia-curand-cu12==10.3.9.90 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (10.3.9.90)
+Requirement already satisfied: nvidia-cusolver-cu12==11.7.3.90 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (11.7.3.90)
+Requirement already satisfied: nvidia-cusparse-cu12==12.5.8.93 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.5.8.93)
+Requirement already satisfied: nvidia-cusparselt-cu12==0.7.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (0.7.1)
+Requirement already satisfied: nvidia-nccl-cu12==2.27.3 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (2.27.3)
+Requirement already satisfied: nvidia-nvtx-cu12==12.8.90 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.8.90)
+Requirement already satisfied: nvidia-nvjitlink-cu12==12.8.93 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (12.8.93)
+Requirement already satisfied: nvidia-cufile-cu12==1.13.1.3 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (1.13.1.3)
+Requirement already satisfied: triton==3.4.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from torch>=2.0->roma) (3.4.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from sympy>=1.13.3->torch>=2.0->roma) (1.3.0)
+Requirement already satisfied: markupsafe>=2.1.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from werkzeug>=1.0.1->tensorboard) (3.0.3)
+Collecting shellingham>=1.3.0 (from typer->transformers)
+  Using cached shellingham-1.5.4-py2.py3-none-any.whl.metadata (3.5 kB)
+Collecting rich>=13.8.0 (from typer->transformers)
+  Using cached rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+Collecting annotated-doc>=0.0.2 (from typer->transformers)
+  Using cached annotated_doc-0.0.5-py3-none-any.whl.metadata (6.5 kB)
+Collecting markdown-it-py>=2.2.0 (from rich>=13.8.0->typer->transformers)
+  Using cached markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting pygments<3.0.0,>=2.13.0 (from rich>=13.8.0->typer->transformers)
+  Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=13.8.0->typer->transformers)
+  Using cached mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Downloading pillow-10.3.0-cp311-cp311-manylinux_2_28_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 99.9 MB/s  0:00:00
+Downloading roma-1.6.1-py3-none-any.whl (25 kB)
+Using cached einops-0.8.2-py3-none-any.whl (65 kB)
+Using cached trimesh-5.1.0-py3-none-any.whl (750 kB)
+Using cached huggingface_hub-1.30.0-py3-none-any.whl (796 kB)
+Using cached click-8.5.0-py3-none-any.whl (125 kB)
+Using cached hf_xet-1.6.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.5 MB)
+Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached hydra_core-1.3.6-py3-none-any.whl (163 kB)
+Using cached omegaconf-2.3.1-py3-none-any.whl (79 kB)
+Downloading accelerate-1.15.0-py3-none-any.whl (394 kB)
+Downloading transformers-5.17.0-py3-none-any.whl (12.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.3/12.3 MB 93.4 MB/s  0:00:00
+Downloading tokenizers-0.23.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 222.3 MB/s  0:00:00
+Downloading scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (9.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.3/9.3 MB 154.4 MB/s  0:00:00
+Downloading h5py-3.16.0-cp311-cp311-manylinux_2_28_x86_64.whl (5.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 148.8 MB/s  0:00:00
+Downloading opencv_python-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl (73.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.8/73.8 MB 175.6 MB/s  0:00:00
+Using cached scipy-1.17.1-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (35.3 MB)
+Using cached matplotlib-3.11.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (10.0 MB)
+Using cached tqdm-4.70.0-py3-none-any.whl (80 kB)
+Downloading tensorboard-2.21.0-py3-none-any.whl (5.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.5/5.5 MB 198.5 MB/s  0:00:00
+Downloading grpcio-1.83.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.1/7.1 MB 233.1 MB/s  0:00:00
+Using cached protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl (343 kB)
+Downloading tensorboard_data_server-0.7.2-py3-none-manylinux_2_31_x86_64.whl (6.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 194.1 MB/s  0:00:00
+Downloading absl_py-2.5.0-py3-none-any.whl (137 kB)
+Using cached contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+Using cached cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Using cached fonttools-4.64.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.5 MB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Downloading joblib-1.6.0-py3-none-any.whl (306 kB)
+Downloading cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+Using cached kiwisolver-1.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+Downloading markdown-3.10.3-py3-none-any.whl (110 kB)
+Downloading narwhals-2.26.0-py3-none-any.whl (474 kB)
+Using cached pyparsing-3.3.2-py3-none-any.whl (122 kB)
+Using cached python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Using cached pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (806 kB)
+Downloading regex-2026.9.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (801 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 801.1/801.1 kB 185.8 MB/s  0:00:00
+Using cached safetensors-0.8.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (516 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading threadpoolctl-3.6.0-py3-none-any.whl (18 kB)
+Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+Using cached anyio-4.15.1-py3-none-any.whl (132 kB)
+Using cached idna-3.19-py3-none-any.whl (68 kB)
+Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+Using cached typer-0.27.2-py3-none-any.whl (123 kB)
+Using cached annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Using cached rich-15.0.0-py3-none-any.whl (310 kB)
+Using cached pygments-2.21.0-py3-none-any.whl (1.3 MB)
+Using cached markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+Using cached mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Using cached shellingham-1.5.4-py2.py3-none-any.whl (9.8 kB)
+Installing collected packages: antlr4-python3-runtime, werkzeug, trimesh, tqdm, threadpoolctl, tensorboard-data-server, six, shellingham, scipy, safetensors, regex, pyyaml, pyparsing, pygments, psutil, protobuf, pillow, opencv-python, narwhals, mdurl, markdown, kiwisolver, idna, hf-xet, h5py, h11, grpcio, fonttools, einops, cycler, contourpy, cloudpickle, click, certifi, annotated-doc, absl-py, tensorboard, python-dateutil, omegaconf, markdown-it-py, joblib, httpcore, anyio, scikit-learn, rich, matplotlib, hydra-core, httpx, typer, roma, huggingface-hub, tokenizers, accelerate, transformers
+  Attempting uninstall: pillow
+    Found existing installation: pillow 12.3.0
+    Uninstalling pillow-12.3.0:
+      Successfully uninstalled pillow-12.3.0
+
+Successfully installed absl-py-2.5.0 accelerate-1.15.0 annotated-doc-0.0.5 antlr4-python3-runtime-4.9.3 anyio-4.15.1 certifi-2026.7.22 click-8.5.0 cloudpickle-3.1.2 contourpy-1.3.3 cycler-0.12.1 einops-0.8.2 fonttools-4.64.0 grpcio-1.83.1 h11-0.16.0 h5py-3.16.0 hf-xet-1.6.0 httpcore-1.0.9 httpx-0.28.1 huggingface-hub-1.30.0 hydra-core-1.3.6 idna-3.19 joblib-1.6.0 kiwisolver-1.5.1 markdown-3.10.3 markdown-it-py-4.2.0 matplotlib-3.11.1 mdurl-0.1.2 narwhals-2.26.0 omegaconf-2.3.1 opencv-python-5.0.0.93 pillow-10.3.0 protobuf-7.36.1 psutil-7.2.2 pygments-2.21.0 pyparsing-3.3.2 python-dateutil-2.9.0.post0 pyyaml-6.0.3 regex-2026.9.3 rich-15.0.0 roma-1.6.1 safetensors-0.8.0 scikit-learn-1.9.0 scipy-1.17.1 shellingham-1.5.4 six-1.17.0 tensorboard-2.21.0 tensorboard-data-server-0.7.2 threadpoolctl-3.6.0 tokenizers-0.23.2 tqdm-4.70.0 transformers-5.17.0 trimesh-5.1.0 typer-0.27.2 werkzeug-3.1.8
+Collecting open3d
+  Downloading open3d-0.19.0-cp311-cp311-manylinux_2_31_x86_64.whl.metadata (4.3 kB)
+Requirement already satisfied: numpy>=1.18.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (2.4.6)
+Collecting dash>=2.6.0 (from open3d)
+  Downloading dash-4.4.1-py3-none-any.whl.metadata (11 kB)
+Requirement already satisfied: werkzeug>=3.0.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (3.1.8)
+Collecting flask>=3.0.0 (from open3d)
+  Downloading flask-3.1.3-py3-none-any.whl.metadata (3.2 kB)
+Collecting nbformat>=5.7.0 (from open3d)
+  Downloading nbformat-5.11.1-py3-none-any.whl.metadata (3.7 kB)
+Collecting configargparse (from open3d)
+  Downloading configargparse-1.7.7-py3-none-any.whl.metadata (23 kB)
+Collecting ipywidgets>=8.0.4 (from open3d)
+  Downloading ipywidgets-8.1.9-py3-none-any.whl.metadata (2.4 kB)
+Collecting addict (from open3d)
+  Downloading addict-2.4.0-py3-none-any.whl.metadata (1.0 kB)
+Requirement already satisfied: pillow>=9.3.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (10.3.0)
+Requirement already satisfied: matplotlib>=3 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (3.11.1)
+Collecting pandas>=1.0 (from open3d)
+  Downloading pandas-3.0.5-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (79 kB)
+Requirement already satisfied: pyyaml>=5.4.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (6.0.3)
+Requirement already satisfied: scikit-learn>=0.21 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (1.9.0)
+Requirement already satisfied: tqdm in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from open3d) (4.70.0)
+Collecting pyquaternion (from open3d)
+  Downloading pyquaternion-0.9.9-py3-none-any.whl.metadata (1.4 kB)
+Collecting plotly>=5.0.0 (from dash>=2.6.0->open3d)
+  Downloading plotly-7.0.0-py3-none-any.whl.metadata (8.7 kB)
+Collecting importlib-metadata (from dash>=2.6.0->open3d)
+  Downloading importlib_metadata-9.0.1-py3-none-any.whl.metadata (4.5 kB)
+Requirement already satisfied: typing_extensions>=4.1.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from dash>=2.6.0->open3d) (4.16.0)
+Collecting requests (from dash>=2.6.0->open3d)
+  Using cached requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting retrying (from dash>=2.6.0->open3d)
+  Downloading retrying-1.4.2-py3-none-any.whl.metadata (5.5 kB)
+Collecting nest-asyncio (from dash>=2.6.0->open3d)
+  Downloading nest_asyncio-1.6.0-py3-none-any.whl.metadata (2.8 kB)
+Requirement already satisfied: setuptools in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from dash>=2.6.0->open3d) (84.0.0)
+Collecting janus>=1.0.0 (from dash>=2.6.0->open3d)
+  Downloading janus-2.0.0-py3-none-any.whl.metadata (5.3 kB)
+Collecting pydantic>=2.10 (from dash>=2.6.0->open3d)
+  Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+Collecting comm (from dash>=2.6.0->open3d)
+  Downloading comm-0.2.3-py3-none-any.whl.metadata (3.7 kB)
+Collecting blinker>=1.9.0 (from flask>=3.0.0->open3d)
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Requirement already satisfied: click>=8.1.3 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from flask>=3.0.0->open3d) (8.5.0)
+Collecting itsdangerous>=2.2.0 (from flask>=3.0.0->open3d)
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Requirement already satisfied: jinja2>=3.1.2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from flask>=3.0.0->open3d) (3.1.6)
+Requirement already satisfied: markupsafe>=2.1.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from flask>=3.0.0->open3d) (3.0.3)
+Collecting ipython>=6.1.0 (from ipywidgets>=8.0.4->open3d)
+  Downloading ipython-9.17.1-py3-none-any.whl.metadata (4.6 kB)
+Collecting traitlets>=4.3.1 (from ipywidgets>=8.0.4->open3d)
+  Downloading traitlets-5.16.1-py3-none-any.whl.metadata (10 kB)
+Collecting widgetsnbextension~=4.0.16 (from ipywidgets>=8.0.4->open3d)
+  Downloading widgetsnbextension-4.0.16-py3-none-any.whl.metadata (1.6 kB)
+Collecting jupyterlab_widgets~=3.0.17 (from ipywidgets>=8.0.4->open3d)
+  Downloading jupyterlab_widgets-3.0.17-py3-none-any.whl.metadata (20 kB)
+Collecting ipython-pygments-lexers>=1.0.0 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl.metadata (1.1 kB)
+Collecting jedi>=0.18.2 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading jedi-0.20.0-py2.py3-none-any.whl.metadata (23 kB)
+Collecting matplotlib-inline>=0.1.6 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading matplotlib_inline-0.2.2-py3-none-any.whl.metadata (2.4 kB)
+Collecting pexpect>4.6 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading pexpect-4.9.0-py2.py3-none-any.whl.metadata (2.5 kB)
+Collecting prompt_toolkit<3.1.0,>=3.0.41 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading prompt_toolkit-3.0.53-py3-none-any.whl.metadata (6.4 kB)
+Requirement already satisfied: psutil>=7 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d) (7.2.2)
+Requirement already satisfied: pygments>=2.14.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d) (2.21.0)
+Collecting stack_data>=0.6.0 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading stack_data-0.6.3-py3-none-any.whl.metadata (18 kB)
+Collecting wcwidth>=0.1.4 (from prompt_toolkit<3.1.0,>=3.0.41->ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading wcwidth-0.8.3-py3-none-any.whl.metadata (43 kB)
+Collecting parso<0.9.0,>=0.8.6 (from jedi>=0.18.2->ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading parso-0.8.7-py2.py3-none-any.whl.metadata (8.2 kB)
+Requirement already satisfied: contourpy>=1.0.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (1.3.3)
+Requirement already satisfied: cycler>=0.10 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (0.12.1)
+Requirement already satisfied: fonttools>=4.28.2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (4.64.0)
+Requirement already satisfied: kiwisolver>=1.3.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (1.5.1)
+Requirement already satisfied: packaging>=20.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (26.3)
+Requirement already satisfied: pyparsing>=3 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (3.3.2)
+Requirement already satisfied: python-dateutil>=2.7 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from matplotlib>=3->open3d) (2.9.0.post0)
+Collecting fastjsonschema>=2.15 (from nbformat>=5.7.0->open3d)
+  Downloading fastjsonschema-2.22.2-py3-none-any.whl.metadata (2.1 kB)
+Collecting jsonschema>=2.6 (from nbformat>=5.7.0->open3d)
+  Using cached jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting jupyter-core!=5.0.*,>=4.12 (from nbformat>=5.7.0->open3d)
+  Downloading jupyter_core-5.9.1-py3-none-any.whl.metadata (1.5 kB)
+Collecting attrs>=22.2.0 (from jsonschema>=2.6->nbformat>=5.7.0->open3d)
+  Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=2.6->nbformat>=5.7.0->open3d)
+  Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema>=2.6->nbformat>=5.7.0->open3d)
+  Using cached referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema>=2.6->nbformat>=5.7.0->open3d)
+  Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+Collecting platformdirs>=2.5 (from jupyter-core!=5.0.*,>=4.12->nbformat>=5.7.0->open3d)
+  Using cached platformdirs-4.11.8-py3-none-any.whl.metadata (5.5 kB)
+Collecting ptyprocess>=0.5 (from pexpect>4.6->ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading ptyprocess-0.7.0-py2.py3-none-any.whl.metadata (1.3 kB)
+Requirement already satisfied: narwhals>=1.15.1 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from plotly>=5.0.0->dash>=2.6.0->open3d) (2.26.0)
+Collecting annotated-types>=0.6.0 (from pydantic>=2.10->dash>=2.6.0->open3d)
+  Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.46.5 (from pydantic>=2.10->dash>=2.6.0->open3d)
+  Downloading pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting typing-inspection>=0.4.2 (from pydantic>=2.10->dash>=2.6.0->open3d)
+  Using cached typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: six>=1.5 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from python-dateutil>=2.7->matplotlib>=3->open3d) (1.17.0)
+Requirement already satisfied: scipy>=1.10.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-learn>=0.21->open3d) (1.17.1)
+Requirement already satisfied: joblib>=1.4.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-learn>=0.21->open3d) (1.6.0)
+Requirement already satisfied: threadpoolctl>=3.5.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-learn>=0.21->open3d) (3.6.0)
+Requirement already satisfied: cloudpickle>=3.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from joblib>=1.4.0->scikit-learn>=0.21->open3d) (3.1.2)
+Collecting executing>=1.2.0 (from stack_data>=0.6.0->ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading executing-2.2.1-py2.py3-none-any.whl.metadata (8.9 kB)
+Collecting asttokens>=2.1.0 (from stack_data>=0.6.0->ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading asttokens-3.0.2-py3-none-any.whl.metadata (5.7 kB)
+Collecting pure-eval (from stack_data>=0.6.0->ipython>=6.1.0->ipywidgets>=8.0.4->open3d)
+  Downloading pure_eval-0.2.3-py3-none-any.whl.metadata (6.3 kB)
+Collecting zipp>=3.20 (from importlib-metadata->dash>=2.6.0->open3d)
+  Downloading zipp-4.1.0-py3-none-any.whl.metadata (3.6 kB)
+Collecting charset_normalizer<4,>=2 (from requests->dash>=2.6.0->open3d)
+  Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (45 kB)
+Requirement already satisfied: idna<4,>=2.5 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from requests->dash>=2.6.0->open3d) (3.19)
+Collecting urllib3<3,>=1.26 (from requests->dash>=2.6.0->open3d)
+  Using cached urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Requirement already satisfied: certifi>=2023.5.7 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from requests->dash>=2.6.0->open3d) (2026.7.22)
+Downloading open3d-0.19.0-cp311-cp311-manylinux_2_31_x86_64.whl (447.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 447.7/447.7 MB 189.0 MB/s  0:00:02
+Downloading dash-4.4.1-py3-none-any.whl (8.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.9/8.9 MB 273.3 MB/s  0:00:00
+Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading ipywidgets-8.1.9-py3-none-any.whl (140 kB)
+Downloading jupyterlab_widgets-3.0.17-py3-none-any.whl (217 kB)
+Downloading widgetsnbextension-4.0.16-py3-none-any.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 240.4 MB/s  0:00:00
+Downloading comm-0.2.3-py3-none-any.whl (7.3 kB)
+Downloading ipython-9.17.1-py3-none-any.whl (639 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 639.0/639.0 kB 149.9 MB/s  0:00:00
+Downloading prompt_toolkit-3.0.53-py3-none-any.whl (392 kB)
+Downloading ipython_pygments_lexers-1.1.1-py3-none-any.whl (8.1 kB)
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading janus-2.0.0-py3-none-any.whl (12 kB)
+Downloading jedi-0.20.0-py2.py3-none-any.whl (4.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 216.3 MB/s  0:00:00
+Downloading parso-0.8.7-py2.py3-none-any.whl (107 kB)
+Downloading matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
+Downloading nbformat-5.11.1-py3-none-any.whl (79 kB)
+Downloading fastjsonschema-2.22.2-py3-none-any.whl (27 kB)
+Using cached jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Downloading jupyter_core-5.9.1-py3-none-any.whl (29 kB)
+Downloading pandas-3.0.5-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (11.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.3/11.3 MB 195.8 MB/s  0:00:00
+Downloading pexpect-4.9.0-py2.py3-none-any.whl (63 kB)
+Using cached platformdirs-4.11.8-py3-none-any.whl (24 kB)
+Downloading plotly-7.0.0-py3-none-any.whl (9.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.1/9.1 MB 257.8 MB/s  0:00:00
+Downloading ptyprocess-0.7.0-py2.py3-none-any.whl (13 kB)
+Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+Downloading pydantic_core-2.46.5-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 228.2 MB/s  0:00:00
+Using cached annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Using cached referencing-0.37.0-py3-none-any.whl (26 kB)
+Using cached rpds_py-2026.6.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (371 kB)
+Downloading stack_data-0.6.3-py3-none-any.whl (24 kB)
+Downloading asttokens-3.0.2-py3-none-any.whl (28 kB)
+Downloading executing-2.2.1-py2.py3-none-any.whl (28 kB)
+Downloading traitlets-5.16.1-py3-none-any.whl (86 kB)
+Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Downloading wcwidth-0.8.3-py3-none-any.whl (331 kB)
+Downloading addict-2.4.0-py3-none-any.whl (3.8 kB)
+Downloading configargparse-1.7.7-py3-none-any.whl (34 kB)
+Downloading importlib_metadata-9.0.1-py3-none-any.whl (27 kB)
+Downloading zipp-4.1.0-py3-none-any.whl (10 kB)
+Downloading nest_asyncio-1.6.0-py3-none-any.whl (5.2 kB)
+Downloading pure_eval-0.2.3-py3-none-any.whl (11 kB)
+Downloading pyquaternion-0.9.9-py3-none-any.whl (14 kB)
+Using cached requests-2.34.2-py3-none-any.whl (73 kB)
+Using cached charset_normalizer-3.5.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (262 kB)
+Using cached urllib3-2.7.0-py3-none-any.whl (131 kB)
+Downloading retrying-1.4.2-py3-none-any.whl (10 kB)
+Installing collected packages: pure-eval, ptyprocess, addict, zipp, widgetsnbextension, wcwidth, urllib3, typing-inspection, traitlets, rpds-py, retrying, pyquaternion, pydantic-core, plotly, platformdirs, pexpect, parso, nest-asyncio, jupyterlab_widgets, janus, itsdangerous, ipython-pygments-lexers, fastjsonschema, executing, configargparse, comm, charset_normalizer, blinker, attrs, asttokens, annotated-types, stack_data, requests, referencing, pydantic, prompt_toolkit, pandas, matplotlib-inline, jupyter-core, jedi, importlib-metadata, flask, jsonschema-specifications, ipython, dash, jsonschema, ipywidgets, nbformat, open3d
+
+Successfully installed addict-2.4.0 annotated-types-0.8.0 asttokens-3.0.2 attrs-26.1.0 blinker-1.9.0 charset_normalizer-3.5.1 comm-0.2.3 configargparse-1.7.7 dash-4.4.1 executing-2.2.1 fastjsonschema-2.22.2 flask-3.1.3 importlib-metadata-9.0.1 ipython-9.17.1 ipython-pygments-lexers-1.1.1 ipywidgets-8.1.9 itsdangerous-2.2.0 janus-2.0.0 jedi-0.20.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 jupyter-core-5.9.1 jupyterlab_widgets-3.0.17 matplotlib-inline-0.2.2 nbformat-5.11.1 nest-asyncio-1.6.0 open3d-0.19.0 pandas-3.0.5 parso-0.8.7 pexpect-4.9.0 platformdirs-4.11.8 plotly-7.0.0 prompt_toolkit-3.0.53 ptyprocess-0.7.0 pure-eval-0.2.3 pydantic-2.13.5 pydantic-core-2.46.5 pyquaternion-0.9.9 referencing-0.37.0 requests-2.34.2 retrying-1.4.2 rpds-py-2026.6.3 stack_data-0.6.3 traitlets-5.16.1 typing-inspection-0.4.4 urllib3-2.7.0 wcwidth-0.8.3 widgetsnbextension-4.0.16 zipp-4.1.0
+[setup_cut3r_env] Install done.
+[setup_cut3r_env] Installing wandb ...
+Collecting wandb
+  Using cached wandb-0.30.0-py3-none-manylinux_2_28_x86_64.whl.metadata (11 kB)
+Requirement already satisfied: click>=8.2.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (8.5.0)
+Collecting opentelemetry-api>=1.43.0 (from wandb)
+  Using cached opentelemetry_api-1.44.0-py3-none-any.whl.metadata (1.4 kB)
+Collecting opentelemetry-exporter-otlp-proto-http>=1.43.0 (from wandb)
+  Using cached opentelemetry_exporter_otlp_proto_http-1.44.0-py3-none-any.whl.metadata (2.4 kB)
+Collecting opentelemetry-sdk>=1.43.0 (from wandb)
+  Using cached opentelemetry_sdk-1.44.0-py3-none-any.whl.metadata (1.6 kB)
+Requirement already satisfied: packaging in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (26.3)
+Requirement already satisfied: platformdirs in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (4.11.8)
+Requirement already satisfied: protobuf!=5.28.0,!=5.29.0,<8,>=5 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (7.36.1)
+Requirement already satisfied: pydantic<3,>=2.6 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (2.13.5)
+Requirement already satisfied: pyyaml in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (6.0.3)
+Requirement already satisfied: requests<3,>=2.0.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (2.34.2)
+Requirement already satisfied: typing-extensions<5,>=4.8 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from wandb) (4.16.0)
+Collecting xxhash>=3.0.0 (from wandb)
+  Using cached xxhash-4.0.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (17 kB)
+Requirement already satisfied: annotated-types>=0.6.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from pydantic<3,>=2.6->wandb) (0.8.0)
+Requirement already satisfied: pydantic-core==2.46.5 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from pydantic<3,>=2.6->wandb) (2.46.5)
+Requirement already satisfied: typing-inspection>=0.4.2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from pydantic<3,>=2.6->wandb) (0.4.4)
+Requirement already satisfied: charset_normalizer<4,>=2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from requests<3,>=2.0.0->wandb) (3.5.1)
+Requirement already satisfied: idna<4,>=2.5 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from requests<3,>=2.0.0->wandb) (3.19)
+Requirement already satisfied: urllib3<3,>=1.26 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from requests<3,>=2.0.0->wandb) (2.7.0)
+Requirement already satisfied: certifi>=2023.5.7 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from requests<3,>=2.0.0->wandb) (2026.7.22)
+Collecting googleapis-common-protos~=1.52 (from opentelemetry-exporter-otlp-proto-http>=1.43.0->wandb)
+  Using cached googleapis_common_protos-1.75.3-py3-none-any.whl.metadata (8.5 kB)
+Collecting opentelemetry-exporter-otlp-proto-common==1.44.0 (from opentelemetry-exporter-otlp-proto-http>=1.43.0->wandb)
+  Using cached opentelemetry_exporter_otlp_proto_common-1.44.0-py3-none-any.whl.metadata (1.8 kB)
+Collecting opentelemetry-proto==1.44.0 (from opentelemetry-exporter-otlp-proto-http>=1.43.0->wandb)
+  Using cached opentelemetry_proto-1.44.0-py3-none-any.whl.metadata (2.3 kB)
+Collecting opentelemetry-semantic-conventions==0.65b0 (from opentelemetry-sdk>=1.43.0->wandb)
+  Using cached opentelemetry_semantic_conventions-0.65b0-py3-none-any.whl.metadata (2.4 kB)
+Using cached wandb-0.30.0-py3-none-manylinux_2_28_x86_64.whl (26.1 MB)
+Using cached opentelemetry_api-1.44.0-py3-none-any.whl (60 kB)
+Using cached opentelemetry_exporter_otlp_proto_http-1.44.0-py3-none-any.whl (21 kB)
+Using cached opentelemetry_exporter_otlp_proto_common-1.44.0-py3-none-any.whl (17 kB)
+Using cached opentelemetry_proto-1.44.0-py3-none-any.whl (72 kB)
+Using cached googleapis_common_protos-1.75.3-py3-none-any.whl (306 kB)
+Using cached opentelemetry_sdk-1.44.0-py3-none-any.whl (137 kB)
+Using cached opentelemetry_semantic_conventions-0.65b0-py3-none-any.whl (204 kB)
+Using cached xxhash-4.0.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (261 kB)
+Installing collected packages: xxhash, opentelemetry-proto, opentelemetry-api, googleapis-common-protos, opentelemetry-semantic-conventions, opentelemetry-exporter-otlp-proto-common, opentelemetry-sdk, opentelemetry-exporter-otlp-proto-http, wandb
+
+Successfully installed googleapis-common-protos-1.75.3 opentelemetry-api-1.44.0 opentelemetry-exporter-otlp-proto-common-1.44.0 opentelemetry-exporter-otlp-proto-http-1.44.0 opentelemetry-proto-1.44.0 opentelemetry-sdk-1.44.0 opentelemetry-semantic-conventions-0.65b0 wandb-0.30.0 xxhash-4.0.1
+[setup_cut3r_env] Installing TTT3R extras (imageio, scikit-image) ...
+Collecting imageio
+  Using cached imageio-2.37.4-py3-none-any.whl.metadata (9.6 kB)
+Collecting imageio-ffmpeg
+  Downloading imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl.metadata (1.5 kB)
+Collecting scikit-image
+  Using cached scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (15 kB)
+Requirement already satisfied: numpy in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from imageio) (2.4.6)
+Requirement already satisfied: pillow>=8.3.2 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from imageio) (10.3.0)
+Requirement already satisfied: scipy>=1.11.4 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-image) (1.17.1)
+Requirement already satisfied: networkx>=3.0 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-image) (3.6.1)
+Collecting tifffile>=2022.8.12 (from scikit-image)
+  Using cached tifffile-2026.3.3-py3-none-any.whl.metadata (31 kB)
+Requirement already satisfied: packaging>=21 in /scratch/baris_bakay/micromamba/envs/cut3r/lib/python3.11/site-packages (from scikit-image) (26.3)
+Collecting lazy-loader>=0.4 (from scikit-image)
+  Using cached lazy_loader-0.5-py3-none-any.whl.metadata (5.9 kB)
+Using cached imageio-2.37.4-py3-none-any.whl (318 kB)
+Downloading imageio_ffmpeg-0.6.0-py3-none-manylinux2014_x86_64.whl (29.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 29.5/29.5 MB 86.4 MB/s  0:00:00
+Using cached scikit_image-0.26.0-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (13.7 MB)
+Using cached lazy_loader-0.5-py3-none-any.whl (8.0 kB)
+Using cached tifffile-2026.3.3-py3-none-any.whl (243 kB)
+Installing collected packages: tifffile, lazy-loader, imageio-ffmpeg, imageio, scikit-image
+
+Successfully installed imageio-2.37.4 imageio-ffmpeg-0.6.0 lazy-loader-0.5 scikit-image-0.26.0 tifffile-2026.3.3
+[setup_cut3r_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13654x13654 matmul (~270 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+... loading model from /home/baris_bakay/lingbot-map/TTT3R/src/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 100 image/raymaps
+[ttt3r|breakfast_room|n100] ingest 59s
+/home/baris_bakay/lingbot-map/TTT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+[ttt3r|breakfast_room|n100|selfpose] acc 0.1021 comp 0.0752 absrel 0.0811
+[ttt3r|breakfast_room|n100|gtpose] acc 0.0977 comp 0.0808 absrel 0.0854
+[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/ttt3r/breakfast_room_n100
+>> Inference with model on 300 image/raymaps
+[ttt3r|breakfast_room|n300] ingest 177s
+[ttt3r|breakfast_room|n300|selfpose] acc 0.1120 comp 0.0483 absrel 0.0951
+[ttt3r|breakfast_room|n300|gtpose] acc 0.0875 comp 0.0420 absrel 0.0873
+[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/ttt3r/breakfast_room_n300
+>> Inference with model on 500 image/raymaps
+[ttt3r|breakfast_room|n500] ingest 288s
+[ttt3r|breakfast_room|n500|selfpose] acc 0.0953 comp 0.0428 absrel 0.1171
+[ttt3r|breakfast_room|n500|gtpose] acc 0.1042 comp 0.0561 absrel 0.1118
+[viz] -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/ttt3r/breakfast_room_n500

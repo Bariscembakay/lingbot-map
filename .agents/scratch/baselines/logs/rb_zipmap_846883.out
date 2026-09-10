@@ -1,0 +1,14 @@
+[setup_zipmap_env] zipmap env already exists, skipping install.
+[setup_zipmap_env] Done.
+GPU 0: NVIDIA A100-SXM4-80GB - allocated 3.96 GiB / 79.25 GiB (5%); keep-alive burst calibrated to 13172x13172 matmul (~241 ms/call, target 300 ms)
+GPU keep-alive started on 1 visible GPU(s)
+[load] state_query ckpt: 0 missing / 0 unexpected
+[zipmap|grey_white_room|n100] ingest 19.8s
+[zipmap|grey_white_room|n100] sim3 scale 2.8052 (median-depth scale 3.0794)
+[zipmap|grey_white_room|n100] acc 0.1608 comp 0.0359 absrel 0.0898 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/grey_white_room_n100
+[zipmap|grey_white_room|n300] ingest 23.0s
+[zipmap|grey_white_room|n300] sim3 scale 2.7168 (median-depth scale 2.8260)
+[zipmap|grey_white_room|n300] acc 0.0626 comp 0.0126 absrel 0.0388 -> /group/compact-3dmem/campaigns/spatial_memory/recallbench/zipmap/grey_white_room_n300
+[zipmap|grey_white_room|n500] ingest 38.2s
+[zipmap|grey_white_room|n500] sim3 scale 1.7692 (median-depth scale 2.6138)
+[2026-09-10T03:30:29.054] error: *** JOB 846883 ON gcp-eu1-a100-80g-g5j6 CANCELLED AT 2026-09-10T03:30:29 DUE TO TIME LIMIT ***
