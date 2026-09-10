@@ -15,12 +15,16 @@ from pathlib import Path
 SCENES = ["whiteroom", "kitchen", "grey_white_room", "green_room",
           "complete_kitchen", "breakfast_room", "staircase"]
 TIERS = [100, 300, 500]
-METHODS = ["cut3r", "ttt3r", "zipmap"]
-NOTE = {"zipmap": " [B]"}          # [B] = bidirectional ingestion
+METHODS = ["cut3r", "ttt3r", "zipmap", "ours"]
+NOTE = {"zipmap": " [B]", "ours": " [P]"}   # [B] bidirectional, [P] posed
 FOOT = ("[B] ZipMap: its released state-query checkpoint is a stage-2 "
         "(bidirectional) fine-tune; no streaming variant exists, so its "
         "ingestion sees all frames jointly -- an easier setting, i.e. an "
         "upper bound on a streaming ZipMap.")
+FOOT += ("\n[P] Ours is a POSED system: it queries GT raymaps natively and its "
+         "canonical scale is an input-side constant, so its cloud needs no "
+         "Sim(3) fit (align.fitted=false) where the baselines get one. It is "
+         "therefore a separate column, not a like-for-like row.")
 
 
 def cell(root: Path, method: str, scene: str, tier: int, mode: str):
