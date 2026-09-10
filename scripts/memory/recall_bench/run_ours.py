@@ -51,6 +51,9 @@ def main() -> int:
     ap.add_argument("--tiers", type=int, nargs="+", default=[100, 300, 500])
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--method", default="ours")
+    ap.add_argument("--dump-dir", type=Path, default=None,
+                    help="GPU phase only: dump metric-scale predictions for the "
+                         "CPU scorer (run_recall_score.py --posed).")
     args = ap.parse_args()
 
     import cv2
@@ -104,6 +107,13 @@ def main() -> int:
 
     for tier in args.tiers:
         od = args.out / args.method / f"{args.scene}_n{tier}"
+        if args.dump_dir:
+            dd = args.dump_dir / args.method
+            dd.mkdir(parents=True, exist_ok=True)
+            df = dd / f"{args.scene}_n{tier}.npz"
+            if df.exists():
+                print(f"[skip] {args.scene}_n{tier} dump exists", flush=True)
+                continue
         if (od / "metrics.json").exists():
             print(f"[skip] {args.scene}_n{tier} already done", flush=True)
             continue
@@ -161,6 +171,19 @@ def main() -> int:
         pw_all = out["pts3d_in_other_view"].float().cpu().numpy() * s
         z_all = out["pts3d_in_self_view"].float().cpu().numpy()[..., 2] * s
         H, W = clip.h, clip.w
+
+        if args.dump_dir:
+            # Written as the gtpose block because that is what ours is: a posed
+            # query with no Sim(3) fit. c2w_pred is stored for provenance only;
+            # the scorer must not fit an alignment to it (--posed).
+            np.savez(df, pw_gtpose=pw_all.reshape(len(qs), -1, 3)[:, ::3
+                                                                  ].astype(np.float32),
+                     zs_gtpose=z_all.astype(np.float16),
+                     c2w_pred=c2w_gt[:tier].astype(np.float64),
+                     hw=np.int32([H, W]), tier=np.int32(tier))
+            print(f"[dump] -> {df} ({df.stat().st_size/1e9:.2f} GB)", flush=True)
+            del clip
+            continue
 
         preds, gts, cols, gcols, per_q = [], [], [], [], []
         depth_absrel, depth_d125 = [], []

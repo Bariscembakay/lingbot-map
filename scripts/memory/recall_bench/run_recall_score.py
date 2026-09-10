@@ -56,6 +56,10 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--manifest-dir", type=Path,
                     default=REPO / "scripts/memory/recall_bench/manifests")
+    ap.add_argument("--posed", action="store_true",
+                    help="ours: predictions are already in the GT frame at metric "
+                         "scale, so no Sim(3) is fitted and the single result is "
+                         "reported under both mode keys.")
     args = ap.parse_args()
 
     od = args.out / args.method / f"{args.scene}_n{args.tier}"
@@ -127,7 +131,7 @@ def main() -> int:
         per_q = [pw_all[q][::3] for q in range(n)]
 
         align = None
-        if mode == "selfpose":
+        if mode == "selfpose" and not args.posed:
             sA, RA, tA = umeyama_sim3(c2w_pred[:n, :3, 3], c2w_gt[:n, :3, 3])
             P = (sA * (RA @ P.T)).T + tA
             per_q = [(sA * (RA @ pq.T)).T + tA for pq in per_q]
@@ -153,6 +157,11 @@ def main() -> int:
         print(f"[{args.method}|{args.scene}|n{n}|{mode}] acc {d_acc.mean():.4f} "
               f"comp {d_comp.mean():.4f} absrel {np.mean(absrel):.4f}", flush=True)
 
+    if args.posed and "gtpose" in res:
+        # aggregate.py reads whichever mode it was asked for; a posed system has
+        # only one, so both keys carry it rather than leaving the table blank.
+        res["selfpose"] = dict(res["gtpose"], posed=True)
+        clouds.setdefault("selfpose", clouds["gtpose"])
     od.mkdir(parents=True, exist_ok=True)
     (od / "metrics.json").write_text(json.dumps(
         {"method": args.method, "scene": args.scene, "tier": n,
