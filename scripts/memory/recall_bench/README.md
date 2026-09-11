@@ -61,7 +61,42 @@ cells, videodepth 5/6 (ZipMap-KITTI checkpoint caveat).
 `metrics.json`, `pred_cloud_rgb.ply` (coloured by the query frame's image),
 `pred_cloud_err.ply` (error heat), `gt_cloud_rgb.ply`. Viser walker sees them.
 
-Runners: `run_cut3r_family.py --update-rule {cut3r,ttt3r}`, `run_zipmap.py`;
-both resume per-tier (skip if metrics.json exists).
+## How a cell is produced (two phases, since 2026-09-11)
+
+Ingest is ~3 min of what used to be a ~10 h cell; the rest is GT unprojection
+and KD-tree work that needs no GPU. Holding an H200 through that made the cells
+*unschedulable* on a full cluster, so the runners split:
+
+1. **GPU** — `run_cut3r_family.py --update-rule {cut3r,ttt3r} --dump-dir D`
+   (ours: `run_ours.py --dump-dir D`). Ingest + query only, ~5 min for all
+   three tiers of a scene. Writes `D/<method>/<scene>_n<tier>.npz`
+   (0.24 GB at n100, 1.18 GB at n500).
+2. **CPU, no GPU requested** — `run_recall_score.py --method M --scene S
+   --tier T --dump-dir D --out OUT` (ours adds `--posed`). Metrics + clouds.
+   These schedule instantly while every GPU is busy.
+
+Verified bit-identical to the old single-process path on the same GPU
+(cut3r/breakfast_room/n100: acc 0.0938, comp 0.0642, absrel 0.0969 both ways).
+`run_zipmap.py` is still single-phase. Every runner resumes per tier.
+
+## Provenance: one GPU type per table
+
+**selfpose is GPU-type sensitive.** Re-scoring an identical cell on an H200
+reproduced gtpose to ~1e-4 but moved selfpose by 19-27% (acc_mean 0.1154 a100
+vs 0.0938 h200), because selfpose fits a Sim(3) to the model's *own* predicted
+camera centres and so amplifies small kernel/TF32 differences. gtpose uses GT
+poses and does not. Ours fits nothing and is unaffected in principle.
+
+Consequence: cut3r and ttt3r were fully regenerated on h200 under one code
+version rather than completing a part-a100 table. The superseded a100 cells
+are kept at `campaigns/spatial_memory/recallbench_superseded_a100/`. ZipMap's
+cells are a100 and are **not** directly comparable on selfpose to the
+regenerated rows; its column is footnoted.
+
+## Viewing
+
+`python view_cell.py --method M --scene S --tier T [--show pred gt err]`
+serves the full-resolution clouds in viser. Files on disk are never
+decimated; `--stride` only thins what reaches the browser.
 
 Future work: VBR / HM3D long-loop extension.
