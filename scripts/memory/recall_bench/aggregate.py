@@ -72,12 +72,12 @@ def main() -> int:
             lag_rows.append((m, t, {b: sum(v) / len(v)
                                     for b, v in sorted(buckets.items())}))
     lines += ["", FOOT, "", "## Recall vs frame age (Acc by age decile, 0=newest)", ""]
-    lines.append("| method | tier | " + " | ".join(f"d{b}" for b in range(11)) + " |")
-    lines.append("|---" * 13 + "|")
+    lines.append("| method | tier | " + " | ".join(f"d{b}" for b in range(10)) + " |")
+    lines.append("|---" * 12 + "|")
     for m, t, b in lag_rows:
         lines.append(f"| {m} | n{t} | " +
                      " | ".join(f"{b[i]:.3f}" if i in b else "-"
-                               for i in range(11)) + " |")
+                               for i in range(10)) + " |")
     txt = "\n".join(lines)
     print(txt)
     if args.out:
