@@ -6,7 +6,7 @@ withheld. This writes the cloud the same model produces on the same frames
 *with* the images, so the two can be viewed and scored side by side. The gap
 between them is the cost of going through memory rather than looking.
 
-Written next to the cell as ingest_cloud_rgb.ply / ingest_cloud_err.ply, using
+Written next to the cell as predicted_cloud_rgb.ply / predicted_cloud_err.ply, using
 the identical colouring, subsampling, Sim(3) and metric code as the recall
 cloud -- otherwise the comparison would measure the pipeline, not the model.
 """
@@ -116,16 +116,16 @@ def main() -> int:
 
     od = args.out / args.update_rule / f"{args.scene}_n{args.tier}"
     od.mkdir(parents=True, exist_ok=True)
-    write_ply(od / "ingest_cloud_rgb.ply", P, C.astype(np.uint8))
+    write_ply(od / "predicted_cloud_rgb.ply", P, C.astype(np.uint8))
     lo, hi = np.percentile(d_acc, 5), np.percentile(d_acc, 95)
-    write_ply(od / "ingest_cloud_err.ply", P, heat(d_acc, float(lo), float(hi)))
-    (od / "ingest_metrics.json").write_text(json.dumps(
+    write_ply(od / "predicted_cloud_err.ply", P, heat(d_acc, float(lo), float(hi)))
+    (od / "predicted_metrics.json").write_text(json.dumps(
         {"method": args.update_rule, "scene": args.scene, "tier": args.tier,
          "pass": "ingestion (images visible) -- upper bound, not a benchmark row",
          "acc_mean": float(d_acc.mean()), "comp_mean": float(d_comp.mean()),
          "chamfer": float((d_acc.mean() + d_comp.mean()) / 2),
          "align": {"scale": float(sA)}}, indent=1))
-    print(f"[viz] -> {od}/ingest_cloud_rgb.ply", flush=True)
+    print(f"[viz] -> {od}/predicted_cloud_rgb.ply", flush=True)
     return 0
 
 

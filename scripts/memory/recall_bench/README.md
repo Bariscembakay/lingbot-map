@@ -58,8 +58,38 @@ cells, videodepth 5/6 (ZipMap-KITTI checkpoint caveat).
 ## Outputs
 
 `/group/compact-3dmem/campaigns/spatial_memory/recallbench/<method>/<scene>_n<tier>/`:
-`metrics.json`, `pred_cloud_rgb.ply` (coloured by the query frame's image),
-`pred_cloud_err.ply` (error heat), `gt_cloud_rgb.ply`. Viser walker sees them.
+- `recalled_cloud_rgb.ply` -- the benchmark's subject: queried with a camera,
+  **image withheld**. This is what every metric in the table is computed from.
+- `recalled_cloud_err.ply` -- per-point distance to GT, 5th-95th percentile.
+- `predicted_cloud_rgb.ply` / `predicted_cloud_err.ply` -- the same model on the
+  same frames **with the images visible**: the upper bound. recall/predicted is
+  the retention ratio, which factors out a method's own reconstruction quality
+  (see below). Written by `dump_ingest_cloud.py`, not present for every cell.
+- `gt_cloud_rgb.ply` -- identical across methods for a given scene/tier.
+- `metrics.json`, `predicted_metrics.json`.
+
+**Colours are ground-truth image pixels, never predicted.** Each point comes
+from one pixel of one queried view and is painted with that view's real image --
+the image the model was not shown at query time. A natural-looking cloud is
+therefore not evidence of good recall; wrong geometry still gets right colours.
+Judge quality from the `*_err` clouds, where colour IS the measurement.
+
+## Absolute score vs retention ratio
+
+The raw means partly rank methods on *reconstruction*, not recall. Measured at
+n100: green_room is the outlier that dominates every mean, and it is hard to
+reconstruct rather than hard to remember --
+
+| method / scene | predicted | recalled | retention |
+|---|---|---|---|
+| ttt3r whiteroom | 0.0885 | 0.0947 | 1.07 |
+| ttt3r green_room | 0.3681 | 0.3999 | 1.09 |
+| cut3r whiteroom | 0.1196 | 0.1425 | 1.19 |
+| cut3r green_room | 1.4300 | 1.9244 | 1.35 |
+
+TTT3R's retention is flat across an easy and a hard scene (~8%); CUT3R's
+degrades with difficulty. Reporting only absolutes would credit TTT3R with a
+12x win on green_room when most of that gap is reconstruction. Report both.
 
 ## How a cell is produced (two phases, since 2026-09-11)
 

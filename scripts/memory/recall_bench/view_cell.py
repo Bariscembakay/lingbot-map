@@ -16,8 +16,13 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path("/group/compact-3dmem/campaigns/spatial_memory/recallbench")
-LAYERS = {"pred": "pred_cloud_rgb.ply", "err": "pred_cloud_err.ply",
-          "gt": "gt_cloud_rgb.ply"}
+# "recalled" = queried with a camera, image withheld (what the benchmark scores)
+# "predicted" = the same model with the image visible (upper bound)
+LAYERS = {"recalled": ["recalled_cloud_rgb.ply", "pred_cloud_rgb.ply"],
+          "err": ["recalled_cloud_err.ply", "pred_cloud_err.ply"],
+          "predicted": ["predicted_cloud_rgb.ply", "ingest_cloud_rgb.ply"],
+          "predicted_err": ["predicted_cloud_err.ply", "ingest_cloud_err.ply"],
+          "gt": ["gt_cloud_rgb.ply"]}
 
 
 def read_ply(p: Path):
@@ -48,7 +53,7 @@ def main() -> int:
     ap.add_argument("--method", required=True)
     ap.add_argument("--scene", required=True)
     ap.add_argument("--tier", type=int, required=True)
-    ap.add_argument("--show", nargs="+", default=["pred", "gt"],
+    ap.add_argument("--show", nargs="+", default=["recalled", "gt"],
                     choices=list(LAYERS))
     ap.add_argument("--stride", type=int, default=1,
                     help="client-side decimation; files stay full-resolution")
@@ -66,7 +71,8 @@ def main() -> int:
 
     srv = viser.ViserServer(port=args.port)
     for name in args.show:
-        p = cell / LAYERS[name]
+        p = next((cell / c for c in LAYERS[name] if (cell / c).exists()),
+                 cell / LAYERS[name][0])
         if not p.exists():
             print(f"  (missing {name}: {p.name})")
             continue

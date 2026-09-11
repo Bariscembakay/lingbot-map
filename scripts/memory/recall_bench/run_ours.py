@@ -237,9 +237,9 @@ def main() -> int:
              "query_all_past": True, "stride": man["stride"],
              "ckpt": str(args.ckpt), "ckpt_step": int(ck.get("step", -1)),
              "posed": True, "gtpose": res, "selfpose": res}, indent=1))
-        write_ply(od / "pred_cloud_rgb.ply", P, C.astype(np.uint8))
+        write_ply(od / "recalled_cloud_rgb.ply", P, C.astype(np.uint8))
         lo, hi = np.percentile(d_acc, 5), np.percentile(d_acc, 95)
-        write_ply(od / "pred_cloud_err.ply", P, heat(d_acc, float(lo), float(hi)))
+        write_ply(od / "recalled_cloud_err.ply", P, heat(d_acc, float(lo), float(hi)))
         write_ply(od / "gt_cloud_rgb.ply", G, GC.astype(np.uint8))
         print(f"[viz] -> {od}", flush=True)
         del clip

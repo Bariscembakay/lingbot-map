@@ -175,9 +175,9 @@ def main() -> int:
          "scored_from_dump": True, "modes_scored": list(res.keys()),
          **res}, indent=1))
     P, C, d_acc = clouds.get("selfpose", clouds[next(iter(clouds))])
-    write_ply(od / "pred_cloud_rgb.ply", P, C.astype(np.uint8))
+    write_ply(od / "recalled_cloud_rgb.ply", P, C.astype(np.uint8))
     lo, hi = np.percentile(d_acc, 5), np.percentile(d_acc, 95)
-    write_ply(od / "pred_cloud_err.ply", P, heat(d_acc, float(lo), float(hi)))
+    write_ply(od / "recalled_cloud_err.ply", P, heat(d_acc, float(lo), float(hi)))
     write_ply(od / "gt_cloud_rgb.ply", G, GC.astype(np.uint8))
     print(f"[viz] -> {od}", flush=True)
     return 0
