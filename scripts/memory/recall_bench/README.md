@@ -81,11 +81,19 @@ Verified bit-identical to the old single-process path on the same GPU
 
 ## Provenance: one GPU type per table
 
-**selfpose is GPU-type sensitive.** Re-scoring an identical cell on an H200
-reproduced gtpose to ~1e-4 but moved selfpose by 19-27% (acc_mean 0.1154 a100
-vs 0.0938 h200), because selfpose fits a Sim(3) to the model's *own* predicted
-camera centres and so amplifies small kernel/TF32 differences. gtpose uses GT
-poses and does not. Ours fits nothing and is unaffected in principle.
+**Cells do not reproduce across GPU type or code version.** Over 10 overlapping
+cut3r cells (a100 originals vs h200 re-runs): selfpose mean |delta| 14.1%
+(max 65%), gtpose mean |delta| 20.3% (max 169%). Both modes move -- an earlier
+note here claimed gtpose was stable to 1e-4, which was generalised from one
+cell and is wrong.
+
+Two causes, easily confused. (a) **Stale code**: `breakfast_room_n500` was
+written 2 min before the Sim(3) commit and 8 h before the OpenGL-flip fix, so
+its +169% gtpose delta is a bug. A file's mtime does not certify it -- a job
+that started before a fix keeps the old code in memory. (b) **Genuine
+sensitivity**: selfpose fits a Sim(3) to the model's own predicted camera
+centres, worst where the reconstruction is already poor (green_room, acc > 1 m,
+swung 65%) and the fit is ill-conditioned. Ours fits nothing and is exempt.
 
 Consequence: cut3r and ttt3r were fully regenerated on h200 under one code
 version rather than completing a part-a100 table. The superseded a100 cells
