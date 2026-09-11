@@ -89,7 +89,7 @@ def main() -> int:
     jj, ii = np.meshgrid(np.arange(Wn), np.arange(Hn), indexing="xy")
 
     # GT is mode-independent, so it is built once and reused by both modes.
-    gt_sub, gtrgb_sub, gd_all = [], [], []
+    gt_sub, gtrgb_sub, gd_all, col_all = [], [], [], []
     for q in range(n):
         i = ids[q]
         dep = cv2.imread(str(root / f"depth/depth{i}.png"), cv2.IMREAD_UNCHANGED)
@@ -104,6 +104,11 @@ def main() -> int:
         gt_sub.append(pw.reshape(-1, 3)[valid.reshape(-1)][::4])
         gtrgb_sub.append(rgb.reshape(-1, 3)[valid.reshape(-1)][::4])
         gd_all.append(cv2.resize(dep, (W, H), interpolation=cv2.INTER_NEAREST))
+        # Prediction colours are the query image too, and like the GT they do
+        # not depend on the mode -- build them here rather than re-reading the
+        # same PNG once per mode.
+        col_all.append(cv2.resize(rgb, (W, H),
+                                  interpolation=cv2.INTER_AREA).reshape(-1, 3)[::3])
     G = np.concatenate(gt_sub); GC = np.concatenate(gtrgb_sub)
     print(f"[gt] {len(G):,} points", flush=True)
 
@@ -113,7 +118,7 @@ def main() -> int:
             continue
         pw_all = d[f"pw_{mode}"].astype(np.float64)      # [n, K, 3]
         zs_all = d[f"zs_{mode}"].astype(np.float64)      # [n, H, W]
-        cols, absrel, d125 = [], [], []
+        absrel, d125 = [], []
         for q in range(n):
             gd = gd_all[q]
             m = (gd > dmin) & (gd < dmax)
@@ -122,12 +127,8 @@ def main() -> int:
                 absrel.append(float((np.abs(zs[m] - gd[m]) / gd[m]).mean()))
                 d125.append(float((np.maximum(zs[m] / gd[m],
                                               gd[m] / zs[m]) < 1.25).mean()))
-            img = cv2.cvtColor(cv2.imread(str(root / f"images/img{ids[q]}.png")),
-                               cv2.COLOR_BGR2RGB)
-            small = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
-            cols.append(small.reshape(-1, 3)[::3])
         P = np.concatenate(list(pw_all))
-        C = np.concatenate(cols)[:len(P)]
+        C = np.concatenate(col_all)[:len(P)]
         per_q = [pw_all[q][::3] for q in range(n)]
 
         align = None
