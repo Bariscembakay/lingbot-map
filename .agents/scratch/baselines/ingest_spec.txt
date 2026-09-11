@@ -1,0 +1,4 @@
+cut3r,whiteroom,100
+ttt3r,whiteroom,100
+cut3r,green_room,100
+ttt3r,green_room,100
