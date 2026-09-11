@@ -21,6 +21,9 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
+# preprocess_like_demo lives beside the validated zero-shot eval, not in the
+# vendored tree -- same two paths run_cut3r_family.py adds.
+sys.path.insert(0, str(REPO / ".agents/scratch/memory_eval"))
 
 
 def main() -> int:
