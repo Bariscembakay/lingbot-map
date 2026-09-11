@@ -56,6 +56,11 @@ def main() -> int:
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--manifest-dir", type=Path,
                     default=REPO / "scripts/memory/recall_bench/manifests")
+    ap.add_argument("--modes", nargs="+", default=["selfpose", "gtpose"],
+                    choices=["selfpose", "gtpose"],
+                    help="which query protocols to score. Restricting to "
+                         "selfpose roughly halves the KD-tree work; gtpose can "
+                         "be scored later from the same dump, which persists.")
     ap.add_argument("--posed", action="store_true",
                     help="ours: predictions are already in the GT frame at metric "
                          "scale, so no Sim(3) is fitted and the single result is "
@@ -113,7 +118,7 @@ def main() -> int:
     print(f"[gt] {len(G):,} points", flush=True)
 
     res, clouds = {}, {}
-    for mode in ("selfpose", "gtpose"):
+    for mode in args.modes:
         if f"pw_{mode}" not in d:
             continue
         pw_all = d[f"pw_{mode}"].astype(np.float64)      # [n, K, 3]
@@ -167,7 +172,8 @@ def main() -> int:
     (od / "metrics.json").write_text(json.dumps(
         {"method": args.method, "scene": args.scene, "tier": n,
          "query_all_past": True, "stride": man["stride"],
-         "scored_from_dump": True, **res}, indent=1))
+         "scored_from_dump": True, "modes_scored": list(res.keys()),
+         **res}, indent=1))
     P, C, d_acc = clouds.get("selfpose", clouds[next(iter(clouds))])
     write_ply(od / "pred_cloud_rgb.ply", P, C.astype(np.uint8))
     lo, hi = np.percentile(d_acc, 5), np.percentile(d_acc, 95)
