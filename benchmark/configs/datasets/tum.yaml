@@ -1,5 +1,5 @@
 dataset: tum
-raw_data_root: /group/compact-3dmem/datasets/TUM-RGBD
+raw_data_root: /data/TUM-RGBD
 _load_img_size: 518
 evaluation:
   depth:

@@ -106,7 +106,7 @@ def read_images_txt(path):
 
 
 if __name__ == '__main__':
-    data_root = '/group/compact-3dmem/datasets/eth3d'
+    data_root = '/data/eth3d'
     # sequences = [seq for seq in os.listdir('data/eth3d') if os.path.isdir(os.path.join('data/eth3d', seq))]
     # print(sequences)
     sequences = ["courtyard", "delivery_area", "electro", "facade", "kicker", "meadow", "office", "pipes", "playground", "relief", "relief_2", "terrace", "terrains"]

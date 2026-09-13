@@ -6,7 +6,7 @@
 # GT stays self-consistent, but the model predicts fx~=fy, i.e. square pixels,
 # so it cannot represent the squashed camera at all.
 dataset: oxford_spires
-raw_data_root: /group/compact-3dmem/datasets/oxford_spires_processed
+raw_data_root: /data/oxford_spires_processed
 _load_img_size: 1008
 sampling:
   strategy: sequence

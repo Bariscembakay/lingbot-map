@@ -1,5 +1,5 @@
 dataset: oxford_spires
-raw_data_root: /group/compact-3dmem/datasets/oxford_spires_processed
+raw_data_root: /data/oxford_spires_processed
 sampling:
   strategy: sequence
   stride: 12
