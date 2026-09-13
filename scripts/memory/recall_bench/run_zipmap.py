@@ -51,6 +51,10 @@ def main() -> int:
                     "lingbot-map/scripts/memory/recall_bench/manifests")
     ap.add_argument("--tiers", type=int, nargs="+", default=[100, 300, 500])
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--dump-dir", type=Path, default=None,
+                    help="GPU phase only: dump raw predictions for the CPU "
+                         "scorer. ZipMap's n500 scoring is >10h of KD-tree "
+                         "work and twice died holding a GPU through it.")
     args = ap.parse_args()
 
     from zipmap.models.ZipMap import ZipMap  # noqa: E402
@@ -108,7 +112,12 @@ def main() -> int:
     dtype = torch.bfloat16
     for tier in args.tiers:
         n = tier
-        if (args.out / "zipmap" / f"{args.scene}_n{tier}" / "metrics.json").exists():
+        if args.dump_dir and (args.dump_dir / "zipmap" /
+                              f"{args.scene}_n{tier}.npz").exists():
+            print(f"[skip] {args.scene}_n{tier} dump exists", flush=True)
+            continue
+        if not args.dump_dir and (args.out / "zipmap" /
+                                  f"{args.scene}_n{tier}" / "metrics.json").exists():
             print(f"[skip] {args.scene}_n{tier} already done", flush=True)
             continue
         images = images_all[:n].to("cuda")
@@ -139,6 +148,32 @@ def main() -> int:
                 ray_conditions=ray_cond, chunksize=25)
         nvs = out["nvs_pred"].float().cpu().numpy()[0]        # [S,H,W,4] rgb+d
         depth_pred = nvs[..., 3]
+
+        if args.dump_dir:
+            # The Sim(3) needs only camera centres, so it is computable here
+            # without touching a single depth PNG. Dump depth ALREADY scaled by
+            # it, because ZipMap is up-to-scale and the generic scorer does not
+            # rescale depth; the scorer then refits the same Sim(3) from the
+            # same c2w_pred and applies it to the points, so both halves agree.
+            sA_d, _, _ = umeyama_sim3(c2w_pred[:n, :3, 3], c2w_gt[:n, :3, 3])
+            jjd, iid = np.meshgrid(np.arange(W), np.arange(H), indexing="xy")
+            dpw, dzs = [], []
+            for q in range(n):
+                Kq, dq = intri[q], depth_pred[q]
+                pc = np.stack([(jjd - Kq[0, 2]) / Kq[0, 0] * dq,
+                               (iid - Kq[1, 2]) / Kq[1, 1] * dq, dq], -1)
+                pwq = pc @ c2w_pred[q, :3, :3].T + c2w_pred[q, :3, 3]
+                dpw.append(pwq.reshape(-1, 3)[::3].astype(np.float32))
+                dzs.append((dq * sA_d).astype(np.float16))
+            dd = args.dump_dir / "zipmap"
+            dd.mkdir(parents=True, exist_ok=True)
+            f = dd / f"{args.scene}_n{tier}.npz"
+            np.savez(f, pw_selfpose=np.stack(dpw), zs_selfpose=np.stack(dzs),
+                     c2w_pred=c2w_pred.astype(np.float64),
+                     hw=np.int32([H, W]), tier=np.int32(tier))
+            print(f"[dump] -> {f} ({f.stat().st_size/1e9:.2f} GB) "
+                  f"sim3 scale {sA_d:.4f}", flush=True)
+            continue
 
         # unproject predicted depth at the query cameras -> world (model frame)
         jj, ii = np.meshgrid(np.arange(W), np.arange(H), indexing="xy")
