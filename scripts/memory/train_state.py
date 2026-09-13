@@ -45,7 +45,7 @@ class Clip:
     """One cached clip, subsampled, with everything a probe needs on device."""
 
     def __init__(self, path: Path, subsample: int, device, max_frames: int | None,
-                 taps: str = "23", store: str = "gpu"):
+                 taps: str = "23", store: str = "gpu", tap_half: str = "both"):
         # store="cpu": taps and gt stay in host RAM and move per access. At
         # ~0.5 GB taps/clip a thousand-clip run cannot live on the GPU (or,
         # x4 DDP ranks, even in materialised host copies without sharding).
@@ -70,6 +70,16 @@ class Clip:
             t23 = c.meta.tap_layers.index(TAP23)
             self.taps = torch.from_numpy(
                 np.ascontiguousarray(c.taps[idx][:, t23]))
+            # A tap is cat([frame_inter, global_inter]) (build_cache.py: E =
+            # embed_dim * 2), so the GLOBAL stream -- the aggregator's global
+            # attention output -- is the SECOND half. Slicing here rather than
+            # rebuilding caches: the stored tap is already 2048-d, so this
+            # ablation costs no new preprocessing, and only pays off in disk
+            # if it turns out 1024 is enough.
+            if tap_half != "both":
+                half = self.taps.shape[-1] // 2
+                self.taps = (self.taps[..., :half] if tap_half == "frame"
+                             else self.taps[..., half:]).contiguous()
             if store == "gpu":
                 self.taps = self.taps.to(device)
         gt_dev = device if store == "gpu" else "cpu"
@@ -184,6 +194,11 @@ def main() -> int:
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
     # (a) tap 23 only vs (b) all four channel-concat; design doc "Sweep axes".
     ap.add_argument("--taps", default="23", choices=["23", "all"])
+    ap.add_argument("--tap-half", default="both",
+                    choices=["both", "frame", "global"],
+                    help="use only one 1024-d half of the 2048-d tap. "
+                         "'global' = the aggregator's global-attention output "
+                         "(second half); halves cache size if it suffices.")
     ap.add_argument("--clip-store", default="gpu", choices=["gpu", "cpu"],
                     help="where clip taps/gt live; cpu for runs whose clip set "
                          "cannot fit on the GPU (moved per access)")
@@ -302,11 +317,11 @@ def main() -> int:
               flush=True)
         clip_paths = shard
     clips = [Clip(p, args.subsample, device, args.max_frames, args.taps,
-                  store=args.clip_store)
+                  store=args.clip_store, tap_half=args.tap_half)
              for p in clip_paths]
     # val runs on rank 0 only; other ranks skip the load entirely.
     val_clips = [Clip(p, args.subsample, device, args.max_frames, args.taps,
-                      store=args.clip_store)
+                      store=args.clip_store, tap_half=args.tap_half)
                  for p in expand_paths(args.val_clips)] if rank0 else []
     assert len({(c.h, c.w, c.patch_hw) for c in clips + val_clips}) == 1
     print(f"[data] {len(clips)} train / {len(val_clips)} val clip(s), "
