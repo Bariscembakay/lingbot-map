@@ -215,6 +215,12 @@ def main() -> int:
     # Unfreeze the lingbot DPT trunk inside LingbotFrozenHead (both lingbot
     # head types); meaningful with --init-from a trained sibling.
     ap.add_argument("--unfreeze-head", action="store_true")
+    # The cheap alternative to --unfreeze-head: freeze the trunk and learn a
+    # rank-r residual beside each of its convolutions. Same --init-from, so the
+    # two are directly comparable; see lingbot_map/memory/lora.py.
+    ap.add_argument("--lora-head", action="store_true")
+    ap.add_argument("--lora-rank", type=int, default=16)
+    ap.add_argument("--lora-alpha", type=float, default=16.0)
     # One-way write: drop the interconnected image stack; state cross-attends
     # to fixed projected patch tokens at every layer. smallread-family only.
     ap.add_argument("--write-oneway", action="store_true")
@@ -345,6 +351,17 @@ def main() -> int:
         model.head.dpt.requires_grad_(True)
         n = sum(p.numel() for p in model.head.dpt.parameters())
         print(f"[unfreeze-head] lingbot DPT trunk trainable ({n/1e6:.1f} M)",
+              flush=True)
+    if args.lora_head:
+        assert not args.unfreeze_head, "--lora-head and --unfreeze-head are rivals"
+        assert hasattr(model.head, "dpt"), "--lora-head needs a lingbot head"
+        # After --init-from, never before: injection renames the trunk's keys
+        # (conv.weight -> conv.base.weight) and that load is strict.
+        from lingbot_map.memory.lora import inject_conv_lora
+        st = inject_conv_lora(model.head.dpt, args.lora_rank, args.lora_alpha)
+        print(f"[lora-head] r={args.lora_rank} alpha={args.lora_alpha} on "
+              f"{st['wrapped']} convs ({st['skipped_grouped']} grouped skipped): "
+              f"{st['lora_params']/1e6:.2f} M trainable vs 32.7 M full unfreeze",
               flush=True)
     if args.reinit_write:
         raw = torch.load(args.cut3r_ckpt, map_location="cpu", weights_only=False)
