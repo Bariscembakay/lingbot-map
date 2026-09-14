@@ -35,6 +35,9 @@ class LoRAConv2d(nn.Module):
         self.B = nn.Conv2d(rank, base.out_channels, 1, bias=False)
         nn.init.kaiming_uniform_(self.A.weight, a=math.sqrt(5))
         nn.init.zeros_(self.B.weight)
+        # Injection runs after the model's .to(device), so a freshly built
+        # nn.Conv2d would sit on the CPU while its input is on CUDA.
+        self.to(base.weight.device, dtype=base.weight.dtype)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.base(x) + self.scale * self.B(self.A(x))
@@ -53,6 +56,7 @@ class LoRAConvTranspose2d(nn.Module):
         self.B = nn.Conv2d(rank, base.out_channels, 1, bias=False)
         nn.init.kaiming_uniform_(self.A.weight, a=math.sqrt(5))
         nn.init.zeros_(self.B.weight)
+        self.to(base.weight.device, dtype=base.weight.dtype)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.base(x) + self.scale * self.B(self.A(x))
