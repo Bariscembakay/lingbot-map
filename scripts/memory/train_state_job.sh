@@ -68,7 +68,12 @@ SYNC_PID=$!
 trap 'kill "$SYNC_PID" 2>/dev/null || true' EXIT
 
 # shellcheck disable=SC2086
-"$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@"
+# Tee into $WORK so the periodic rsync carries the log to sof1 too. Slurm's own
+# --output goes to the RUNNING zone's /home, so an msp3 job's log is unreadable
+# from sof1 -- that is how run 865094 sat "warming up" for two hours when it had
+# actually died in argparse after 46s.
+"$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@" \
+    2>&1 | tee -a "$WORK/train.log"
 
 rsync -a "$WORK/" "$OUT/"
 echo "[train_state_job] shipped $WORK -> $OUT"
