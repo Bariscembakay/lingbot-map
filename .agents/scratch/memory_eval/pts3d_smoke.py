@@ -22,7 +22,8 @@ d = torch.einsum("bij,bhwj->bhwi", R, pix)
 o = t[:, None, None, :].expand(b, h, w, 3)
 z = torch.rand(b, h, w, device=dev) + 0.5
 def fake(frame, out):
-    m = types.SimpleNamespace(head=types.SimpleNamespace(pts_frame=frame))
+    m = types.SimpleNamespace(head=types.SimpleNamespace(pts_frame=frame),
+                              head_type="smallread_lingbot")
     m.probe = lambda *a: out
     return m
 c = torch.ones(b, h, w, device=dev)
