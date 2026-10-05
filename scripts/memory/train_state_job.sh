@@ -46,7 +46,6 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 if [ "${KEEPALIVE:-0}" = "1" ]; then
     "$PY_ENV" "$HOME/ASVGGT/scratch/lib/gpu_keep_alive.py" 0.03 &
     KEEPALIVE_PID=$!
-    trap 'kill "$KEEPALIVE_PID" 2>/dev/null; kill "$SYNC_PID" 2>/dev/null' EXIT
 fi
 
 # Work on node-local /scratch, ship to sof1's /group at the end -- /group is the
@@ -65,7 +64,17 @@ case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
 # last.pt are rewritten continuously, so a 10-min sync loses at most 10 min.
 ( while sleep 600; do rsync -a "$WORK/" "$OUT/" 2>/dev/null || true; done ) &
 SYNC_PID=$!
-trap 'kill "$SYNC_PID" 2>/dev/null || true' EXIT
+trap 'kill "$SYNC_PID" 2>/dev/null || true; kill "${KEEPALIVE_PID:-}" 2>/dev/null || true' EXIT
+
+# The keep-alive guards ONLY the idle clip preload. Left running, its burst
+# (calibrated on the idle GPU) competes with training for the whole job --
+# prime suspect in the 211 s/update A100 3D arms. Stop it at the first [data]
+# line of THIS segment (train.log is appended across segments).
+if [ -n "${KEEPALIVE_PID:-}" ]; then
+    _n0=$( (wc -l < "$WORK/train.log") 2>/dev/null || echo 0)
+    ( until tail -n +"$((_n0 + 1))" "$WORK/train.log" 2>/dev/null | grep -q '^\[data\]'; do
+          sleep 30; done; kill "$KEEPALIVE_PID" 2>/dev/null ) &
+fi
 
 # shellcheck disable=SC2086
 # Tee into $WORK so the periodic rsync carries the log to sof1 too. Slurm's own

@@ -535,10 +535,15 @@ def main() -> int:
             loss_sum += float(window.detach())
         if world > 1:
             import torch.distributed as dist
-            for p in model.parameters():
-                if p.grad is not None:
-                    dist.all_reduce(p.grad)
-                    p.grad /= world
+            from torch._utils import _flatten_dense_tensors, _unflatten_dense_tensors
+            # One collective, not one per tensor: hundreds of tiny serial
+            # all_reduces were pure latency.
+            grads = [p.grad for p in model.parameters() if p.grad is not None]
+            flat = _flatten_dense_tensors(grads)
+            dist.all_reduce(flat)
+            flat /= world
+            for g, s in zip(grads, _unflatten_dense_tensors(flat, grads)):
+                g.copy_(s)
         gnorm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0))
         opt.step()
         sched.step()
