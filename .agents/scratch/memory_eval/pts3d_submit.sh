@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # 3D-output ablation vs LORAHEAD_r16 (0.1503): identical config, only the head output differs.
-# Usage: pts3d_submit.sh <smoke_jobid>
+# Usage: pts3d_submit.sh <smoke_jobid> [tag ...]   (no tags = all arms)
 set -euo pipefail
-SMOKE=$1
+SMOKE=$1; shift; ONLY=" $* "
 G=/group/compact-3dmem/campaigns/spatial_memory
 VAL=$(printf '/data/lingbot-tapcache-v4-40/%s ' val_top/210f741378_c0 val_top/260db9cf5a_c0 val_top/2ab7bea148_c0 val_top/47eb87b5bb_c0 val_median/0a7cc12c0e_c0 val_median/1730c7d709_c0 val_median/1841a0b525_c0 val_median/4291be3b44_c0)
-for spec in "PTS3D_cam:--pts-frame cam" "PTS3D_world:--pts-frame world" "FRESHLASTCONV_depth:--fresh-last-conv"; do
+for spec in "PTS3D_camframe:--pts-frame cam" "PTS3D_worldframe:--pts-frame world" "FRESHLASTCONV_depth:--fresh-last-conv"; do
     tag=${spec%%:*}; flag=${spec#*:}
+    [ "$ONLY" = "  " ] || [[ "$ONLY" == *" $tag "* ]] || continue
     name=spatialmem_LORAHEAD_r16_${tag}_scenes96_96f_b4_write4_read2_lingbothead_initfrom_frozenhead_h200_to4900_12hseg
-    dep=afterok:$SMOKE
+    dep=$([ "$SMOKE" = none ] || echo afterok:$SMOKE)
     for seg in 1 2; do
         # shellcheck disable=SC2086
-        jid=$(sbatch --parsable --dependency=$dep --export=ALL --job-name=${name}${seg} \
+        jid=$(sbatch --parsable ${dep:+--dependency=$dep} --export=ALL --job-name=${name}${seg} \
             --partition=batch --constraint="zone-sof1|zone-msp3" --gpus=h200:1 \
             --cpus-per-task=12 --mem=128G --time=12:00:00 \
             --chdir=/home/baris_bakay/lingbot-map \
