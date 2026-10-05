@@ -51,11 +51,19 @@ for frame in (None, "cam", "world"):
         g0, c1 = head(taps, hw)
     shape = (2, *hw, 3) if frame else (2, *hw)
     check(f"[{frame}] output shape {tuple(g0.shape)}", tuple(g0.shape) == shape)
-    check(f"[{frame}] cold start value", torch.allclose(g0, torch.full_like(g0, 0.0 if frame else 1.0)))
+    check(f"[{frame}] cold start value (max|dev|={(g0 - (0.0 if frame else 1.0)).abs().max().item():.2e})", torch.allclose(g0, torch.full_like(g0, 0.0 if frame else 1.0), atol=0.1))
     check(f"[{frame}] confidence unchanged by surgery", torch.allclose(c0, c1, atol=1e-5))
     head.train()
     g, _ = head(taps, hw)
     (g - 2).square().mean().backward()
+    # Existence is not enough: a dead activation hands back all-zero grads.
+    gn = last.weight.grad[:-1].norm().item()
+    check(f"[{frame}] geometry-channel grad is nonzero (|g|={gn:.3e})", gn > 1e-8)
+    opt = torch.optim.SGD([last.weight, last.bias], lr=1e-2)
+    opt.step()
+    with torch.no_grad():
+        g1, _ = head(taps, hw)
+    check(f"[{frame}] geometry output moves after one step", (g1 - g0).abs().max().item() > 1e-6)
     trainable = [n for n, p in head.named_parameters() if p.requires_grad and p.grad is not None]
     frozen = [n for n, p in head.named_parameters() if not p.requires_grad and p.grad is not None]
     check(f"[{frame}] grads reach new conv + LoRA ({len(trainable)} tensors), 0 frozen ({len(frozen)})",

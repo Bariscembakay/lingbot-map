@@ -271,9 +271,9 @@ class LingbotFrozenHead(nn.Module):
 
         pts_frame None keeps the depth+conf output (the cold-start control);
         "cam"/"world" emit xyz+conf in that frame instead. Geometry channels
-        start at zero and only the confidence channel keeps its pretrained
-        weights, so every arm is cold in exactly the same place. Call AFTER
-        LoRA injection: the new conv must not be wrapped."""
+        start at (near) zero and only the confidence channel keeps its
+        pretrained weights, so every arm is cold in exactly the same place.
+        Call AFTER LoRA injection: the new conv must not be wrapped."""
         old = self.dpt.scratch.output_conv2[-1]
         old = getattr(old, "base", old)
         new = nn.Conv2d(old.in_channels, 4 if pts_frame else 2, 1).to(
@@ -281,6 +281,11 @@ class LingbotFrozenHead(nn.Module):
         with torch.no_grad():
             new.weight.zero_()
             new.bias.zero_()
+            if pts_frame:
+                # inv_log = sign(y)*expm1(|y|) has exactly zero gradient at
+                # y = 0, so an all-zero xyz init never moves (cost two 1000-step
+                # runs); start tiny instead.
+                new.weight[:-1].normal_(std=1e-5)
             new.weight[-1:].copy_(old.weight[-1:])
             new.bias[-1:].copy_(old.bias[-1:])
         self.dpt.scratch.output_conv2[-1] = new
