@@ -264,6 +264,29 @@ class LingbotFrozenHead(nn.Module):
                         weights_only=False)
         self.dpt.load_state_dict(sd["depth_head"])
         self.dpt.requires_grad_(False)
+        self.pts_frame = None
+
+    def reset_output(self, pts_frame: str | None):
+        """Swap the trunk's last 1x1 conv for a fresh, fully trainable one.
+
+        pts_frame None keeps the depth+conf output (the cold-start control);
+        "cam"/"world" emit xyz+conf in that frame instead. Geometry channels
+        start at zero and only the confidence channel keeps its pretrained
+        weights, so every arm is cold in exactly the same place. Call AFTER
+        LoRA injection: the new conv must not be wrapped."""
+        old = self.dpt.scratch.output_conv2[-1]
+        old = getattr(old, "base", old)
+        new = nn.Conv2d(old.in_channels, 4 if pts_frame else 2, 1).to(
+            old.weight.device, dtype=old.weight.dtype)
+        with torch.no_grad():
+            new.weight.zero_()
+            new.bias.zero_()
+            new.weight[-1:].copy_(old.weight[-1:])
+            new.bias[-1:].copy_(old.bias[-1:])
+        self.dpt.scratch.output_conv2[-1] = new
+        if pts_frame:
+            self.dpt.activation = "inv_log"   # lingbot's own point-head activation
+        self.pts_frame = pts_frame
 
     def forward(self, taps: list[torch.Tensor], hw: tuple[int, int]):
         h, w = hw
@@ -283,7 +306,8 @@ class LingbotFrozenHead(nn.Module):
             else:
                 z, conf = self.dpt(toks, imgs, patch_start_idx=0)
         b = taps[0].shape[0]
-        return z.reshape(b, h, w), conf.reshape(b, h, w)
+        z = z.reshape(b, h, w, 3) if self.pts_frame else z.reshape(b, h, w)
+        return z, conf.reshape(b, h, w)
 
 
 class StateMemory(nn.Module):
@@ -455,6 +479,8 @@ class StateMemory(nn.Module):
                 # norm); strip the mod token from each.
                 taps_r = [t[:, 1:] for t in (xs[0], xs[1], xs[-1], x)]
                 z, conf = self.head(taps_r, hw)
+                if self.head.pts_frame:
+                    return {"pts": z, "conf": conf}
                 return {"ray_depth": z, "conf": conf}   # pairs with unit=False rays
             x = x[:, 1:]                        # strip the mod/pose token
             sd, conf = self.head(x, (h // self.patch_size, w // self.patch_size), hw)

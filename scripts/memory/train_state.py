@@ -142,9 +142,15 @@ def run_probe(model, st, spos_q, rm, hw, rays=None):
             "raydepth", "lingbot", "smallread", "smallread_lingbot"):
         return {k: v.float() for k, v in out.items()}
     o, d, c2w = rays
-    pts_w = o + out["ray_depth"].float().unsqueeze(-1) * d
     R, t = c2w[:, :3, :3], c2w[:, :3, 3]
-    pts_s = torch.einsum("bji,bhwj->bhwi", R, pts_w - t[:, None, None, :])
+    frame = getattr(model.head, "pts_frame", None)
+    if frame == "cam":
+        pts_s = out["pts"].float()
+        pts_w = torch.einsum("bij,bhwj->bhwi", R, pts_s) + t[:, None, None, :]
+    else:
+        pts_w = (out["pts"].float() if frame == "world"
+                 else o + out["ray_depth"].float().unsqueeze(-1) * d)
+        pts_s = torch.einsum("bji,bhwj->bhwi", R, pts_w - t[:, None, None, :])
     c = out["conf"].float()
     return {"pts3d_in_self_view": pts_s, "conf_self": c,
             "pts3d_in_other_view": pts_w, "conf": c}
@@ -218,7 +224,17 @@ def main() -> int:
     # The cheap alternative to --unfreeze-head: freeze the trunk and learn a
     # rank-r residual beside each of its convolutions. Same --init-from, so the
     # two are directly comparable; see lingbot_map/memory/lora.py.
-    ap.add_argument("--lora-head", action="store_true")
+    # Default ON for lingbot heads since 2026-10-02 (LORAHEAD_r16 matched the
+    # full unfreeze, 0.1503 vs 0.1510, ~4x sooner). Old non-LoRA last.pt files
+    # need --no-lora-head to resume: injection renames the trunk's keys.
+    ap.add_argument("--lora-head", action=argparse.BooleanOptionalAction,
+                    default=None)
+    # Direct 3D output instead of depth on the known ray: the trunk's last
+    # conv becomes a fresh xyz+conf conv, read in the query camera frame or
+    # the stream's world frame. --fresh-last-conv alone is the control: same
+    # cold last layer, still depth.
+    ap.add_argument("--pts-frame", choices=["cam", "world"], default=None)
+    ap.add_argument("--fresh-last-conv", action="store_true")
     ap.add_argument("--lora-rank", type=int, default=16)
     ap.add_argument("--lora-alpha", type=float, default=16.0)
     # One-way write: drop the interconnected image stack; state cross-attends
@@ -273,6 +289,9 @@ def main() -> int:
     ap.add_argument("--resume", default="off", choices=["off", "auto"])
     ap.add_argument("--viz-every", type=int, default=500)
     args = ap.parse_args()
+    if args.lora_head is None:
+        args.lora_head = (args.head in ("lingbot", "smallread_lingbot")
+                          and not args.unfreeze_head)
 
     # ---- multi-GPU (torchrun) ----
     # No DDP wrapper: tbptt runs several backward() calls per update and the
@@ -363,6 +382,11 @@ def main() -> int:
               f"{st['wrapped']} convs ({st['skipped_grouped']} grouped skipped): "
               f"{st['lora_params']/1e6:.2f} M trainable vs 32.7 M full unfreeze",
               flush=True)
+    if args.pts_frame or args.fresh_last_conv:
+        assert args.head == "smallread_lingbot", "--pts-frame needs smallread_lingbot"
+        model.head.reset_output(args.pts_frame)
+        print(f"[head-output] fresh last conv, output "
+              f"{'xyz/' + args.pts_frame if args.pts_frame else 'depth'}", flush=True)
     if args.reinit_write:
         raw = torch.load(args.cut3r_ckpt, map_location="cpu", weights_only=False)
         sd = raw["model"] if "model" in raw else raw
@@ -609,7 +633,7 @@ def evaluate(model, vclips, frames, args, device):
     model.eval()
     res = {}
     for tag, n in (("m", frames), ("x", 96)):
-        es, ew = [], []
+        es, ew, eo = [], [], []
         for c in vclips:
             n_c = min(n, len(c))
             state, spos = model.init_state(1, device)
@@ -628,8 +652,17 @@ def evaluate(model, vclips, frames, args, device):
                             .norm(dim=-1)[valid].mean()))
             ew.append(float((out["pts3d_in_other_view"] - xw)
                             .norm(dim=-1)[valid].mean()))
+            if rays is not None:
+                # 0 by construction for depth heads; how far a free 3D head
+                # strays off the ray it was asked about.
+                v = out["pts3d_in_other_view"] - rays[0]
+                cos = (v * rays[1]).sum(-1) / (
+                    v.norm(dim=-1) * rays[1].norm(dim=-1)).clamp_min(1e-9)
+                eo.append(float(torch.rad2deg(torch.acos(cos.clamp(-1, 1)))[valid].mean()))
         res[f"val{tag}_self"] = float(np.mean(es))
         res[f"val{tag}_world"] = float(np.mean(ew))
+        if eo:
+            res[f"val{tag}_offray_deg"] = float(np.mean(eo))
     model.train()
     return res
 
