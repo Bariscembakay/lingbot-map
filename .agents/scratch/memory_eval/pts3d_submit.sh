@@ -12,7 +12,7 @@ for spec in "PTS3D_camframe_smallinit:--pts-frame cam" "PTS3D_worldframe_smallin
     dep=$([ "$SMOKE" = none ] || echo afterok:$SMOKE)
     for seg in 1 2; do
         # shellcheck disable=SC2086
-        jid=$(sbatch --parsable ${dep:+--dependency=$dep} --export=ALL --job-name=${name}${seg} \
+        jid=$(sbatch --parsable ${dep:+--dependency=$dep} --export=ALL,KEEPALIVE=1 --job-name=${name}${seg} \
             --partition=batch --constraint="zone-sof1|zone-msp3" --gpus=h200:1 \
             --cpus-per-task=12 --mem=128G --time=12:00:00 \
             --chdir=/home/baris_bakay/lingbot-map \
