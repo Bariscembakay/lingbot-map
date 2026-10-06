@@ -9,8 +9,10 @@ for spec in "PTS3D_camframe_smallinit:--pts-frame cam" "PTS3D_worldframe_smallin
     tag=${spec%%:*}; flag=${spec#*:}
     [ "$ONLY" = "  " ] || [[ "$ONLY" == *" $tag "* ]] || continue
     name=spatialmem_LORAHEAD_r16_${tag}_scenes96_96f_b4_write4_read2_lingbothead_initfrom_frozenhead_h200_to4900_12hseg
-    dep=$([ "$SMOKE" = none ] || echo afterok:$SMOKE)
-    for seg in 1 2; do
+    # SMOKE: a job id (afterok), "none", or a full spec like afterany:<seg> to
+    # extend a running arm; NSEG segments are chained after it.
+    case "$SMOKE" in none) dep="" ;; after*) dep=$SMOKE ;; *) dep=afterok:$SMOKE ;; esac
+    for seg in $(seq 1 "${NSEG:-2}"); do
         # shellcheck disable=SC2086
         jid=$(sbatch --parsable ${dep:+--dependency=$dep} --export=ALL,KEEPALIVE=1 --job-name=${name}${seg} \
             --partition=batch --constraint="zone-sof1|zone-msp3" --gpus=h200:1 \
