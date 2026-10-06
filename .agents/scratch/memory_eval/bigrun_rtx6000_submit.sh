@@ -2,12 +2,13 @@
 # BIGRUN on 8x RTX PRO 6000 (96 GB): global batch kept at 24 (3/rank), so lr and the
 # per-update objective match the 2-GPU run; warm-started from its best.pt (the
 # only checkpoint it left), now with the LoRA head. Two chained 24h segments (node free until its 2026-10-12 maintenance).
+# STAGE=1: clips come from this node's /scratch copy (prestage_job.sh), not sof1's CephFS.
 set -euo pipefail
 G=/group/compact-3dmem/campaigns/spatial_memory
 name=spatialmem_BIGRUN_944scenes_96f_b3x8gpu_write8oneway_read8_tap23_lingbothead_LORAr16_initfrom_b12x2step100_lr1.4e-4_rtx6000x8_24hseg
-dep=""
+dep="${FIRST_DEP:-}"   # e.g. afterany:<running segment>
 for seg in 1 2; do
-    jid=$(sbatch --parsable ${dep:+--dependency=$dep} --export=ALL,KEEPALIVE=1 --job-name=${name}${seg} \
+    jid=$(sbatch --parsable ${dep:+--dependency=$dep} --export=ALL,KEEPALIVE=1,STAGE=1 --job-name=${name}${seg} \
         --partition=batch --constraint=zone-gcp-eu1 --nodes=1 --gpus=rtx6000:8 \
         --cpus-per-task=64 --mem=900G --time=24:00:00 \
         --chdir=/home/baris_bakay/lingbot-map \

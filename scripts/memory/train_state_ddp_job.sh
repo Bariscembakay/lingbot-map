@@ -49,6 +49,21 @@ if [ "${KEEPALIVE:-0}" = "1" ]; then
     KEEPALIVE_PID=$!
 fi
 
+# STAGE=1: read clips from a per-node /scratch copy instead of /data (see
+# stage_data.sh). After the keep-alive starts: a first copy is hours of idle GPU.
+if [ "${STAGE:-0}" = "1" ]; then
+    source scripts/memory/stage_data.sh
+    set -f   # rewrite the globs, do not expand them
+    _spec=""
+    for _tok in $CLIPS_SPEC; do _spec="$_spec $(stage_path "$_tok")"; done
+    CLIPS_SPEC=${_spec# }
+    _args=()
+    for _a in "$@"; do _args+=("$(stage_path "$_a")"); done
+    set -- "${_args[@]}"
+    set +f
+    echo "[stage] clips: $CLIPS_SPEC"
+fi
+
 # Work on node-local /scratch, ship to sof1's /group at the end -- /group is the
 # system of record and /scratch is wiped.
 WORK="/scratch/$USER/train_state/$(basename "$OUT")"
