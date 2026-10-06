@@ -77,6 +77,19 @@ case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
 # A walltime kill would strand everything on this node's /scratch (bash does not
 # run EXIT traps when SIGKILLed after KillWait). Mirror instead: history.json and
 # last.pt are rewritten continuously, so a 10-min sync loses at most 10 min.
+# A --init-from on sof1's /group (e.g. the previous curriculum stage) does not
+# exist on msp3, whose /group is a different filesystem: fetch it into WORK.
+_args=(); _next=0
+for _a in "$@"; do
+    if [ "$_next" = 1 ] && [ ! -e "$_a" ]; then
+        rsync -a "sof1:$_a" "$WORK/init_from.pt"
+        _a="$WORK/init_from.pt"
+    fi
+    _next=0; [ "$_a" = "--init-from" ] && _next=1
+    _args+=("$_a")
+done
+set -- "${_args[@]}"
+
 ( while sleep 600; do rsync -a "$WORK/" "$OUT/" 2>/dev/null || true; done ) &
 SYNC_PID=$!
 trap 'kill "$SYNC_PID" 2>/dev/null || true; kill "${KEEPALIVE_PID:-}" 2>/dev/null || true' EXIT

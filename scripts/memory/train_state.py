@@ -37,6 +37,7 @@ from lingbot_map.memory.cut3r_state import StateMemory, load_cut3r_weights  # no
 from lingbot_map.memory.probe_data import (  # noqa: E402
     build_raymap, gt_pointmaps, relative_c2w, true_rays)
 from lingbot_map.memory.recall_loss import probe_loss  # noqa: E402
+from lingbot_map.memory.sampling import cut3r_views  # noqa: E402
 
 TAP23 = 23  # tap layer id; its index is resolved per cache from meta.tap_layers
 
@@ -185,6 +186,21 @@ def main() -> int:
     # own first frame. Curriculum starts short (CUT3R trains 4 -> 64 views the
     # same way) and later stages re-launch longer with --init-from.
     ap.add_argument("--frames", type=int, default=16)
+    # --frames-min < --frames: each update draws its length uniformly from
+    # [frames-min, frames], one length per batch (CUT3R's 4..64 final stage).
+    ap.add_argument("--frames-min", type=int, default=None)
+    # window: a random contiguous window. cut3r: CUT3R's ScanNet++ sampler
+    # (lingbot_map/memory/sampling.py) -- gapped, sometimes shuffled, and
+    # with revisits under --allow-repeat.
+    ap.add_argument("--sampler", choices=["window", "cut3r"], default="window")
+    ap.add_argument("--allow-repeat", action="store_true")
+    ap.add_argument("--max-interval", type=int, default=3)
+    # CUT3R's long-context trick: only the last K frames carry gradient; the
+    # rest run under no_grad just to build the state. 0 = every frame.
+    ap.add_argument("--grad-last", type=int, default=0)
+    # Validation stream length (default --frames). Pin it (96) when --frames
+    # changes across curriculum stages, or valm stops being comparable.
+    ap.add_argument("--val-frames", type=int, default=None)
     # Scenes per update. Memorisation gradients are scene-specific and cancel
     # across the batch; the read-the-state gradient is common and adds.
     ap.add_argument("--batch", type=int, default=8)
@@ -360,8 +376,14 @@ def main() -> int:
         grad_ckpt=not args.no_grad_ckpt, head_type=args.head,
         read_depth=args.read_depth).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
+    lora_done = False
     if args.init_from:
         sd = torch.load(args.init_from, map_location="cpu", weights_only=False)
+        if args.lora_head and any(".base.weight" in k for k in sd["model"]):
+            # A LoRA-trained stage: inject first so the strict load matches.
+            from lingbot_map.memory.lora import inject_conv_lora
+            inject_conv_lora(model.head.dpt, args.lora_rank, args.lora_alpha)
+            lora_done = True
         model.load_state_dict(sd["model"])
         print(f"[init] warm-started from {args.init_from} (step {sd.get('step')})",
               flush=True)
@@ -371,7 +393,7 @@ def main() -> int:
         n = sum(p.numel() for p in model.head.dpt.parameters())
         print(f"[unfreeze-head] lingbot DPT trunk trainable ({n/1e6:.1f} M)",
               flush=True)
-    if args.lora_head:
+    if args.lora_head and not lora_done:
         assert not args.unfreeze_head, "--lora-head and --unfreeze-head are rivals"
         assert hasattr(model.head, "dpt"), "--lora-head needs a lingbot head"
         # After --init-from, never before: injection renames the trunk's keys
@@ -439,7 +461,6 @@ def main() -> int:
         print(f"[resume] {ckpt_path} -> step {start_step} "
               f"(best_val {best_val:.4f})", flush=True)
     B = min(args.batch, len(clips))
-    N = args.frames
     hw = (clips[0].h, clips[0].w)
     t0 = time.time()
     def save_ckpt(step):
@@ -458,7 +479,17 @@ def main() -> int:
     step = max(0, start_step - 1)
     for step in range(start_step, args.updates):
         sel = [clips[i] for i in rng.choice(len(clips), size=B, replace=False)]
-        starts = [int(rng.integers(0, max(1, len(c) - N + 1))) for c in sel]
+        N = (int(rng.integers(args.frames_min, args.frames + 1))
+             if args.frames_min else args.frames)
+        # idxs[b][t]: the clip frame streamed at step t. The world frame is
+        # idxs[b][0]'s camera, whatever order the sampler produced.
+        if args.sampler == "cut3r":
+            idxs = [cut3r_views(rng, len(c), N, args.allow_repeat, args.max_interval)
+                    for c in sel]
+        else:
+            idxs = [list(range(s0, s0 + N)) for s0 in
+                    (int(rng.integers(0, max(1, len(c) - N + 1))) for c in sel)]
+        g0 = max(0, N - args.grad_last) if args.grad_last else 0
         state, spos = model.init_state(B, device)
         parts, nprobe = {"l21_self": 0.0, "l21_world": 0.0}, 0
         # `window` holds the not-yet-backwarded loss; with tbptt it is settled
@@ -466,7 +497,7 @@ def main() -> int:
         # count (known upfront) so both modes optimise the same objective.
         window, loss_sum = 0.0, 0.0
         frames_since_cut = 0
-        n_stops = sum(1 for t in range(N)
+        n_stops = sum(1 for t in range(g0, N)
                       if t % args.probe_every == 0
                       and (t > 0 or args.probe_current == "on"))
         state_norms = []
@@ -475,30 +506,30 @@ def main() -> int:
         amp = torch.autocast("cuda", dtype=torch.bfloat16,
                              enabled=(args.amp == "bf16" and device.type == "cuda"))
         for t in range(N):
-            tap = torch.stack([c.taps[s0 + t] for c, s0 in zip(sel, starts)]
+            tap = torch.stack([c.taps[ix[t]] for c, ix in zip(sel, idxs)]
                               ).to(device).float()
-            with amp:
+            with amp, torch.set_grad_enabled(t >= g0):
                 if not args.no_write:
                     state = model.write(state, spos, tap, clips[0].patch_hw)
             state_norms.append(float(state.detach().norm(dim=(1, 2)).mean()))
 
-            if t % args.probe_every == 0:
+            if t >= g0 and t % args.probe_every == 0:
                 # Same local t for every scene, so nq is equal across the batch
                 # and the B*nq queries run as one probe pass.
                 qs0 = sample_queries(rng, t, args.n_past, args.probe_current == "on")
                 if qs0:
                     nq = len(qs0)
                     rms, xss, xws, vs, rays = [], [], [], [], []
-                    for c, s0 in zip(sel, starts):
+                    for c, ix in zip(sel, idxs):
                         qs = sample_queries(rng, t, args.n_past,
                                             args.probe_current == "on")
-                        aq = [s0 + q for q in qs]
+                        aq = [ix[q] for q in qs]
                         rm, xs, xw, valid = c.probe_inputs(
-                            aq, args.raymap_convention, anchor=s0)
+                            aq, args.raymap_convention, anchor=ix[0])
                         rms.append(rm); xss.append(xs); xws.append(xw); vs.append(valid)
                         if args.head in ("raydepth", "lingbot", "smallread", "smallread_lingbot"):
                             rays.append(c.probe_rays(
-                                aq, anchor=s0, unit=args.head not in ("lingbot", "smallread_lingbot")))
+                                aq, anchor=ix[0], unit=args.head not in ("lingbot", "smallread_lingbot")))
                     rm = torch.cat(rms); xs = torch.cat(xss)
                     xw = torch.cat(xws); valid = torch.cat(vs)
                     ray3 = tuple(torch.cat(z) for z in zip(*rays)) if rays else None
@@ -557,7 +588,8 @@ def main() -> int:
                "sec": time.time() - t0}
         stop = False
         if rank0 and val_clips and step % args.val_every == 0:
-            rec.update(evaluate(model, val_clips, N, args, device))
+            rec.update(evaluate(model, val_clips, args.val_frames or args.frames,
+                                args, device))
             print("[val] " + " ".join(f"{k}={v:.4f}" for k, v in rec.items()
                                       if k.startswith("val")), flush=True)
             if rec["valm_self"] < best_val - args.min_delta:
@@ -638,6 +670,9 @@ def evaluate(model, vclips, frames, args, device):
     model.eval()
     res = {}
     for tag, n in (("m", frames), ("x", 96)):
+        if tag == "x" and n == frames:   # identical stream; don't run it twice
+            res.update({k.replace("valm", "valx"): v for k, v in res.items()})
+            continue
         es, ew, eo = [], [], []
         for c in vclips:
             n_c = min(n, len(c))
