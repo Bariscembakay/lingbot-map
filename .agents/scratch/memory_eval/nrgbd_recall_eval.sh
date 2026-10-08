@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# NRGBD recall benchmark (nrgbd_recall_s2) for one checkpoint, one scene per
-# array task: ingest+query+dump on the GPU, then score n100/n300/n500 posed.
-# Clouds (~1.5 GB/cell) only for PLY_SCENE at n500.
-# Usage: sbatch --array=0-6 nrgbd_recall_eval.sh <method> <ckpt> [ply_scene]
+# NRGBD recall benchmark (nrgbd_recall_s2), GPU phase only: ingest + query +
+# dump for one scene per array task. Scoring is CPU-only and runs separately
+# (nrgbd_recall_score.sh): scored inside this job, the GPU sat idle for up to an
+# hour and the idle-GPU reaper killed it (1086779_0/2/3).
+# Usage: sbatch --array=0-6 nrgbd_recall_eval.sh <method> <ckpt>
 set -uo pipefail
-METHOD=$1; CKPT=$2; PLY_SCENE=${3:-whiteroom}
+METHOD=$1; CKPT=$2
 SCENES=(whiteroom kitchen grey_white_room green_room complete_kitchen breakfast_room staircase)
 S=${SCENES[${SLURM_ARRAY_TASK_ID:?}]}
 CAMP=/group/compact-3dmem/campaigns/spatial_memory
@@ -18,8 +19,3 @@ dataset pull NRGBD >/dev/null 2>&1 || true
 nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | sed 's/^/[gpu] /'
 "$P" scripts/memory/recall_bench/run_ours.py --scene "$S" --ckpt "$CKPT" --method "$METHOD" \
     --cache "$CACHE" --out "$CAMP/recallbench" --dump-dir "$CAMP/recallbench_dumps" || exit 1
-for T in 100 300 500; do
-    ply=--no-ply; [ "$S" = "$PLY_SCENE" ] && [ "$T" = 500 ] && ply=""
-    "$P" scripts/memory/recall_bench/run_recall_score.py --method "$METHOD" --posed $ply \
-        --scene "$S" --tier "$T" --dump-dir "$CAMP/recallbench_dumps" --out "$CAMP/recallbench" || exit 1
-done
