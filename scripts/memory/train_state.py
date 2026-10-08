@@ -251,6 +251,9 @@ def main() -> int:
     # cold last layer, still depth.
     ap.add_argument("--pts-frame", choices=["cam", "world"], default=None)
     ap.add_argument("--fresh-last-conv", action="store_true")
+    # The whole DPT head random-init and trainable (no lingbot weights, no
+    # LoRA): depth vs xyz without either output inheriting depth pretraining.
+    ap.add_argument("--fresh-head", action="store_true")
     ap.add_argument("--lora-rank", type=int, default=16)
     ap.add_argument("--lora-alpha", type=float, default=16.0)
     # One-way write: drop the interconnected image stack; state cross-attends
@@ -307,7 +310,10 @@ def main() -> int:
     args = ap.parse_args()
     if args.lora_head is None:
         args.lora_head = (args.head in ("lingbot", "smallread_lingbot")
-                          and not args.unfreeze_head)
+                          and not args.unfreeze_head and not args.fresh_head)
+    assert not (args.fresh_head and (args.lora_head or args.unfreeze_head
+                                     or args.fresh_last_conv)), \
+        "--fresh-head trains the whole head; LoRA/unfreeze/fresh-last-conv do not apply"
 
     # ---- multi-GPU (torchrun) ----
     # No DDP wrapper: tbptt runs several backward() calls per update and the
@@ -404,7 +410,13 @@ def main() -> int:
               f"{st['wrapped']} convs ({st['skipped_grouped']} grouped skipped): "
               f"{st['lora_params']/1e6:.2f} M trainable vs 32.7 M full unfreeze",
               flush=True)
-    if args.pts_frame or args.fresh_last_conv:
+    if args.fresh_head:
+        assert args.head == "smallread_lingbot", "--fresh-head needs smallread_lingbot"
+        model.head.fresh_head(args.pts_frame)
+        n = sum(p.numel() for p in model.head.dpt.parameters())
+        print(f"[fresh-head] random-init DPT, {n/1e6:.1f} M trainable, output "
+              f"{'xyz/' + args.pts_frame if args.pts_frame else 'depth'}", flush=True)
+    elif args.pts_frame or args.fresh_last_conv:
         assert args.head == "smallread_lingbot", "--pts-frame needs smallread_lingbot"
         model.head.reset_output(args.pts_frame)
         print(f"[head-output] fresh last conv, output "

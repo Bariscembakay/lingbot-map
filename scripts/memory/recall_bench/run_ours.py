@@ -141,7 +141,9 @@ def main() -> int:
                 from lingbot_map.memory.lora import inject_conv_lora
                 inject_conv_lora(model.head.dpt, int(t.get("lora_rank", 16)),
                                  float(t.get("lora_alpha", 16.0)))
-            if t.get("pts_frame") or t.get("fresh_last_conv"):
+            if t.get("fresh_head"):
+                model.head.fresh_head(t.get("pts_frame"))
+            elif t.get("pts_frame") or t.get("fresh_last_conv"):
                 model.head.reset_output(t.get("pts_frame"))
             missing, unexpected = model.load_state_dict(ck["model"], strict=False)
             if missing or unexpected:

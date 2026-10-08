@@ -266,6 +266,29 @@ class LingbotFrozenHead(nn.Module):
         self.dpt.requires_grad_(False)
         self.pts_frame = None
 
+    def fresh_head(self, pts_frame: str | None):
+        """Replace the pretrained trunk by the same DPT architecture, randomly
+        initialised and fully trainable (VGGT trains its depth and point heads
+        this way). Depth and xyz then start equally cold, so neither output
+        inherits lingbot's depth pretraining."""
+        from lingbot_map.heads.dpt_head import DPTHead
+        old = self.dpt
+        self.dpt = DPTHead(dim_in=2 * HALF, patch_size=old.patch_size,
+                           output_dim=4 if pts_frame else 2,
+                           activation="inv_log" if pts_frame else "exp",
+                           conf_activation="expp1").to(
+                               next(old.parameters()).device)
+        self.dpt.requires_grad_(True)
+        # A random last layer feeding exp/inv_log blew up in smoke 1086949
+        # (depth NaN at step 2, world |g| 1.5e7). Start it near zero for both
+        # outputs: depth ~1 m, xyz ~origin. Small, not zero: inv_log has zero
+        # gradient at exactly 0.
+        last = self.dpt.scratch.output_conv2[-1]
+        with torch.no_grad():
+            last.weight.normal_(std=1e-3)
+            last.bias.zero_()
+        self.pts_frame = pts_frame
+
     def reset_output(self, pts_frame: str | None):
         """Swap the trunk's last 1x1 conv for a fresh, fully trainable one.
 
