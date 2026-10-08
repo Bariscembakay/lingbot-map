@@ -27,11 +27,16 @@ PY_ENV="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/cut3r/bin/python"
 # /data is an autofs registry mount that resolves only after `dataset pull`
 # on the running node (idempotent; replicates cross-zone when needed).
 # CLIPS_SPEC may name clips from several /data datasets; pull each once.
-for _tok in $CLIPS_SPEC; do
-    case "$_tok" in
-        /data/*) dataset pull "$(echo "$_tok" | cut -d/ -f3)" >/dev/null ;;
-    esac
+# Val clips can name a dataset the train globs do not (v5-tap23 val on a
+# 96-scene run), so the extra args are scanned too; one pull per dataset, and
+# no glob expansion (a mounted /data glob would expand to every clip).
+set -f
+for _ds in $(for _tok in $CLIPS_SPEC "$@"; do
+                 case "$_tok" in /data/*) echo "$_tok" | cut -d/ -f3 ;; esac
+             done | sort -u); do
+    dataset pull "$_ds" >/dev/null
 done
+set +f
 
 # NO gpu_keep_alive here, deliberately. It exists for inference jobs that are
 # bursty on the GPU and read as idle to the deallocation reaper. This loop is the

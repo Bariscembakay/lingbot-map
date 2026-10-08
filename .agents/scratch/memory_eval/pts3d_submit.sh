@@ -4,7 +4,7 @@
 set -euo pipefail
 SMOKE=$1; shift; ONLY=" $* "
 G=/group/compact-3dmem/campaigns/spatial_memory
-VAL=$(printf '/data/lingbot-tapcache-v4-40/%s ' val_top/210f741378_c0 val_top/260db9cf5a_c0 val_top/2ab7bea148_c0 val_top/47eb87b5bb_c0 val_median/0a7cc12c0e_c0 val_median/1730c7d709_c0 val_median/1841a0b525_c0 val_median/4291be3b44_c0)
+VAL=$(tr '\n' ' ' < "$(dirname "$0")/val24.txt")   # default val set since 2026-10-08 (BIGRUN's 24 scenes)
 for spec in "PTS3D_camframe_smallinit:--pts-frame cam" "PTS3D_worldframe_smallinit:--pts-frame world" "FRESHLASTCONV_depth:--fresh-last-conv"; do
     tag=${spec%%:*}; flag=${spec#*:}
     [ "$ONLY" = "  " ] || [[ "$ONLY" == *" $tag "* ]] || continue

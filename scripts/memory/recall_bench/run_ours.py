@@ -135,6 +135,14 @@ def main() -> int:
                                 read_depth=int(t.get("read_depth", 2)),
                                 write_oneway=bool(t.get("write_oneway", False)),
                                 head_type=head, grad_ckpt=False)
+            # Head adapters the checkpoint was trained with must exist before
+            # the (key-checked) load: LoRA renames conv.weight -> conv.base.weight.
+            if any(".base.weight" in k for k in ck["model"]):
+                from lingbot_map.memory.lora import inject_conv_lora
+                inject_conv_lora(model.head.dpt, int(t.get("lora_rank", 16)),
+                                 float(t.get("lora_alpha", 16.0)))
+            if t.get("pts_frame") or t.get("fresh_last_conv"):
+                model.head.reset_output(t.get("pts_frame"))
             missing, unexpected = model.load_state_dict(ck["model"], strict=False)
             if missing or unexpected:
                 print(f"[fatal] state_dict mismatch: {len(missing)} missing, "

@@ -61,6 +61,8 @@ def main() -> int:
                     help="which query protocols to score. Restricting to "
                          "selfpose roughly halves the KD-tree work; gtpose can "
                          "be scored later from the same dump, which persists.")
+    # Clouds are ~1.5 GB per cell; write them only for the cells to be viewed.
+    ap.add_argument("--no-ply", action="store_true")
     ap.add_argument("--posed", action="store_true",
                     help="ours: predictions are already in the GT frame at metric "
                          "scale, so no Sim(3) is fitted and the single result is "
@@ -174,6 +176,9 @@ def main() -> int:
          "query_all_past": True, "stride": man["stride"],
          "scored_from_dump": True, "modes_scored": list(res.keys()),
          **res}, indent=1))
+    if args.no_ply:
+        print(f"[metrics] -> {od}", flush=True)
+        return 0
     P, C, d_acc = clouds.get("selfpose", clouds[next(iter(clouds))])
     write_ply(od / "recalled_cloud_rgb.ply", P, C.astype(np.uint8))
     lo, hi = np.percentile(d_acc, 5), np.percentile(d_acc, 95)

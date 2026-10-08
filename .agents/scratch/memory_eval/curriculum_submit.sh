@@ -9,7 +9,7 @@
 set -euo pipefail
 G=/group/compact-3dmem/campaigns/spatial_memory
 B0=scenes96_cut3rcurr_write4_read2_lingbothead_LORAr16
-VAL=$(printf '/data/lingbot-tapcache-v4-40/%s ' val_top/210f741378_c0 val_top/260db9cf5a_c0 val_top/2ab7bea148_c0 val_top/47eb87b5bb_c0 val_median/0a7cc12c0e_c0 val_median/1730c7d709_c0 val_median/1841a0b525_c0 val_median/4291be3b44_c0)
+VAL=$(tr '\n' ' ' < "$(dirname "$0")/val24.txt")   # default val set since 2026-10-08 (BIGRUN's 24 scenes)
 common="--head smallread_lingbot --dec-depth 4 --read-depth 2 --lora-head --lora-rank 16 --lora-alpha 16
   --sampler cut3r --max-frames 160 --val-frames 96 --tbptt 0 --n-past 4 --probe-every 1
   --lr 1e-4 --wd 0.05 --warmup 100 --val-clips $VAL --val-every 100 --patience 15 --min-delta 0.002
