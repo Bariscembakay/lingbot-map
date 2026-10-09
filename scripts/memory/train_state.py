@@ -463,6 +463,16 @@ def main() -> int:
         if "opt" in sd:
             opt.load_state_dict(sd["opt"])
             sched.load_state_dict(sd["sched"])
+            # The restored sched carries the old base lr, so a changed --lr
+            # (e.g. a resume at a larger batch) would be silently ignored.
+            # Rescale rather than overwrite to keep any plateau decay.
+            old_lr = float(sd.get("args", {}).get("lr", args.lr))
+            if old_lr != args.lr:
+                f = args.lr / old_lr
+                sched.base_lrs = [b * f for b in sched.base_lrs]
+                for g in opt.param_groups:
+                    g["lr"] *= f
+                print(f"[resume] lr {old_lr:.2e} -> {args.lr:.2e}", flush=True)
         start_step = int(sd.get("step", 0)) + 1
         best_val = float(sd.get("best_val", float("inf")))
         evals_since_best = int(sd.get("evals_since_best", 0))

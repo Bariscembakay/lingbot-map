@@ -76,6 +76,15 @@ mkdir -p "$WORK"
 # Pre-seed from OUT so `--resume auto` survives requeues onto fresh nodes
 # (rsync also accepts a remote "sof1:" OUT). No-op for a brand-new run.
 rsync -a "$OUT/" "$WORK/" 2>/dev/null || true
+# SEED_FROM=<run dir>: continue another run (optimizer, step, best) under a new
+# OUT, e.g. the same training moved to a different GPU type and batch. Used only
+# while OUT has no last.pt, so later segments resume from OUT as usual.
+if [ -n "${SEED_FROM:-}" ] && [ ! -f "$WORK/last.pt" ]; then
+    for _f in last.pt best.pt history.json; do
+        rsync -a "$SEED_FROM/$_f" "$WORK/"
+    done
+    echo "[seed] $SEED_FROM -> $WORK"
+fi
 # OUT may be a remote rsync destination ("sof1:/group/...") when running on
 # msp3: results must ship to sof1's /group, never land on msp3's 300G one.
 case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
