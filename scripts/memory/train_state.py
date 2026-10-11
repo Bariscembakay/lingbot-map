@@ -25,6 +25,7 @@ import re
 import os
 import sys
 import time
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,7 @@ from lingbot_map.memory.probe_data import (  # noqa: E402
     build_raymap, gt_pointmaps, relative_c2w, true_rays)
 from lingbot_map.memory.recall_loss import probe_loss  # noqa: E402
 from lingbot_map.memory.sampling import cut3r_views  # noqa: E402
+from lingbot_map.memory import semantic as sem_mod  # noqa: E402
 
 TAP23 = 23  # tap layer id; its index is resolved per cache from meta.tap_layers
 
@@ -51,6 +53,8 @@ class Clip:
         # ~0.5 GB taps/clip a thousand-clip run cannot live on the GPU (or,
         # x4 DDP ranks, even in materialised host copies without sharding).
         c = ClipCache(path)
+        self.name = Path(path).name
+        self.sem = None   # ChorusTargets when --sem-feat is on
         n = len(c)
         idx = list(range(0, n, subsample))
         if max_frames:
@@ -157,6 +161,35 @@ def run_probe(model, st, spos_q, rm, hw, rays=None):
             "pts3d_in_other_view": pts_w, "conf": c}
 
 
+def semantic_queries(rng, sel, idxs, t, n_frames, n_pix):
+    """Per clip: the current frame + (n_frames-1) uniform past frames, n_pix
+    GT-lifted surface points each. Returns stream-frame xyz [B, R, 3], raw
+    Chorus targets [B, R, D] and validity [B, R] (False where no voxel lies
+    within ChorusTargets.max_dist, or a frame had too few valid pixels)."""
+    R = n_frames * n_pix
+    xyz = torch.zeros(len(sel), R, 3)
+    tgt = torch.zeros(len(sel), R, sem_mod.UPCAST_DIM)
+    ok = torch.zeros(len(sel), R, dtype=torch.bool)
+    for b, (c, ix) in enumerate(zip(sel, idxs)):
+        frames = [t] + [int(q) for q in rng.integers(0, t + 1, n_frames - 1)]
+        if c.sem is None:
+            continue
+        first = c.gt_c2w[ix[0]].cpu()
+        for j, q in enumerate(frames):
+            fi = ix[q]
+            dep = c.gt_depth[fi].cpu()
+            v, u = sem_mod.sample_pixels(rng, dep, n_pix)
+            if len(v) == 0:
+                continue
+            p = sem_mod.lift_pixels(dep, c.K[fi].cpu(), c.gt_c2w[fi].cpu(), v, u)
+            f, good = c.sem.lookup(p)
+            sl = slice(j * n_pix, j * n_pix + len(v))
+            xyz[b, sl] = torch.from_numpy(sem_mod.to_stream(p, first)).float()
+            tgt[b, sl] = f
+            ok[b, sl] = good
+    return xyz, tgt, ok
+
+
 def budget_stops(N, S):
     """S stop indices spread evenly over [0, N), the last always N-1."""
     return sorted({(i + 1) * N // S - 1 for i in range(S)})
@@ -231,6 +264,17 @@ def main() -> int:
     # torch.compile the write/read decoder blocks (fixed token counts); module
     # keys are untouched (forward is wrapped), so checkpoints stay compatible.
     ap.add_argument("--compile", action="store_true")
+    # Semantic recall (lingbot_map/memory/semantic.py): at every probe stop, per
+    # clip, --sem-frames frames (the current one + uniform past ones) each give
+    # --sem-pixels GT-lifted surface points; the state is queried there for the
+    # Chorus voxel feature (upcast, standardised), loss = (1-cos) + SmoothL1.
+    ap.add_argument("--sem-feat", default="off", choices=["off", "upcast"])
+    ap.add_argument("--sem-weight", type=float, default=1.0)
+    ap.add_argument("--sem-frames", type=int, default=4)
+    ap.add_argument("--sem-pixels", type=int, default=4)
+    ap.add_argument("--sem-val-pixels", type=int, default=64)
+    ap.add_argument("--chorus-root", type=Path, default=sem_mod.CHORUS_ROOT)
+    ap.add_argument("--chorus-align", type=Path, default=sem_mod.CHORUS_ROOT / "clip_align.json")
     ap.add_argument("--validator", action="store_true")
     # window: a random contiguous window. cut3r: CUT3R's ScanNet++ sampler
     # (lingbot_map/memory/sampling.py) -- gapped, sometimes shuffled, and
@@ -418,6 +462,18 @@ def main() -> int:
                  for p in expand_paths(args.val_clips)] if rank0 and (
                      args.validator or not args.async_val) else []
     assert len({(c.h, c.w, c.patch_hw) for c in clips + val_clips}) == 1
+    if args.sem_feat != "off":
+        align = sem_mod.load_align(args.chorus_align)
+        missing = []
+        for c in clips + val_clips:
+            # A scene without Chorus features (no 3DGS) keeps its geometry loss;
+            # its semantic queries are all masked out.
+            if (args.chorus_root / align[c.name]["scene"] / "upcast.npy").exists():
+                c.sem = sem_mod.ChorusTargets(c.name, align, args.chorus_root)
+            else:
+                missing.append(c.name)
+        print(f"[sem] Chorus {args.sem_feat} targets for {len(clips)} train / {len(val_clips)} val clips"
+              f"; none for {missing}", flush=True)
     ref = (clips or val_clips)[0]
     print(f"[data] {len(clips)} train / {len(val_clips)} val clip(s), "
           f"{len(ref)} frames each, {ref.h}x{ref.w}, "
@@ -503,6 +559,18 @@ def main() -> int:
     n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"[model] {n_train/1e6:.1f} M trainable", flush=True)
 
+    if args.sem_feat != "off":
+        model.sem = sem_mod.VoxelQuery().to(device)
+        if any(c.sem is not None for c in clips):
+            # Per-channel stats over the training scenes' voxels; saved in the
+            # model, so a resume or the validator reuses them unchanged.
+            g = torch.Generator().manual_seed(0)
+            smp = torch.cat([c.sem.feat[torch.randint(0, len(c.sem.feat), (min(20000, len(c.sem.feat)),),
+                                                      generator=g)].float() for c in clips if c.sem is not None])
+            model.sem.feat_mean.copy_(smp.mean(0).to(device))
+            model.sem.feat_std.copy_(smp.std(0).clamp_min(1e-3).to(device))
+        print(f"[sem] VoxelQuery {sum(p.numel() for p in model.sem.parameters())/1e6:.1f} M params",
+              flush=True)
     if args.validator:
         return validator_loop(model, val_clips, args, device, run)
     if args.compile:
@@ -587,6 +655,7 @@ def main() -> int:
         g0 = max(0, N - args.grad_last) if args.grad_last else 0
         state, spos = model.init_state(B, device)
         parts, nprobe = {"l21_self": 0.0, "l21_world": 0.0}, 0
+        sem_l, sem_c = 0.0, 0.0
         # `window` holds the not-yet-backwarded loss; with tbptt it is settled
         # at every boundary, otherwise once at clip end. Normalise by the stop
         # count (known upfront) so both modes optimise the same objective.
@@ -640,6 +709,14 @@ def main() -> int:
                                         ray3)
                     loss, p = probe_loss(out, xs, xw, valid)
                     window = window + loss
+                    if args.sem_feat != "off":
+                        xyz, tgt, ok = semantic_queries(rng, sel, idxs, t, args.sem_frames, args.sem_pixels)
+                        with amp:
+                            pred = model.sem(state, xyz.to(device))
+                        ls, cs = sem_mod.semantic_loss(pred, model.sem.standardise(tgt.to(device)),
+                                                       ok.to(device))
+                        window = window + args.sem_weight * ls
+                        sem_l += float(ls); sem_c += cs
                     for k in parts:
                         parts[k] += p[k]
                     nprobe += 1
@@ -683,6 +760,8 @@ def main() -> int:
                "l21_self": parts["l21_self"] / max(1, nprobe),
                "l21_world": parts["l21_world"] / max(1, nprobe),
                "grad_norm": gnorm, "state_norm": float(np.mean(state_norms)),
+               **({"sem_loss": sem_l / max(1, nprobe), "sem_cos": sem_c / max(1, nprobe)}
+                  if args.sem_feat != "off" else {}),
                "peak_gb": (torch.cuda.max_memory_allocated() / 1e9
                            if device.type == "cuda" else 0.0),
                "sec": time.time() - t0}
@@ -717,7 +796,9 @@ def main() -> int:
             print(f"[{step:5d}] loss {rec['loss']:8.4f} | L21 self "
                   f"{rec['l21_self']:.4f} world {rec['l21_world']:.4f} | "
                   f"|g| {gnorm:7.3f} | |s| {rec['state_norm']:8.1f} | "
-                  f"{rec['peak_gb']:5.1f}GB | {rec['sec']:6.1f}s", flush=True)
+                  f"{rec['peak_gb']:5.1f}GB | {rec['sec']:6.1f}s"
+                  + (f" | sem {rec['sem_loss']:.3f} cos {rec['sem_cos']:.3f}" if "sem_cos" in rec else ""),
+                  flush=True)
             (args.out / "history.json").write_text(json.dumps(hist))
         assert not (args.train_plateau_decay and world > 1), \
             "plateau decay decides from per-rank loss and would diverge ranks"
@@ -764,6 +845,44 @@ def main() -> int:
         dist.destroy_process_group()
     print(f"[done] {time.time()-t0:.0f}s", flush=True)
     return 0
+
+
+_PROJ = {}
+
+
+@torch.no_grad()
+def eval_semantic(model, c, state, qs, T, n_pix, device):
+    """Semantic recall on one val clip after streaming frames 0..T: n_pix fixed
+    (seeded) GT-lifted points per lag-ladder frame q. Rows: (lag, cos on the
+    standardised target, cos in raw upcast space, cos in Chorus's SigLIP space,
+    the same two for the always-predict-the-mean floor, T)."""
+    if "lang" not in _PROJ:
+        _PROJ["lang"] = sem_mod.load_chorus_projectors()["lang"].to(device)
+    P = _PROJ["lang"]
+    rng = np.random.default_rng(zlib.crc32(c.name.encode()))  # hash() is salted per process
+    first = c.gt_c2w[0].cpu()
+    xyz, tgt, ok, lags = [], [], [], []
+    for q in qs:
+        dep = c.gt_depth[q].cpu()
+        v, u = sem_mod.sample_pixels(rng, dep, n_pix)
+        p = sem_mod.lift_pixels(dep, c.K[q].cpu(), c.gt_c2w[q].cpu(), v, u)
+        f, good = c.sem.lookup(p)
+        xyz.append(torch.from_numpy(sem_mod.to_stream(p, first)).float()); tgt.append(f); ok.append(good)
+        lags.append(torch.full((len(v),), float(T - q)))
+    xyz, tgt, ok, lags = torch.cat(xyz), torch.cat(tgt), torch.cat(ok), torch.cat(lags)
+    xyz, tgt, lags = xyz[ok].to(device), tgt[ok].to(device), lags[ok]
+    sm = model.sem
+    pred = sm(state[:1], xyz[None])[0].float()
+    cs = torch.nn.functional.cosine_similarity(pred, sm.standardise(tgt), dim=-1)
+    raw = sm.raw(pred)
+    cr = torch.nn.functional.cosine_similarity(raw, tgt, dim=-1)
+    mean = sm.feat_mean[None].expand_as(tgt)
+    fr = torch.nn.functional.cosine_similarity(mean, tgt, dim=-1)
+    lt = P(tgt)
+    cl = torch.nn.functional.cosine_similarity(P(raw), lt, dim=-1)
+    fl = torch.nn.functional.cosine_similarity(P(mean), lt, dim=-1)
+    return torch.stack([lags.to(device), cs, cr, cl, fr, fl,
+                        torch.full_like(cs, float(T))], 1).cpu()
 
 
 def validator_loop(model, vclips, args, device, run):
@@ -824,6 +943,7 @@ def evaluate(model, vclips, frames, args, device):
             res.update({k.replace("valm", "valx"): v for k, v in res.items()})
             continue
         es, ew, eo = [], [], []
+        sem_rows = []   # (lag, cos_std, cos_raw, cos_lang, floor_raw, floor_lang) per point
         for c in vclips:
             n_c = min(n, len(c))
             state, spos = model.init_state(1, device)
@@ -849,6 +969,15 @@ def evaluate(model, vclips, frames, args, device):
                 cos = (v * rays[1]).sum(-1) / (
                     v.norm(dim=-1) * rays[1].norm(dim=-1)).clamp_min(1e-9)
                 eo.append(float(torch.rad2deg(torch.acos(cos.clamp(-1, 1)))[valid].mean()))
+            if tag == "m" and getattr(model, "sem", None) is not None and c.sem is not None:
+                sem_rows.append(eval_semantic(model, c, state, qs, T, args.sem_val_pixels, device))
+        if sem_rows:
+            r = torch.cat(sem_rows)
+            lag, T_ = r[:, 0], r[:, 6]
+            for k, col in (("cos", 1), ("rawcos", 2), ("langcos", 3), ("rawcos_floor", 4), ("langcos_floor", 5)):
+                res[f"valsem_{k}"] = float(r[:, col].mean())
+            res["valsem_cos_recent"] = float(r[lag <= 4, 1].mean())
+            res["valsem_cos_old"] = float(r[lag >= T_ // 2, 1].mean())
         res[f"val{tag}_self"] = float(np.mean(es))
         res[f"val{tag}_world"] = float(np.mean(ew))
         if eo:
