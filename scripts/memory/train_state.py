@@ -157,6 +157,25 @@ def run_probe(model, st, spos_q, rm, hw, rays=None):
             "pts3d_in_other_view": pts_w, "conf": c}
 
 
+def budget_stops(N, S):
+    """S stop indices spread evenly over [0, N), the last always N-1."""
+    return sorted({(i + 1) * N // S - 1 for i in range(S)})
+
+
+def budget_queries(rng, t, recent_window):
+    """One recent (age 0..recent_window, current included) + one old (uniform
+    over [0, t)) query; the old one is what tests long retention."""
+    recent = t - int(rng.integers(0, min(t, recent_window) + 1))
+    old = int(rng.integers(0, t)) if t > 0 else t
+    return [recent, old]
+
+
+def downsample_hw(x, s):
+    """Every s-th pixel of an image-shaped [B, H, W, ...] tensor, matching the
+    head's /s output grid (align_corners=True maps pixel i to ~s*i)."""
+    return x if s == 1 else x[:, ::s, ::s]
+
+
 def sample_queries(rng, t, n_past, probe_current):
     """`min(n_past, t)` distinct past cameras, plus the current one if enabled."""
     qs = list(rng.choice(t, size=min(n_past, t), replace=False)) if t > 0 else []
@@ -189,6 +208,30 @@ def main() -> int:
     # --frames-min < --frames: each update draws its length uniformly from
     # [frames-min, frames], one length per batch (CUT3R's 4..64 final stage).
     ap.add_argument("--frames-min", type=int, default=None)
+    ap.add_argument("--frames-step", type=int, default=1,
+                    help="lengths drawn from range(frames-min, frames+1, step)")
+    # Constant query budget: S probe stops per clip, evenly spaced and ending
+    # on the last frame, whatever the drawn length (p = S/N), with one recent
+    # (age <= --recent-window, current included) and one old (uniform over the
+    # past) query per stop. Replaces --probe-every/--n-past when > 0, and makes
+    # per-update memory and probe cost independent of N.
+    ap.add_argument("--probe-stops", type=int, default=0)
+    ap.add_argument("--recent-window", type=int, default=8)
+    # Training-only head speedups (eval stays fp32 full-size); see LingbotFrozenHead.
+    ap.add_argument("--head-bf16", action="store_true")
+    ap.add_argument("--head-down", type=int, default=1, choices=[1, 2])
+    # Fraction of valid pixels kept in the loss (random per probe); the head
+    # still predicts every pixel, only the loss tensors shrink.
+    ap.add_argument("--loss-keep", type=float, default=1.0)
+    # Async validation: training only drops weight snapshots into out/val_queue
+    # at --val-every and never pauses; a separate `--validator` process (same
+    # args) evaluates them, writes val_history.json / best.pt and its own wandb
+    # run. Early stopping needs synchronous val, so --patience must be 0.
+    ap.add_argument("--async-val", action="store_true")
+    # torch.compile the write/read decoder blocks (fixed token counts); module
+    # keys are untouched (forward is wrapped), so checkpoints stay compatible.
+    ap.add_argument("--compile", action="store_true")
+    ap.add_argument("--validator", action="store_true")
     # window: a random contiguous window. cut3r: CUT3R's ScanNet++ sampler
     # (lingbot_map/memory/sampling.py) -- gapped, sometimes shuffled, and
     # with revisits under --allow-repeat.
@@ -333,10 +376,12 @@ def main() -> int:
     torch.manual_seed(args.seed)          # same model init on every rank
     rng = np.random.default_rng(args.seed + rank)  # different batches per rank
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    assert not (args.async_val and args.patience), "--async-val needs --patience 0"
     if rank0:
         args.out.mkdir(parents=True, exist_ok=True)
-        (args.out / "config.json").write_text(
-            json.dumps({k: str(v) for k, v in vars(args).items()}, indent=2))
+        if not args.validator:
+            (args.out / "config.json").write_text(
+                json.dumps({k: str(v) for k, v in vars(args).items()}, indent=2))
     if ddp:
         dist.barrier()
 
@@ -350,14 +395,15 @@ def main() -> int:
                 wdir = args.out
             # Deterministic id + resume: a requeued/preempted job appends to
             # the SAME wandb run instead of fragmenting one training into many.
-            rid = re.sub(r"[^a-z0-9_-]", "-", args.out.name.lower())[:120]
-            run = wandb.init(project="spatial_memory", name=args.out.name,
-                             id=rid, resume="allow",
+            sfx = "_val" if args.validator else ""
+            rid = re.sub(r"[^a-z0-9_-]", "-", args.out.name.lower())[:116] + sfx.replace("_", "-")
+            run = wandb.init(project="spatial_memory", name=args.out.name + sfx,
+                             id=rid, resume="allow", group=args.out.name,
                              mode=args.wandb, config=vars(args), dir=str(wdir))
         except Exception as e:  # e.g. no ~/.netrc on msp3 -- never kill the run
             print(f"[wandb] disabled: {e}", flush=True)
 
-    clip_paths = expand_paths(args.clips)
+    clip_paths = [] if args.validator else expand_paths(args.clips)
     if world > 1:
         shard = clip_paths[rank::world]
         print(f"[ddp] rank {rank}/{world}: {len(shard)}/{len(clip_paths)} clips",
@@ -369,15 +415,17 @@ def main() -> int:
     # val runs on rank 0 only; other ranks skip the load entirely.
     val_clips = [Clip(p, args.subsample, device, args.max_frames, args.taps,
                       store=args.clip_store, tap_half=args.tap_half)
-                 for p in expand_paths(args.val_clips)] if rank0 else []
+                 for p in expand_paths(args.val_clips)] if rank0 and (
+                     args.validator or not args.async_val) else []
     assert len({(c.h, c.w, c.patch_hw) for c in clips + val_clips}) == 1
+    ref = (clips or val_clips)[0]
     print(f"[data] {len(clips)} train / {len(val_clips)} val clip(s), "
-          f"{len(clips[0])} frames each, {clips[0].h}x{clips[0].w}, "
-          f"patch grid {clips[0].patch_hw}", flush=True)
+          f"{len(ref)} frames each, {ref.h}x{ref.w}, "
+          f"patch grid {ref.patch_hw}", flush=True)
 
-    model = StateMemory(patch_size=clips[0].meta.patch_size if hasattr(
-        clips[0].meta, "patch_size") else 14,
-        tap_dim=clips[0].taps.shape[-1], state_tokens=args.state_tokens,
+    model = StateMemory(patch_size=ref.meta.patch_size if hasattr(
+        ref.meta, "patch_size") else 14,
+        tap_dim=ref.taps.shape[-1], state_tokens=args.state_tokens,
         dec_depth=args.dec_depth, write_oneway=args.write_oneway,
         grad_ckpt=not args.no_grad_ckpt, head_type=args.head,
         read_depth=args.read_depth).to(device)
@@ -421,6 +469,11 @@ def main() -> int:
         model.head.reset_output(args.pts_frame)
         print(f"[head-output] fresh last conv, output "
               f"{'xyz/' + args.pts_frame if args.pts_frame else 'depth'}", flush=True)
+    if args.head_bf16 or args.head_down != 1:
+        assert args.head == "smallread_lingbot", "--head-bf16/--head-down need smallread_lingbot"
+        model.head.train_bf16, model.head.train_down = args.head_bf16, args.head_down
+        print(f"[head-train] bf16={args.head_bf16} down={args.head_down} (eval: fp32, full size)",
+              flush=True)
     if args.reinit_write:
         raw = torch.load(args.cut3r_ckpt, map_location="cpu", weights_only=False)
         sd = raw["model"] if "model" in raw else raw
@@ -450,6 +503,13 @@ def main() -> int:
     n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"[model] {n_train/1e6:.1f} M trainable", flush=True)
 
+    if args.validator:
+        return validator_loop(model, val_clips, args, device, run)
+    if args.compile:
+        blocks = list(model.dec_blocks_state) + list(getattr(model, "read_blocks", []))
+        for blk in blocks:
+            blk.forward = torch.compile(blk.forward)
+        print(f"[compile] {len(blocks)} decoder blocks", flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
     sched = torch.optim.lr_scheduler.LambdaLR(
         opt, lambda s: min(1.0, (s + 1) / max(1, args.warmup)))
@@ -498,11 +558,24 @@ def main() -> int:
         torch.save({"model": model.state_dict(), "step": step,
                     "valm_self": val, "args": vars(args)}, tmp)
         tmp.replace(args.out / "best.pt")
+    vq = args.out / "val_queue"
+    if args.async_val and rank0:
+        vq.mkdir(exist_ok=True)
+        (vq / "DONE").unlink(missing_ok=True)
+    def queue_snapshot(step):
+        # Weights only (no optimizer): ~1 GB, renamed atomically so the
+        # validator never reads a half-written file.
+        tmp = vq / f".step_{step:07d}.pt.tmp"
+        torch.save({"model": model.state_dict(), "step": step}, tmp)
+        tmp.replace(vq / f"step_{step:07d}.pt")
     step = max(0, start_step - 1)
     for step in range(start_step, args.updates):
         sel = [clips[i] for i in rng.choice(len(clips), size=B, replace=False)]
-        N = (int(rng.integers(args.frames_min, args.frames + 1))
+        N = (int(rng.choice(range(args.frames_min, args.frames + 1, args.frames_step)))
              if args.frames_min else args.frames)
+        stops = set(budget_stops(N, args.probe_stops)) if args.probe_stops else None
+        is_stop = ((lambda t: t in stops) if stops is not None
+                   else (lambda t: t % args.probe_every == 0))
         # idxs[b][t]: the clip frame streamed at step t. The world frame is
         # idxs[b][0]'s camera, whatever order the sampler produced.
         if args.sampler == "cut3r":
@@ -520,8 +593,7 @@ def main() -> int:
         window, loss_sum = 0.0, 0.0
         frames_since_cut = 0
         n_stops = sum(1 for t in range(g0, N)
-                      if t % args.probe_every == 0
-                      and (t > 0 or args.probe_current == "on"))
+                      if is_stop(t) and (stops is not None or t > 0 or args.probe_current == "on"))
         state_norms = []
         opt.zero_grad(set_to_none=True)
 
@@ -535,23 +607,29 @@ def main() -> int:
                     state = model.write(state, spos, tap, clips[0].patch_hw)
             state_norms.append(float(state.detach().norm(dim=(1, 2)).mean()))
 
-            if t >= g0 and t % args.probe_every == 0:
+            if t >= g0 and is_stop(t):
                 # Same local t for every scene, so nq is equal across the batch
                 # and the B*nq queries run as one probe pass.
-                qs0 = sample_queries(rng, t, args.n_past, args.probe_current == "on")
+                draw = ((lambda: budget_queries(rng, t, args.recent_window)) if stops is not None
+                        else (lambda: sample_queries(rng, t, args.n_past, args.probe_current == "on")))
+                qs0 = draw()
                 if qs0:
                     nq = len(qs0)
                     rms, xss, xws, vs, rays = [], [], [], [], []
                     for c, ix in zip(sel, idxs):
-                        qs = sample_queries(rng, t, args.n_past,
-                                            args.probe_current == "on")
+                        qs = draw()
                         aq = [ix[q] for q in qs]
                         rm, xs, xw, valid = c.probe_inputs(
                             aq, args.raymap_convention, anchor=ix[0])
-                        rms.append(rm); xss.append(xs); xws.append(xw); vs.append(valid)
+                        ds = lambda x: downsample_hw(x, args.head_down)  # noqa: E731
+                        v = ds(valid)
+                        if args.loss_keep < 1:
+                            v = v & (torch.rand(v.shape, device=v.device) < args.loss_keep)
+                        rms.append(rm); xss.append(ds(xs)); xws.append(ds(xw)); vs.append(v)
                         if args.head in ("raydepth", "lingbot", "smallread", "smallread_lingbot"):
-                            rays.append(c.probe_rays(
-                                aq, anchor=ix[0], unit=args.head not in ("lingbot", "smallread_lingbot")))
+                            o, d_, c2w = c.probe_rays(
+                                aq, anchor=ix[0], unit=args.head not in ("lingbot", "smallread_lingbot"))
+                            rays.append((ds(o), ds(d_), c2w))
                     rm = torch.cat(rms); xs = torch.cat(xss)
                     xw = torch.cat(xws); valid = torch.cat(vs)
                     ray3 = tuple(torch.cat(z) for z in zip(*rays)) if rays else None
@@ -574,7 +652,7 @@ def main() -> int:
             # keeps all writes supervised and the stop schedule identical to
             # the full-BPTT baseline.
             frames_since_cut += 1
-            if (args.tbptt and t % args.probe_every == 0
+            if (args.tbptt and is_stop(t)
                     and frames_since_cut >= args.tbptt and t + 1 < N):
                 if torch.is_tensor(window):
                     (window / max(1, n_stops)).backward()
@@ -625,7 +703,9 @@ def main() -> int:
                       f"(best {best_val:.4f}); stopping at step {step}",
                       flush=True)
                 stop = True
-        if world > 1 and args.val_clips and step % args.val_every == 0:
+        elif rank0 and args.async_val and step % args.val_every == 0:
+            queue_snapshot(step)
+        if world > 1 and args.val_clips and step % args.val_every == 0 and not args.async_val:
             import torch.distributed as dist
             flag = torch.tensor([int(stop)], device=device)
             dist.broadcast(flag, src=0)
@@ -669,6 +749,10 @@ def main() -> int:
 
     if rank0:
         save_ckpt(step)
+        if args.async_val:
+            if step % args.val_every:
+                queue_snapshot(step)
+            (vq / "DONE").touch()
         (args.out / "history.json").write_text(json.dumps(hist))
         dump_viz(model, clips[0], args, device, args.updates, tag="train")
         if val_clips:
@@ -679,6 +763,50 @@ def main() -> int:
         import torch.distributed as dist
         dist.destroy_process_group()
     print(f"[done] {time.time()-t0:.0f}s", flush=True)
+    return 0
+
+
+def validator_loop(model, vclips, args, device, run):
+    """Evaluate every snapshot the training process queues (see --async-val).
+
+    Same args as training, so the model and val set are built identically.
+    Exits once training has marked the queue DONE and nothing is pending.
+    """
+    vq = args.out / "val_queue"
+    vq.mkdir(parents=True, exist_ok=True)
+    hp = args.out / "val_history.json"
+    hist = json.loads(hp.read_text()) if hp.exists() else []
+    best = min((r["valm_self"] for r in hist), default=float("inf"))
+    print(f"[validator] watching {vq} ({len(hist)} evals so far, best {best:.4f})", flush=True)
+    while True:
+        snaps = sorted(vq.glob("step_*.pt"))
+        if not snaps:
+            if (vq / "DONE").exists():
+                break
+            time.sleep(20)
+            continue
+        for sp in snaps:
+            sd = torch.load(sp, map_location="cpu", weights_only=False)
+            model.load_state_dict(sd["model"])
+            rec = {"step": int(sd["step"]),
+                   **evaluate(model, vclips, args.val_frames or args.frames, args, device)}
+            print("[val] " + " ".join(f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}"
+                                      for k, v in rec.items()), flush=True)
+            hist = [r for r in hist if r["step"] != rec["step"]] + [rec]
+            hist.sort(key=lambda r: r["step"])
+            hp.write_text(json.dumps(hist))
+            if run is not None:
+                run.log(rec, step=rec["step"])
+            if rec["valm_self"] < best - args.min_delta:
+                best = rec["valm_self"]
+                tmp = args.out / "best.pt.tmp"
+                torch.save({"model": sd["model"], "step": rec["step"], "valm_self": best,
+                            "args": vars(args)}, tmp)
+                tmp.replace(args.out / "best.pt")
+            sp.unlink()
+    if run is not None:
+        run.finish()
+    print(f"[validator] done, best {best:.4f}", flush=True)
     return 0
 
 

@@ -265,6 +265,12 @@ class LingbotFrozenHead(nn.Module):
         self.dpt.load_state_dict(sd["depth_head"])
         self.dpt.requires_grad_(False)
         self.pts_frame = None
+        # Training-only speedups (eval/no-grad always runs fp32 at full size, so
+        # metrics stay comparable): bf16 trunk and a /train_down output grid.
+        # Measured on a 60-query probe pass: bf16 + /2 = 1.55x faster, grad
+        # cosine 0.999 vs fp32.
+        self.train_bf16 = False
+        self.train_down = 1
 
     def fresh_head(self, pts_frame: str | None):
         """Replace the pretrained trunk by the same DPT architecture, randomly
@@ -320,22 +326,27 @@ class LingbotFrozenHead(nn.Module):
         h, w = hw
         imgs = torch.zeros(taps[0].shape[0], 1, 3, h, w,
                            device=taps[0].device, dtype=torch.float32)
-        with torch.amp.autocast("cuda", enabled=False):
-            # Adapters must also run fp32: under the loop's bf16 autocast a
-            # Linear outside this block emits bf16, which the frozen fp32
-            # trunk rejects.
+        train = torch.is_grad_enabled() and self.training
+        # The patch grid comes from imgs (full h, w); down_ratio only shrinks
+        # the final interpolation + output convs, so the weights are unchanged.
+        self.dpt.down_ratio = self.train_down if train else 1
+        with torch.amp.autocast("cuda", dtype=torch.bfloat16, enabled=train and self.train_bf16):
+            # Adapters must also run fp32 when the trunk does: under the loop's
+            # bf16 autocast a Linear outside this block emits bf16, which the
+            # fp32 trunk rejects.
             toks = [a(t.float())[:, None] for a, t in zip(self.adapters, taps)]
             # The frozen trunk still needs its activations for backprop THROUGH
             # it to the adapters/decoder; checkpoint them instead of storing.
-            if torch.is_grad_enabled() and self.training:
+            if train:
                 z, conf = checkpoint(
                     lambda *ts: self.dpt(list(ts[:-1]), ts[-1], patch_start_idx=0),
                     *toks, imgs, use_reentrant=False)
             else:
                 z, conf = self.dpt(toks, imgs, patch_start_idx=0)
-        b = taps[0].shape[0]
-        z = z.reshape(b, h, w, 3) if self.pts_frame else z.reshape(b, h, w)
-        return z, conf.reshape(b, h, w)
+        b, ho, wo = taps[0].shape[0], conf.shape[-2], conf.shape[-1]
+        z = z.float()
+        z = z.reshape(b, ho, wo, 3) if self.pts_frame else z.reshape(b, ho, wo)
+        return z, conf.float().reshape(b, ho, wo)
 
 
 class StateMemory(nn.Module):

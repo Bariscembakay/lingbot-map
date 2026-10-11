@@ -97,7 +97,7 @@ set -- "${_args[@]}"
 
 ( while sleep 600; do rsync -a "$WORK/" "$OUT/" 2>/dev/null || true; done ) &
 SYNC_PID=$!
-trap 'kill "$SYNC_PID" 2>/dev/null || true; kill "${KEEPALIVE_PID:-}" 2>/dev/null || true' EXIT
+trap 'kill "$SYNC_PID" 2>/dev/null || true; kill "${KEEPALIVE_PID:-}" 2>/dev/null || true; kill "${VAL_PID:-}" 2>/dev/null || true' EXIT
 
 # The keep-alive guards ONLY the idle clip preload. Left running, its burst
 # (calibrated on the idle GPU) competes with training for the whole job --
@@ -109,6 +109,19 @@ if [ -n "${KEEPALIVE_PID:-}" ]; then
           sleep 30; done; kill "$KEEPALIVE_PID" 2>/dev/null ) &
 fi
 
+# --async-val: a validator process with the same args evaluates the weight
+# snapshots training queues (train_state.py --validator), on the same GPU, so
+# training never pauses for validation. Its log is val.log beside train.log.
+VAL_PID=""
+case " $* " in *" --async-val "*)
+    # A DONE left by the previous segment would make this validator quit at once.
+    rm -f "$WORK/val_queue/DONE"
+    # shellcheck disable=SC2086
+    "$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@" --validator \
+        >> "$WORK/val.log" 2>&1 &
+    VAL_PID=$! ;;
+esac
+
 # shellcheck disable=SC2086
 # Tee into $WORK so the periodic rsync carries the log to sof1 too. Slurm's own
 # --output goes to the RUNNING zone's /home, so an msp3 job's log is unreadable
@@ -116,6 +129,13 @@ fi
 # actually died in argparse after 46s.
 "$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@" \
     2>&1 | tee -a "$WORK/train.log"
+
+if [ -n "$VAL_PID" ]; then
+    # Training marks the queue DONE on a clean exit; marking it here too means a
+    # crashed trainer cannot leave the validator polling until walltime.
+    mkdir -p "$WORK/val_queue"; touch "$WORK/val_queue/DONE"
+    wait "$VAL_PID" || true
+fi
 
 rsync -a "$WORK/" "$OUT/"
 echo "[train_state_job] shipped $WORK -> $OUT"
