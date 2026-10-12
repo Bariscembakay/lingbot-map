@@ -190,6 +190,34 @@ def semantic_queries(rng, sel, idxs, t, n_frames, n_pix):
     return xyz, tgt, ok
 
 
+_VAL_FWD = {"mtime": None, "hist": [], "logged": None}
+
+
+def val_to_wandb(out: Path) -> dict:
+    """Oldest validator record not yet sent to wandb, as fields for this update's
+    log call (one per update, so a backlog after a resume drains over the next
+    updates). The set of sent steps persists in out/val_wandb_logged.json, which
+    the job syncs with the run dir, so nothing is sent twice across segments."""
+    f = _VAL_FWD
+    lp = out / "val_wandb_logged.json"
+    if f["logged"] is None:
+        f["logged"] = set(json.loads(lp.read_text())) if lp.exists() else set()
+    hp = out / "val_history.json"
+    try:
+        m = hp.stat().st_mtime
+        if m != f["mtime"]:
+            f["hist"], f["mtime"] = json.loads(hp.read_text()), m
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+    pending = [r for r in f["hist"] if r["step"] not in f["logged"]]
+    if not pending:
+        return {}
+    r = min(pending, key=lambda r: r["step"])
+    f["logged"].add(r["step"])
+    lp.write_text(json.dumps(sorted(f["logged"])))
+    return {**{k: v for k, v in r.items() if k != "step"}, "val_step": r["step"]}
+
+
 def budget_stops(N, S):
     """S stop indices spread evenly over [0, N), the last always N-1."""
     return sorted({(i + 1) * N // S - 1 for i in range(S)})
@@ -258,8 +286,9 @@ def main() -> int:
     ap.add_argument("--loss-keep", type=float, default=1.0)
     # Async validation: training only drops weight snapshots into out/val_queue
     # at --val-every and never pauses; a separate `--validator` process (same
-    # args) evaluates them, writes val_history.json / best.pt and its own wandb
-    # run. Early stopping needs synchronous val, so --patience must be 0.
+    # args) evaluates them and writes val_history.json / best.pt; training forwards
+    # the results into its own wandb run. Early stopping needs synchronous
+    # val, so --patience must be 0.
     ap.add_argument("--async-val", action="store_true")
     # torch.compile the write/read decoder blocks (fixed token counts); module
     # keys are untouched (forward is wrapped), so checkpoints stay compatible.
@@ -430,7 +459,9 @@ def main() -> int:
         dist.barrier()
 
     run = None
-    if args.wandb != "off" and rank0:
+    # The validator logs to val_history.json only; the training process forwards
+    # those records into its own run (see val_to_wandb), so one run holds both.
+    if args.wandb != "off" and rank0 and not args.validator:
         try:
             import wandb
             # Run dirs live on persistent /group, not the run's /scratch out dir.
@@ -439,11 +470,16 @@ def main() -> int:
                 wdir = args.out
             # Deterministic id + resume: a requeued/preempted job appends to
             # the SAME wandb run instead of fragmenting one training into many.
-            sfx = "_val" if args.validator else ""
-            rid = re.sub(r"[^a-z0-9_-]", "-", args.out.name.lower())[:116] + sfx.replace("_", "-")
-            run = wandb.init(project="spatial_memory", name=args.out.name + sfx,
-                             id=rid, resume="allow", group=args.out.name,
+            rid = re.sub(r"[^a-z0-9_-]", "-", args.out.name.lower())[:120]
+            run = wandb.init(project="spatial_memory", name=args.out.name,
+                             id=rid, resume="allow",
                              mode=args.wandb, config=vars(args), dir=str(wdir))
+            if args.async_val:
+                # Val records arrive a few updates after their step; plot them on
+                # their own axis so they land at the right x.
+                run.define_metric("val_step")
+                for pat in ("valm_*", "valx_*", "valsem_*"):
+                    run.define_metric(pat, step_metric="val_step")
         except Exception as e:  # e.g. no ~/.netrc on msp3 -- never kill the run
             print(f"[wandb] disabled: {e}", flush=True)
 
@@ -791,7 +827,7 @@ def main() -> int:
             stop = bool(flag.item())
         hist.append(rec)
         if run is not None:
-            run.log(rec, step=step)
+            run.log({**rec, **(val_to_wandb(args.out) if args.async_val else {})}, step=step)
         if rank0 and step % args.log_every == 0:
             print(f"[{step:5d}] loss {rec['loss']:8.4f} | L21 self "
                   f"{rec['l21_self']:.4f} world {rec['l21_world']:.4f} | "
