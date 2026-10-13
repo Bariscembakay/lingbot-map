@@ -71,6 +71,17 @@ class Clip:
             # consumers move one frame's stack to the device per step (~66 MB).
             t4 = torch.from_numpy(np.ascontiguousarray(c.taps[idx]))
             self.taps = t4.permute(0, 2, 1, 3).reshape(t4.shape[0], t4.shape[2], -1)
+        elif "," in taps:
+            # Channel-concat the listed layers (e.g. "11,17" -> 4096-d). Read
+            # layer by layer: slicing the memmap per layer touches only those
+            # layers' pages, not the whole 4-tap block.
+            layers = [int(x) for x in taps.split(",")]
+            assert all(l in c.meta.tap_layers for l in layers), \
+                f"{path}: taps={taps} needs layers {layers}, cache has {c.meta.tap_layers}"
+            self.taps = torch.cat([torch.from_numpy(np.ascontiguousarray(
+                c.taps[idx, c.meta.tap_layers.index(l)])) for l in layers], dim=-1)
+            if store == "gpu":
+                self.taps = self.taps.to(device)
         else:
             t23 = c.meta.tap_layers.index(TAP23)
             self.taps = torch.from_numpy(
@@ -331,7 +342,9 @@ def main() -> int:
     ap.add_argument("--probe-current", default="on", choices=["on", "off"])
     ap.add_argument("--raymap-convention", default="cut3r", choices=["cut3r", "true"])
     # (a) tap 23 only vs (b) all four channel-concat; design doc "Sweep axes".
-    ap.add_argument("--taps", default="23", choices=["23", "all"])
+    ap.add_argument("--taps", default="23",
+                    help="'23', 'all' (4/11/17/23), or a comma list such as '11,17' "
+                         "(channel-concatenated)")
     ap.add_argument("--tap-half", default="both",
                     choices=["both", "frame", "global"],
                     help="use only one 1024-d half of the 2048-d tap. "
@@ -538,7 +551,22 @@ def main() -> int:
             inject_conv_lora(model.head.dpt, int(sa.get("lora_rank", args.lora_rank)),
                              float(sa.get("lora_alpha", args.lora_alpha)))
             lora_done = args.lora_head
-        model.load_state_dict(sd["model"])
+        if args.fresh_head:
+            # The checkpoint's head IS a fresh-architecture DPT: build it before
+            # the load, or the later fresh_head() call would re-randomise it.
+            model.head.fresh_head(args.pts_frame)
+        # A different --taps changes only in_proj's input width; that layer
+        # starts fresh and everything else loads.
+        ms = model.state_dict()
+        drop = [k for k, v in sd["model"].items() if k in ms and v.shape != ms[k].shape]
+        assert all(k.startswith("in_proj.") for k in drop), f"shape mismatch beyond in_proj: {drop}"
+        for k in drop:
+            del sd["model"][k]
+        missing, unexpected = model.load_state_dict(sd["model"], strict=False)
+        assert set(missing) == set(drop) and not unexpected, (missing[:5], unexpected[:5])
+        if drop:
+            print(f"[init] re-initialised {drop}: tap width {ms['in_proj.weight'].shape[1]} "
+                  f"vs checkpoint's taps={sd.get('args', {}).get('taps', '23')}", flush=True)
         if args.unfreeze_head and any(".base.weight" in k for k in sd["model"]):
             n = merge_conv_lora(model.head.dpt)
             print(f"[init] merged {n} LoRA adapters into the DPT weights", flush=True)
@@ -563,9 +591,10 @@ def main() -> int:
               flush=True)
     if args.fresh_head:
         assert args.head == "smallread_lingbot", "--fresh-head needs smallread_lingbot"
-        model.head.fresh_head(args.pts_frame)
+        if not args.init_from:
+            model.head.fresh_head(args.pts_frame)
         n = sum(p.numel() for p in model.head.dpt.parameters())
-        print(f"[fresh-head] random-init DPT, {n/1e6:.1f} M trainable, output "
+        print(f"[fresh-head] {'loaded' if args.init_from else 'random-init'} DPT, {n/1e6:.1f} M trainable, output "
               f"{'xyz/' + args.pts_frame if args.pts_frame else 'depth'}", flush=True)
     elif args.pts_frame or args.fresh_last_conv:
         assert args.head == "smallread_lingbot", "--pts-frame needs smallread_lingbot"
