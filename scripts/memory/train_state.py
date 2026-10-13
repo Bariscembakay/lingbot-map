@@ -41,6 +41,7 @@ from lingbot_map.memory.recall_loss import probe_loss  # noqa: E402
 from lingbot_map.memory.sampling import cut3r_views  # noqa: E402
 from lingbot_map.memory import semantic as sem_mod  # noqa: E402
 
+TAP_DIM_23 = 2048  # cat([frame_attn, global_attn])
 TAP23 = 23  # tap layer id; its index is resolved per cache from meta.tap_layers
 
 
@@ -80,6 +81,15 @@ class Clip:
                 f"{path}: taps={taps} needs layers {layers}, cache has {c.meta.tap_layers}"
             self.taps = torch.cat([torch.from_numpy(np.ascontiguousarray(
                 c.taps[idx, c.meta.tap_layers.index(l)])) for l in layers], dim=-1)
+            # The special tokens (camera token first) come from tap 23 -- the
+            # one lingbot's camera head reads -- zero-padded to the patch
+            # width; StateMemory.write projects them with in_proj_special.
+            assert TAP23 in c.meta.tap_layers, f"{path}: specials need tap 23"
+            psi = c.meta.patch_start_idx
+            sp = torch.from_numpy(np.ascontiguousarray(
+                c.taps[idx, c.meta.tap_layers.index(TAP23), :psi]))
+            self.taps[:, :psi] = 0
+            self.taps[:, :psi, :sp.shape[-1]] = sp
             if store == "gpu":
                 self.taps = self.taps.to(device)
         else:
@@ -538,7 +548,8 @@ def main() -> int:
         tap_dim=ref.taps.shape[-1], state_tokens=args.state_tokens,
         dec_depth=args.dec_depth, write_oneway=args.write_oneway,
         grad_ckpt=not args.no_grad_ckpt, head_type=args.head,
-        read_depth=args.read_depth).to(device)
+        read_depth=args.read_depth,
+        special_dim=TAP_DIM_23 if "," in args.taps else None).to(device)
     load_cut3r_weights(model, args.cut3r_ckpt)
     lora_done = False
     if args.init_from:
@@ -556,8 +567,13 @@ def main() -> int:
             # the load, or the later fresh_head() call would re-randomise it.
             model.head.fresh_head(args.pts_frame)
         # A different --taps changes only in_proj's input width; that layer
-        # starts fresh and everything else loads.
+        # starts fresh and everything else loads. With tap-23 specials, a
+        # tap-23 checkpoint's in_proj is exactly in_proj_special.
         ms = model.state_dict()
+        if model.in_proj_special is not None and "in_proj_special.weight" not in sd["model"]:
+            for k in ("weight", "bias"):
+                sd["model"][f"in_proj_special.{k}"] = sd["model"][f"in_proj.{k}"].clone()
+            print("[init] in_proj_special <- checkpoint in_proj (tap-23 specials)", flush=True)
         drop = [k for k, v in sd["model"].items() if k in ms and v.shape != ms[k].shape]
         assert all(k.startswith("in_proj.") for k in drop), f"shape mismatch beyond in_proj: {drop}"
         for k in drop:

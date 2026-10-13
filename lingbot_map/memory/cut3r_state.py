@@ -362,7 +362,7 @@ class StateMemory(nn.Module):
                  dec_num_heads: int = 12, state_dec_num_heads: int = 16,
                  patch_start_idx: int = 6, grad_ckpt: bool = False,
                  head_type: str = "dpt", read_depth: int = 2,
-                 write_oneway: bool = False):
+                 write_oneway: bool = False, special_dim: int | None = None):
         super().__init__()
         # Full BPTT over 160 frames is required by the objective (a probe at t
         # must credit the write at q), and 954 decoder passes of activations do
@@ -378,6 +378,11 @@ class StateMemory(nn.Module):
         # Tap 23 is 2048-d (frame stream ++ global stream); CUT3R's own
         # decoder_embed is 1024 -> 768 and belongs to the raymap path instead.
         self.in_proj = nn.Linear(tap_dim, DEC_DIM, bias=True)
+        # special_dim: the special tokens arrive from tap 23 (zero-padded to
+        # tap_dim) while the patches come from other taps; they keep their own
+        # 2048 -> 768 projection, which warm-starts from a tap-23 in_proj.
+        self.in_proj_special = (nn.Linear(special_dim, DEC_DIM, bias=True)
+                                if special_dim else None)
 
         self.register_tokens = nn.Embedding(state_tokens, HALF)
         self.decoder_embed_state = nn.Linear(HALF, DEC_DIM, bias=True)
@@ -488,7 +493,12 @@ class StateMemory(nn.Module):
     def write(self, state, state_pos, tap, patch_hw):
         """Consume one frame's cached tap 23. `tap` is `[B, 1005, 2048]`."""
         b = tap.shape[0]
-        tokens = self.in_proj(tap)
+        if self.in_proj_special is None:
+            tokens = self.in_proj(tap)
+        else:
+            psi, sd = self.patch_start_idx, self.in_proj_special.in_features
+            tokens = torch.cat([self.in_proj_special(tap[:, :psi, :sd]),
+                                self.in_proj(tap[:, psi:])], dim=1)
         pos = grid_positions(*patch_hw, self.patch_start_idx, b, tap.device)
         new_state, _ = self._decode(state, state_pos, tokens, pos)
         return new_state
