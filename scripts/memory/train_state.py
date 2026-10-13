@@ -398,6 +398,11 @@ def main() -> int:
     # blocks, head) AND s0. Only meaningful with --init-from a checkpoint whose
     # read is trained -- a frozen random head is a dead path.
     ap.add_argument("--freeze-read", action="store_true")
+    # Head-only training on a fixed memory: every write/read parameter frozen and
+    # writes run without autograd (no backprop through the stream), so only the
+    # head's forward/backward costs anything. Pair with --init-from + a trainable
+    # head (--unfreeze-head / --lora-head).
+    ap.add_argument("--freeze-memory", action="store_true")
     # Restore the write stacks to CUT3R init (fresh in_proj) AFTER --init-from,
     # so the read stays trained while the write starts over.
     ap.add_argument("--reinit-write", action="store_true")
@@ -525,12 +530,18 @@ def main() -> int:
     lora_done = False
     if args.init_from:
         sd = torch.load(args.init_from, map_location="cpu", weights_only=False)
-        if args.lora_head and any(".base.weight" in k for k in sd["model"]):
-            # A LoRA-trained stage: inject first so the strict load matches.
-            from lingbot_map.memory.lora import inject_conv_lora
-            inject_conv_lora(model.head.dpt, args.lora_rank, args.lora_alpha)
-            lora_done = True
+        if (args.lora_head or args.unfreeze_head) and any(".base.weight" in k for k in sd["model"]):
+            # A LoRA-trained stage: inject (with ITS rank/alpha) so the strict load
+            # matches; --unfreeze-head then folds the adapters into the weights.
+            from lingbot_map.memory.lora import inject_conv_lora, merge_conv_lora
+            sa = sd.get("args", {})
+            inject_conv_lora(model.head.dpt, int(sa.get("lora_rank", args.lora_rank)),
+                             float(sa.get("lora_alpha", args.lora_alpha)))
+            lora_done = args.lora_head
         model.load_state_dict(sd["model"])
+        if args.unfreeze_head and any(".base.weight" in k for k in sd["model"]):
+            n = merge_conv_lora(model.head.dpt)
+            print(f"[init] merged {n} LoRA adapters into the DPT weights", flush=True)
         print(f"[init] warm-started from {args.init_from} (step {sd.get('step')})",
               flush=True)
     if args.unfreeze_head:
@@ -591,6 +602,14 @@ def main() -> int:
     if args.freeze_s0:
         model.register_tokens.requires_grad_(False)
         model.decoder_embed_state.requires_grad_(False)
+    if args.freeze_memory:
+        assert args.init_from, "--freeze-memory freezes a trained memory; pass --init-from"
+        model.requires_grad_(False)
+        model.head.requires_grad_(True)
+        if not args.unfreeze_head and args.lora_head:
+            for n_, p_ in model.head.dpt.named_parameters():
+                p_.requires_grad_(".A." in n_ or ".B." in n_)
+        print("[freeze-memory] write/read frozen, writes without autograd; head trains", flush=True)
     model.train()
     n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"[model] {n_train/1e6:.1f} M trainable", flush=True)
@@ -707,7 +726,7 @@ def main() -> int:
         for t in range(N):
             tap = torch.stack([c.taps[ix[t]] for c, ix in zip(sel, idxs)]
                               ).to(device).float()
-            with amp, torch.set_grad_enabled(t >= g0):
+            with amp, torch.set_grad_enabled(t >= g0 and not args.freeze_memory):
                 if not args.no_write:
                     state = model.write(state, spos, tap, clips[0].patch_hw)
             state_norms.append(float(state.detach().norm(dim=(1, 2)).mean()))

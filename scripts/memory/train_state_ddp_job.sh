@@ -94,7 +94,7 @@ case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
 # last.pt are rewritten continuously, so a 10-min sync loses at most 10 min.
 ( while sleep 600; do rsync -a "$WORK/" "$OUT/" 2>/dev/null || true; done ) &
 SYNC_PID=$!
-trap 'kill "$SYNC_PID" 2>/dev/null || true; kill "${KEEPALIVE_PID:-}" 2>/dev/null || true' EXIT
+trap 'kill "$SYNC_PID" 2>/dev/null || true; kill "${KEEPALIVE_PID:-}" 2>/dev/null || true; kill "${VAL_PID:-}" 2>/dev/null || true' EXIT
 
 # The keep-alive guards ONLY the idle clip preload. Left running, its burst
 # (calibrated on the idle GPU) competes with training for the whole job --
@@ -109,6 +109,17 @@ fi
 # SLURM_GPUS_ON_NODE proved unreliable (smoke 835801 ran 1 rank on a 2-GPU
 # allocation); count the GPUs actually visible instead.
 NPROC=$(nvidia-smi -L | wc -l)
+
+# --async-val: one validator process (plain python, not under torchrun) on the
+# node's first GPU evaluates the snapshots rank 0 queues; see train_state_job.sh.
+VAL_PID=""
+case " $* " in *" --async-val "*)
+    rm -f "$WORK/val_queue/DONE"
+    # shellcheck disable=SC2086
+    CUDA_VISIBLE_DEVICES=0 "$PY_ENV" scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@" \
+        --validator >> "$WORK/val.log" 2>&1 &
+    VAL_PID=$! ;;
+esac
 # shellcheck disable=SC2086
 # Tee into $WORK so the periodic rsync carries the log to sof1 too. Slurm's own
 # --output goes to the RUNNING zone's /home, so an msp3 job's log is unreadable
@@ -117,6 +128,11 @@ NPROC=$(nvidia-smi -L | wc -l)
 "$PY_ENV" -m torch.distributed.run --standalone --nproc_per_node="$NPROC" \
     scripts/memory/train_state.py --clips $CLIPS_SPEC --out "$WORK" "$@" \
     2>&1 | tee -a "$WORK/train.log"
+
+if [ -n "$VAL_PID" ]; then
+    mkdir -p "$WORK/val_queue"; touch "$WORK/val_queue/DONE"
+    wait "$VAL_PID" || true
+fi
 
 rsync -a "$WORK/" "$OUT/"
 echo "[train_state_job] shipped $WORK -> $OUT"

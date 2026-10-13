@@ -84,3 +84,23 @@ def inject_conv_lora(root: nn.Module, rank: int, alpha: float) -> dict:
                  if p.requires_grad)
     return {"wrapped": n_wrapped, "skipped_grouped": n_skipped,
             "lora_params": n_lora}
+
+
+def merge_conv_lora(root: nn.Module) -> int:
+    """Fold every LoRA wrapper under `root` back into a plain conv whose weight
+    is base + scale * (B o A) -- same outputs, no adapter, all weights trainable
+    (to continue a LoRA-trained head as a fully unfrozen one)."""
+    n = 0
+    for parent in list(root.modules()):
+        for name, child in list(parent.named_children()):
+            if isinstance(child, (LoRAConv2d, LoRAConvTranspose2d)):
+                base, A, B = child.base, child.A.weight, child.B.weight[:, :, 0, 0]
+                with torch.no_grad():
+                    if isinstance(child, LoRAConv2d):     # A [r,in,k,k], B [out,r]
+                        delta = torch.einsum("or,rikl->oikl", B, A)
+                    else:                                 # base/A weights are [in,out|r,k,k]
+                        delta = torch.einsum("irkl,or->iokl", A, B)
+                    base.weight.add_(child.scale * delta)
+                setattr(parent, name, base)
+                n += 1
+    return n
