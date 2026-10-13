@@ -88,6 +88,18 @@ fi
 # OUT may be a remote rsync destination ("sof1:/group/...") when running on
 # msp3: results must ship to sof1's /group, never land on msp3's 300G one.
 case "$OUT" in *:*) : ;; *) mkdir -p "$OUT" ;; esac
+# A --init-from on sof1's /group does not exist on msp3, whose /group is a
+# different filesystem: fetch it into WORK (as train_state_job.sh does).
+_args=(); _next=0
+for _a in "$@"; do
+    if [ "$_next" = 1 ] && [ ! -e "$_a" ]; then
+        rsync -a "sof1:$_a" "$WORK/init_from.pt"
+        _a="$WORK/init_from.pt"
+    fi
+    _next=0; [ "$_a" = "--init-from" ] && _next=1
+    _args+=("$_a")
+done
+set -- "${_args[@]}"
 
 # A walltime kill would strand everything on this node's /scratch (bash does not
 # run EXIT traps when SIGKILLed after KillWait). Mirror instead: history.json and
