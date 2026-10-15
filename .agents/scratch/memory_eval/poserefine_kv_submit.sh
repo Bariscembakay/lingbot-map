@@ -19,7 +19,7 @@ P=poserefine_kvmem_mixed944k360vk2_t32-2048_anchor8
 JOB=poserefine_kv_train_job.sh; [ "${ZONE:-sof1}" = msp3 ] && JOB=poserefine_kv_train_msp3_job.sh
 sub() {  # sub <arm suffix> <args...>
     if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $1 "* ]]; then return; fi
-    echo "$1 $(sbatch --parsable --partition=batch --gpus=$GPU --time=06:00:00 \
+    echo "$1 $(sbatch --parsable --partition=batch --gpus=$GPU --time=03:30:00 \
         -J "poserefine_KVMEM_$1_${JT:-mixed_scannet944_kitti360_vkitti2}_t32-2048_anchor8_lr3e-5_10k_${GPU%%:*}_${ZONE:-sof1}" \
         $JOB "${P}_$1" $C "${@:2}")"
 }
@@ -50,4 +50,16 @@ if [ "${1:-}" = gem ]; then
     P=poserefine_kvmem_drivingonly_k360vk2_t32-2048_anchor8; JT=drivingonly_kitti360_vkitti2
     sub A_frozencausal_rel_drivingonly $A --memory kvcache --rel-w 1 --lr 3e-5
     sub A_frozencausal_rel_drivingonly_gem $A --memory kvcache --rel-w 1 --lr 3e-5 --gem-mem
+fi
+# Indoor replication: the 944-scene recipe that gave the earlier early-step val24 gain
+# (ScanNet++ only, t 16..320, batch 16, lr 2e-5, plain abs loss), only the memory swapped
+# for lingbot's KV cache.
+if [ "${1:-}" = indoor ]; then
+    C="--anchor-frames 8 --train-store cpu --train-dirs train+train_v5 --t-min 16 --t-max 320 --t-step 16
+       --batch 16 --steps 6000 --warmup 500 --val-every 250 --eval-sets val24:320,nrgbd:500 --select val24"
+    export FINAL_EVAL=val24:320,nrgbd:500
+    P=poserefine_kvmem_scannet944_t16-320_anchor8_b16_lr2e-5; JT=scannet944only_t16-320_b16_lr2e-5_6k
+    sub A_frozencausal_indoor $A --memory kvcache --lr 2e-5
+    sub B_bidirhead_indoor $B --memory kvcache --lr 2e-5 --max-frames-rope 20000
+    sub A_frozencausal_indoor_rel $A --memory kvcache --lr 2e-5 --rel-w 1
 fi
