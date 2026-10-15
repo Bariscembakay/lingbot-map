@@ -603,6 +603,7 @@ def main():
     ap.add_argument("--select", default="",
                     help="comma list of eval sets; best.pt minimises their mean ATE / lingbot ATE "
                          "(default: the first eval set's ATE)")
+    ap.add_argument("--tag", default="", help="eval-only: suffix of the output json name")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--wandb", action="store_true")
     args = ap.parse_args()
@@ -651,7 +652,7 @@ def main():
         return
     if args.eval_only:
         r, s = run_eval()
-        tag = f"final_{args.ckpt.stem}" if args.ckpt else f"eval0_{args.head_mode or model.head_mode}{'_norope' if args.no_head_rope else ''}"
+        tag = f"final_{args.ckpt.stem}{args.tag}" if args.ckpt else f"eval0_{args.head_mode or model.head_mode}{'_norope' if args.no_head_rope else ''}"
         (args.out / f"{tag}.json").write_text(
             json.dumps({"summary": s, "per_clip": r}, indent=1))
         print(json.dumps(s, indent=1))
