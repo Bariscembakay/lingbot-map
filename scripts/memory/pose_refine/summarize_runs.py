@@ -43,7 +43,9 @@ def main():
             lines.append(f"| {d.name} | {hist[-1]['step'] if hist else 0} | – |" + " – | – |" * len(SETS))
             continue
         js = json.loads(src.read_text())
-        pc = js["per_clip"] if "per_clip" in js else js
+        pc = dict(js["per_clip"] if "per_clip" in js else js)
+        for extra in sorted(d.glob("final_best_*.json")):   # cross-domain evals of the same best.pt
+            pc.update(json.loads(extra.read_text())["per_clip"])
         ps = per_set(pc)
         best = json.loads((d / "best.pt.json").read_text())["step"] if (d / "best.pt.json").exists() else None
         if best is None and hist:

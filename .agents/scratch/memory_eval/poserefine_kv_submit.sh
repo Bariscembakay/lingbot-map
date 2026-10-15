@@ -70,3 +70,17 @@ if [ "${1:-}" = indoor ]; then
     sub A_frozencausal_indoor_reg0.1 $A --memory kvcache --lr 2e-5 --reg-w 0.1
     sub A_frozencausal_indoor_nomem $A --memory none --lr 2e-5
 fi
+# Mixed recipe, fixed after the overnight diagnosis: the scale-free fit + distance
+# normalisation only on driving batches (ScanNet++ GT is already in lingbot's scale; using
+# them there degraded val24 indoors too), and the group drawn before t so ScanNet++ gets its
+# weight (t-first gave it ~13% of batches). lr 2e-5 as the working indoor recipe.
+if [ "${1:-}" = mixedfix ]; then
+    C="--anchor-frames 8 --train-store cpu --group-first --metric-groups kitti360_train,vkitti2
+       --train-dirs train+train_v5:0.5,kitti360_train:0.3,vkitti2:0.2
+       --t-min 32 --t-max 2048 --t-step 32 --t-max-start 1024 --frames-per-batch 4096 --batch 16
+       --max-frames-rope 20000 --steps 8000 --warmup 500 --val-every 500
+       --eval-sets val24:320,kitti360_val:full,nrgbd:500,kitti:full --select val24,kitti360_val"
+    P=poserefine_kvmem_mixedfix944k360vk2_t32-2048_anchor8_lr2e-5; JT=mixedfix_scannet944_kitti360_vkitti2_metricloss_driving_only_groupfirst
+    sub A_frozencausal_rel_mixedfix $A --memory kvcache --rel-w 1 --lr 2e-5
+    sub B_bidirhead_rel_mixedfix $B --memory kvcache --rel-w 1 --lr 2e-5
+fi

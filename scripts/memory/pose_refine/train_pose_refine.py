@@ -596,6 +596,12 @@ def main():
     ap.add_argument("--reg-w", type=float, default=0.0, help="weight of mean(dc^2)/mean(c^2)")
     ap.add_argument("--rel-w", type=float, default=0.0, help="weight of the local relative-pose loss")
     ap.add_argument("--norm-trans", action="store_true", help="translation loss / mean GT distance")
+    ap.add_argument("--group-first", action="store_true",
+                    help="draw the --train-dirs group by weight first, then t within its clip lengths "
+                         "(otherwise t first, so short-clip groups only appear for small t)")
+    ap.add_argument("--metric-groups", default="",
+                    help="comma list of --train-dirs groups with metric GT (driving): only their batches get "
+                         "the scale-free fit and distance normalisation; others keep the plain loss")
     ap.add_argument("--frames-per-batch", type=int, default=0,
                     help="batch = min(--batch, this // t): long prefixes take smaller batches")
     ap.add_argument("--t-max-start", type=int, default=0,
@@ -708,10 +714,15 @@ def main():
         tm = Tmax
         if args.t_max_start:
             tm = int(args.t_max_start + (Tmax - args.t_max_start) * min(1.0, step / (0.6 * args.steps)))
-        t = int(rng.choice(np.arange(args.t_min, tm + 1, args.t_step)))
-        avail = [g for g in groups_tr if (g[3] >= t).any()]
-        w = np.array([g[2] for g in avail])
-        _, clips, _, lens = avail[rng.choice(len(avail), p=w / w.sum())]
+        if args.group_first:
+            w = np.array([g[2] for g in groups_tr])
+            gname, clips, _, lens = groups_tr[rng.choice(len(groups_tr), p=w / w.sum())]
+            t = int(rng.choice(np.arange(args.t_min, min(tm, lens.max()) + 1, args.t_step)))
+        else:
+            t = int(rng.choice(np.arange(args.t_min, tm + 1, args.t_step)))
+            avail = [g for g in groups_tr if (g[3] >= t).any()]
+            w = np.array([g[2] for g in avail])
+            gname, clips, _, lens = avail[rng.choice(len(avail), p=w / w.sum())]
         ok = np.flatnonzero(lens >= t)
         B = min(args.batch, max(1, args.frames_per_batch // t)) if args.frames_per_batch else args.batch
         bi = rng.choice(ok, B, replace=len(ok) < B)
@@ -726,8 +737,10 @@ def main():
         gem = torch.stack([c.gem[:t] for c in sample]).to(dev) if args.gem_mem else None
         with torch.autocast("cuda", dtype=torch.bfloat16):
             preds = model(spec, st, lp, kf=kf, rope_f=rf, gem=gem)
+        metric = gname in args.metric_groups.split(",") if args.metric_groups else None
         loss = pose_loss([p.float() for p in preds], gt, skip=args.anchor_frames,
-                         scale_free=args.scale_free_loss, norm_trans=args.norm_trans,
+                         scale_free=args.scale_free_loss if metric is None else metric,
+                         norm_trans=args.norm_trans if metric is None else metric,
                          rel_w=args.rel_w, hw=sample[0].hw)
         if args.reg_w and model.last_delta is not None:
             c = spec[:, :, TAP23, CAM].float()
