@@ -26,4 +26,4 @@ SYNC=$!; trap 'kill $SYNC 2>/dev/null; rsync -a "$WORK/" "$DEST/" || true' EXIT
 "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $WORK "$@"
 "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $WORK --eval-only \
     --ckpt $WORK/best.pt --max-frames-rope 20000 \
-    --eval-sets val24:320,kitti360_val:full,nrgbd:500,kitti:full,vbr:full
+    --eval-sets ${FINAL_EVAL:-val24:320,kitti360_val:full,nrgbd:500,kitti:full,vbr:full}

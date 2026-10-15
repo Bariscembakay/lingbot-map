@@ -17,4 +17,4 @@ ARM=$1; shift
 "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $CAMP/$ARM --wandb "$@"
 "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $CAMP/$ARM --eval-only \
     --ckpt $CAMP/$ARM/best.pt --max-frames-rope 20000 \
-    --eval-sets val24:320,kitti360_val:full,nrgbd:500,kitti:full,vbr:full
+    --eval-sets ${FINAL_EVAL:-val24:320,kitti360_val:full,nrgbd:500,kitti:full,vbr:full}

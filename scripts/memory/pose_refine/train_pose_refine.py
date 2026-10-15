@@ -77,6 +77,8 @@ class ClipData:
         self.kf = kf.to(device)
         # lingbot's RoPE frame index: frames processed so far that were appended to the cache
         self.rope_f = (torch.cumsum(kf.long(), 0) - kf.long()).to(device)
+        dz = f.resolve().parent.parent / "dino" / f.name
+        self.gem = torch.from_numpy(np.load(dz)["gem"]).to(device) if dz.exists() else None
         self.states = self.stops = None
         if state_dir is not None:
             s = np.load(state_dir / f.name)
@@ -179,6 +181,26 @@ class LingbotKV(nn.Module):
                 v.reshape(B, t * 6, 16, HEAD_DIM).transpose(1, 2))
 
 
+class GemMemory(nn.Module):
+    """One extra memory token per cached frame per block: its DINOv2 GeM descriptor, projected
+    into the block's K/V head space; keys get lingbot's 3D RoPE at (frame, 6, 6), the spatial
+    slot after the 6 special tokens."""
+
+    def __init__(self, n_blocks, dim=1024):
+        super().__init__()
+        self.norm = nn.LayerNorm(dim)
+        self.k = nn.ModuleList(nn.Linear(dim, 16 * HEAD_DIM) for _ in range(n_blocks))
+        self.v = nn.ModuleList(nn.Linear(dim, 16 * HEAD_DIM) for _ in range(n_blocks))
+        self.k_norm = nn.ModuleList(nn.LayerNorm(HEAD_DIM) for _ in range(n_blocks))
+
+    def forward(self, gem, rope_f, table, i):
+        B, t = gem.shape[:2]
+        g = self.norm(gem.float())
+        k = self.k_norm[i](self.k[i](g).view(B, t, 16, HEAD_DIM))
+        k = apply_rope3d(k, rope3d_freqs(table, rope_f, 6)[:, :, None])
+        return k.transpose(1, 2), self.v[i](g).view(B, t, 16, HEAD_DIM).transpose(1, 2)
+
+
 class Block(nn.Module):
     def __init__(self, d, heads, cross):
         super().__init__()
@@ -221,7 +243,7 @@ class Block(nn.Module):
 class PoseRefiner(nn.Module):
     def __init__(self, memory, variant, head, d=1024, depth=4, heads=16, tok_dim=2048,
                  state_dim=768, state_tokens=768, anchors=0, pose_emb=False, kv_adapter=False,
-                 lingbot_ckpt=None):
+                 lingbot_ckpt=None, gem_mem=False):
         super().__init__()
         self.memory, self.variant, self.anchors = memory, variant, anchors
         self.inp = nn.Sequential(nn.LayerNorm(tok_dim), nn.Linear(tok_dim, d))
@@ -235,6 +257,7 @@ class PoseRefiner(nn.Module):
             self.lkv = LingbotKV(lingbot_ckpt, kv_adapter)
             for blk, qn in zip(self.blocks, self.lkv.q_norm_init):
                 blk.q_norm.load_state_dict(qn)
+        self.gem_mem = GemMemory(depth) if gem_mem else None
         self.out_norm = nn.LayerNorm(d)
         self.out = nn.Linear(d, 9 if variant in ("direct_pose", "pose_residual") else tok_dim)
         if variant != "direct_pose":
@@ -274,7 +297,7 @@ class PoseRefiner(nn.Module):
     def outputs_poses(self):
         return self.variant in ("direct_pose", "pose_residual")
 
-    def refine(self, spec, state=None, lingbot_pose=None, kf=None, rope_f=None):
+    def refine(self, spec, state=None, lingbot_pose=None, kf=None, rope_f=None, gem=None):
         """-> refined camera tokens [B, t, C], or [poses] for the pose-output variants.
         kvcache memory: kf [B, t] marks the frames lingbot cached, rope_f [B, t] their RoPE index."""
         B, t = spec.shape[:2]
@@ -288,8 +311,13 @@ class PoseRefiner(nn.Module):
         if self.memory == "kvcache":
             mask = kf[:, None, None, :, None].expand(B, 1, 1, t, 6).reshape(B, 1, 1, t * 6)
             qfreq = rope3d_freqs(self.lkv.table, rope_f, 0)
+            if self.gem_mem is not None:
+                mask = torch.cat([mask, kf[:, None, None, :]], -1)
             for i, blk in enumerate(self.blocks):
                 k, v = self.lkv(spec, rope_f, i)
+                if self.gem_mem is not None:
+                    gk, gv = self.gem_mem(gem, rope_f, self.lkv.table, i)
+                    k, v = torch.cat([k, gk.to(k.dtype)], 2), torch.cat([v, gv.to(v.dtype)], 2)
                 x = blk(x, pos, (k, v, mask, qfreq))
         else:
             mem, mem_pos = self.memory_tokens(spec, state)
@@ -305,10 +333,11 @@ class PoseRefiner(nn.Module):
             return [lingbot_pose.float() + y]
         return cam + y
 
-    def forward(self, spec, state=None, lingbot_pose=None, head_mode=None, refine=True, kf=None, rope_f=None):
+    def forward(self, spec, state=None, lingbot_pose=None, head_mode=None, refine=True, kf=None, rope_f=None,
+                gem=None):
         """spec [B, t, 4, 6, C] -> list of pose encodings [B, t, 9] (the last is final)."""
         if refine:
-            cam = self.refine(spec, state, lingbot_pose, kf, rope_f)
+            cam = self.refine(spec, state, lingbot_pose, kf, rope_f, gem)
             if self.outputs_poses:
                 return cam
         elif self.outputs_poses:
@@ -451,8 +480,9 @@ def evaluate(model, clips, ts, head_mode=None, refine=True):
             st = c.state_at(t)[None] if model.memory == "state" else None
             # fp32: on NRGBD (~0.2 deg/frame) bf16 jitter alone inflated RPE-rot 30%
             with torch.autocast("cuda", enabled=False):
+                gem = c.gem[None, :t] if model.gem_mem is not None else None
                 p = model(c.spec[None, :t], st, c.lingbot[None, :t], head_mode, refine,
-                          c.kf[None, :t], c.rope_f[None, :t])[-1][0].float()
+                          c.kf[None, :t], c.rope_f[None, :t], gem)[-1][0].float()
             r = traj_metrics(pose_enc_to_c2w(p, c.hw), c.gt_c2w[:t], c.scale)
             r["lingbot"] = traj_metrics(pose_enc_to_c2w(c.lingbot[:t].float(), c.hw),
                                         c.gt_c2w[:t], c.scale)
@@ -561,6 +591,8 @@ def main():
                     help="eval-only override of the variant's head mode")
     ap.add_argument("--pose-emb", action="store_true", help="add MLP(lingbot pose) to each query")
     ap.add_argument("--kv-adapter", action="store_true", help="kvcache: zero-init learned residual on frozen K/V")
+    ap.add_argument("--gem-mem", action="store_true",
+                    help="kvcache: add each cached frame's DINOv2 GeM descriptor (<split>/dino/) as a memory token")
     ap.add_argument("--reg-w", type=float, default=0.0, help="weight of mean(dc^2)/mean(c^2)")
     ap.add_argument("--rel-w", type=float, default=0.0, help="weight of the local relative-pose loss")
     ap.add_argument("--norm-trans", action="store_true", help="translation loss / mean GT distance")
@@ -578,7 +610,7 @@ def main():
         ck = torch.load(args.ckpt, map_location="cpu", weights_only=False)
         for key, dflt in (("memory", None), ("variant", None), ("anchor_frames", 0),
                           ("no_head_rope", False), ("state_label", None), ("pose_emb", False),
-                          ("kv_adapter", False)):
+                          ("kv_adapter", False), ("gem_mem", False)):
             setattr(args, key, ck["args"].get(key, dflt))
     assert args.memory and args.variant, "--memory/--variant (or --ckpt) required"
     torch.manual_seed(args.seed)
@@ -590,7 +622,7 @@ def main():
     head = build_head(args.lingbot_ckpt, not args.no_head_rope, args.max_frames_rope)
     assert args.anchor_frames == 0 or args.variant != "direct_pose", "direct_pose has no lingbot anchors"
     model = PoseRefiner(args.memory, args.variant, head, anchors=args.anchor_frames, pose_emb=args.pose_emb,
-                        kv_adapter=args.kv_adapter, lingbot_ckpt=args.lingbot_ckpt).to(dev)
+                        kv_adapter=args.kv_adapter, lingbot_ckpt=args.lingbot_ckpt, gem_mem=args.gem_mem).to(dev)
     # "name:len+len" per set; "full" = whole clip. The first set picks best.pt.
     evsets = []
     for item in args.eval_sets.split(","):
@@ -690,8 +722,9 @@ def main():
         lp = torch.stack([c.lingbot[:t] for c in sample]).to(dev)
         kf = torch.stack([c.kf[:t] for c in sample]).to(dev)
         rf = torch.stack([c.rope_f[:t] for c in sample]).to(dev)
+        gem = torch.stack([c.gem[:t] for c in sample]).to(dev) if args.gem_mem else None
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            preds = model(spec, st, lp, kf=kf, rope_f=rf)
+            preds = model(spec, st, lp, kf=kf, rope_f=rf, gem=gem)
         loss = pose_loss([p.float() for p in preds], gt, skip=args.anchor_frames,
                          scale_free=args.scale_free_loss, norm_trans=args.norm_trans,
                          rel_w=args.rel_w, hw=sample[0].hw)
