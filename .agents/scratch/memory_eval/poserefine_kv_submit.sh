@@ -83,4 +83,5 @@ if [ "${1:-}" = mixedfix ]; then
     P=poserefine_kvmem_mixedfix944k360vk2_t32-2048_anchor8_lr2e-5; JT=mixedfix_scannet944_kitti360_vkitti2_metricloss_driving_only_groupfirst
     sub A_frozencausal_rel_mixedfix $A --memory kvcache --rel-w 1 --lr 2e-5
     sub B_bidirhead_rel_mixedfix $B --memory kvcache --rel-w 1 --lr 2e-5
+    sub A_frozencausal_rel_mixedfix_nomem $A --memory none --rel-w 1 --lr 2e-5
 fi
