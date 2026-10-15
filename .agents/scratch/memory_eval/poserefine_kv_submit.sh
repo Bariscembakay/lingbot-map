@@ -69,6 +69,10 @@ if [ "${1:-}" = indoor ]; then
     sub A_frozencausal_indoor_kvadapter $A --memory kvcache --lr 2e-5 --kv-adapter
     sub A_frozencausal_indoor_reg0.1 $A --memory kvcache --lr 2e-5 --reg-w 0.1
     sub A_frozencausal_indoor_nomem $A --memory none --lr 2e-5
+    for sd in 1 2; do
+        sub A_frozencausal_indoor_seed$sd $A --memory kvcache --lr 2e-5 --seed $sd
+        sub A_frozencausal_indoor_nomem_seed$sd $A --memory none --lr 2e-5 --seed $sd
+    done
 fi
 # Mixed recipe, fixed after the overnight diagnosis: the scale-free fit + distance
 # normalisation only on driving batches (ScanNet++ GT is already in lingbot's scale; using
