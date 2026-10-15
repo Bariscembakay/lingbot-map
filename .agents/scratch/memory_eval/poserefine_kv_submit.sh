@@ -62,4 +62,6 @@ if [ "${1:-}" = indoor ]; then
     sub A_frozencausal_indoor $A --memory kvcache --lr 2e-5
     sub B_bidirhead_indoor $B --memory kvcache --lr 2e-5 --max-frames-rope 20000
     sub A_frozencausal_indoor_rel $A --memory kvcache --lr 2e-5 --rel-w 1
+    sub A_frozencausal_indoor_scalefree_normtrans $A --memory kvcache --lr 2e-5 --scale-free-loss --norm-trans
+    sub B_bidirhead_indoor_rel $B --memory kvcache --lr 2e-5 --max-frames-rope 20000 --rel-w 1
 fi
