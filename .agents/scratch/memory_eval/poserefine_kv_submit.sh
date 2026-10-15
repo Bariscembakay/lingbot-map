@@ -11,7 +11,7 @@ GPU=${GPU:-h200:1}
 C="--anchor-frames 8 --scale-free-loss --norm-trans --train-store cpu
    --train-dirs train+train_v5:0.45,kitti360_train:0.35,vkitti2:0.2
    --t-min 32 --t-max 2048 --t-step 32 --t-max-start 1024 --frames-per-batch 4096 --batch 16
-   --max-frames-rope 4096 --steps 10000 --warmup 500 --val-every 500
+   --max-frames-rope 20000 --steps 10000 --warmup 500 --val-every 500
    --eval-sets val24:320,kitti360_val:full,nrgbd:500,kitti:full --select val24,kitti360_val"
 A="--variant tokres_frozencausal --no-head-rope"
 B="--variant tokres_bidirhead"
