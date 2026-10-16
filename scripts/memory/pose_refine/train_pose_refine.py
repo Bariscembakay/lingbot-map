@@ -108,6 +108,12 @@ def rope(x, pos, theta=10000.0):
     return torch.cat([a * cos - b * sin, a * sin + b * cos], -1)
 
 
+def anchor_block(n, a, device):
+    m = torch.zeros(n, n, dtype=torch.bool, device=device)
+    m[:a, :a] = True
+    return m
+
+
 def anchor_mask(n, a, device):
     m = torch.ones(n, n, dtype=torch.bool, device=device)
     m[:a, a:] = False
@@ -271,6 +277,7 @@ class PoseRefiner(nn.Module):
             self.mem_in = nn.Sequential(nn.LayerNorm(state_dim), nn.Linear(state_dim, d))
             self.slot_emb = nn.Parameter(torch.zeros(state_tokens, d))
         self.head = head
+        self.dense_causal_eval = False
         if variant == "tokres_frozencausal":
             head.requires_grad_(False)
         self.head_mode = "causal" if variant == "tokres_frozencausal" else "bidir"
@@ -351,9 +358,24 @@ class PoseRefiner(nn.Module):
         t = cam.shape[1]
         head_mode = head_mode or self.head_mode
         nfs = (self.anchors or t) if head_mode == "bidir" else 8
+        restore = None
+        if head_mode == "causal" and self.dense_causal_eval and not torch.is_grad_enabled():
+            # the causal head's FlexAttention block mask is rebuilt by a per-frame python loop
+            # and compiled per sequence length: minutes per full-length driving clip. Same mask,
+            # dense: the 8 anchors attend among themselves, every later frame to itself and the past.
+            restore = [blk._prepare_blockwise_causal_attn_mask for blk in self.head.trunk]
+            for blk in self.head.trunk:
+                blk._prepare_blockwise_causal_attn_mask = (
+                    lambda device, num_frames, frame_seqlen, num_frame_per_block:
+                    torch.ones(num_frames, num_frames, dtype=torch.bool, device=device).tril()
+                    | anchor_block(num_frames, 8, device))
+            nfs = -1   # as head_context_probe.py, whose dense "full" mask reproduced lingbot's poses
         preds = self.head.trunk_fn(self.head.token_norm(cam), None, self.head.num_iterations,
                                    num_frame_per_block=1, num_frame_for_scale=nfs,
                                    sliding_window_size=-1)
+        if restore is not None:
+            for blk, f in zip(self.head.trunk, restore):
+                blk._prepare_blockwise_causal_attn_mask = f
         if self.anchors and lingbot_pose is not None:
             # a trainable head would otherwise drift the anchors' poses, and with them the gauge
             a = self.anchors
@@ -610,6 +632,9 @@ def main():
                     help="comma list of eval sets; best.pt minimises their mean ATE / lingbot ATE "
                          "(default: the first eval set's ATE)")
     ap.add_argument("--tag", default="", help="eval-only: suffix of the output json name")
+    ap.add_argument("--flex-causal-eval", action="store_true",
+                    help="evaluate the causal head with its own FlexAttention mask instead of the "
+                         "equivalent dense one (bit-identical on val24/NRGBD, but minutes per long clip)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--wandb", action="store_true")
     args = ap.parse_args()
@@ -644,6 +669,7 @@ def main():
         r = {n: evaluate(model, c, ts, args.head_mode, refine) for n, c, ts in evsets}
         return r, {k: summarise(v) for k, v in r.items()}
 
+    model.dense_causal_eval = not args.flex_causal_eval
     if args.ckpt:
         model.load_state_dict(ck["model"])
         print(f"[ckpt] {args.ckpt} step {ck['step']}", flush=True)
