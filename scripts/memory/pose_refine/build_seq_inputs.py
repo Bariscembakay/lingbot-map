@@ -3,8 +3,9 @@
 
 Each sequence is cut into runs that start every --start-every frames and last up to
 --run-len frames; each run is its own lingbot stream (its own frame 0 and anchor scale),
-run exactly as the benchmark runs lingbot on KITTI: images cover-fit resized and
-centre-cropped to 504x280 (benchmark/datasets/kitti.py), then the benchmark's
+run as the benchmark runs lingbot on KITTI: images cover-fit resized and centre-cropped to
+504x280 (benchmark/datasets/kitti.py; KITTI-360 is cropped around its off-centre principal
+point instead, see pp_center_fit), then the benchmark's
 LingbotMapMethod with its auto keyframe interval. GT is metric and relative to the run's
 first frame (gt_scale = 1), so the training loss must be scale-free.
 Usage: build_seq_inputs.py kitti360 --seq 2013_05_28_drive_0000_sync --out DIR
@@ -43,6 +44,28 @@ def cover_fit(rgb, K):
     K[:2] *= s
     K[0, 2] -= x0
     K[1, 2] -= y0
+    return out, K
+
+
+def pp_center_fit(rgb, K):
+    """Largest TW:TH window centred on the principal point, resized to TWxTH.
+
+    lingbot predicts a camera whose optical axis is the image centre. KITTI-360's rectified
+    camera 0 has cy = 238.8 in a 376-row image, so a centre crop leaves the principal point
+    37.8 px (5.25 deg) below centre and lingbot's camera comes out pitched against the GT one:
+    the "KITTI-360 GT convention" offset, measured at 4.9-5.8 deg on the cached val runs."""
+    H, W = rgb.shape[:2]
+    cx, cy = K[0, 2], K[1, 2]
+    h = min(2 * min(cy, H - cy), 2 * min(cx, W - cx) * TH / TW)
+    w = h * TW / TH
+    x0, y0 = cx - w / 2, cy - h / 2
+    s = TW / w
+    A = np.array([[s, 0, -x0 * s], [0, s, -y0 * s]], np.float64)
+    out = cv2.warpAffine(rgb, A, (TW, TH), flags=cv2.INTER_AREA)
+    K = K.copy()
+    K[:2] *= s
+    K[0, 2] -= x0 * s
+    K[1, 2] -= y0 * s
     return out, K
 
 
@@ -115,7 +138,8 @@ def main():
             f = out / f"{name}.npz"
             if f.exists():
                 continue
-            imgs, Ks = zip(*(cover_fit(cv2.cvtColor(cv2.imread(str(p)), cv2.COLOR_BGR2RGB), K)
+            fit = pp_center_fit if args.dataset == "kitti360" else cover_fit
+            imgs, Ks = zip(*(fit(cv2.cvtColor(cv2.imread(str(p)), cv2.COLOR_BGR2RGB), K)
                              for p, _, K in run))
             images = torch.from_numpy(np.stack(imgs)).permute(0, 3, 1, 2).float().div_(255)
             chunks = []
