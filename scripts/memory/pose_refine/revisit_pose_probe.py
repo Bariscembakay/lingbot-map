@@ -129,7 +129,7 @@ def predict(model, table, rows, norm, dev, bs=4096):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--inputs", type=Path, default=Path("/group/compact-3dmem/datasets/lingbot-poserefine-v1"))
+    ap.add_argument("--inputs", type=Path, default=Path("/data/lingbot-poserefine-v1"))
     ap.add_argument("--features", default="t23_cam,t23_all6,alltaps_cam,alltaps_all6")
     ap.add_argument("--val-drive", default="drive_0009")
     ap.add_argument("--test-sets", default="kitti,vbr")

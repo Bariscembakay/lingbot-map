@@ -28,7 +28,7 @@ sys.path.insert(0, str(REPO / "benchmark"))
 from methods.lingbot_map import LingbotMapMethod  # noqa: E402  (benchmark/methods is not inside the package)
 from lingbot_map.memory.losses import pose_enc_to_c2w  # noqa: E402
 
-DATA = Path("/group/compact-3dmem/datasets")
+DATA = Path("/data")
 TW, TH = 504, 280
 
 

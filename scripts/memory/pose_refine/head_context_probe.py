@@ -84,7 +84,7 @@ def decode(head, cam, mask):
 @torch.no_grad()
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--inputs", type=Path, default=Path("/group/compact-3dmem/datasets/lingbot-poserefine-v1"))
+    ap.add_argument("--inputs", type=Path, default=Path("/data/lingbot-poserefine-v1"))
     ap.add_argument("--sets", default="val24,nrgbd,kitti")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()

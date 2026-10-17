@@ -18,7 +18,7 @@ import torch.nn.functional as F
 from scipy.spatial import cKDTree
 from torch.utils.checkpoint import checkpoint
 
-CHORUS_ROOT = Path("/group/compact-3dmem/datasets/chorus_scannetpp_v2_vox5cm")
+CHORUS_ROOT = Path("/data/chorus-scannetpp-v2-vox5cm")
 CHORUS_CKPT = "/group/compact-3dmem/checkpoints/Chorus/lang-dino-enc-pretrain-scan-ppv2-mp3d-mcmc.pth"
 UPCAST_DIM = 1232
 

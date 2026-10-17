@@ -9,11 +9,12 @@
 set -euo pipefail
 cd "$HOME/lingbot-map"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
+dataset pull lingbot-poserefine-v1 >/dev/null
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 &
 KA=$!; trap 'kill $KA 2>/dev/null' EXIT
 for D in "$@"; do
-    "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs /group/compact-3dmem/datasets/lingbot-poserefine-v1 \
+    "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs /data/lingbot-poserefine-v1 \
         --out "$D" --eval-only --ckpt "$D/best.pt" --max-frames-rope 20000 \
         --eval-sets ${SETS:-kitti:full,vbr:full} --tag ${TAG:-_driving}
 done

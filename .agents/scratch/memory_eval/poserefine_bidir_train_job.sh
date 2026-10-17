@@ -10,7 +10,9 @@
 set -euo pipefail
 cd "$HOME/lingbot-map"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
+dataset pull lingbot-poserefine-v1 >/dev/null
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
+"$P" -c "import wandb" 2>/dev/null || "$P" -m pip install -q wandb  # lingbot_map env ships without it
 CAMP=/group/compact-3dmem/campaigns/spatial_memory
 ARM=$1; shift
 # patch tokens come from the /data tap caches; the specials-only runs read only /group npz inputs
@@ -20,9 +22,9 @@ fi
 if [ "$ARM" = smoke ]; then
     S=/scratch/$USER/bidir_smoke
     "$P" scripts/memory/pose_refine/train_bidir_refiner.py --out $S/spec_fixed --anchors fixed \
-        --steps 20 --val-every 10 --warmup 5 --max-train 4 --nrgbd-lengths 64,500
+        --steps 20 --val-every 10 --warmup 5 --max-train 4 --nrgbd-lengths 64,500 --no-wandb
     "$P" scripts/memory/pose_refine/train_bidir_refiner.py --out $S/patch_free --anchors free --patches \
-        --batch 2 --steps 20 --val-every 10 --warmup 5 --max-train 4 --nrgbd-lengths 64,500
+        --batch 2 --steps 20 --val-every 10 --warmup 5 --max-train 4 --nrgbd-lengths 64,500 --no-wandb
     exit 0
 fi
 "$P" scripts/memory/pose_refine/train_bidir_refiner.py --out $CAMP/$ARM "$@"

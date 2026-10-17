@@ -6,6 +6,8 @@ Input at prefix length t (frames 0..t-1), all from lingbot's last layer (tap 23,
   --patches  also the patch tokens of the 8 anchor frames and of the last 64 frames,
              the frames whose full tokens lingbot's KV cache holds at time t
 Four pre-norm self-attention blocks at width 2048 (no in/out projection), bidirectional,
+(--width 1024: in-projection 2048->1024 and final norm + out-projection 1024->2048, so the
+input token cannot reach the output through the residual stream unchanged),
 1-D RoPE on frame index, learned token-type (and patch-position) embeddings. The outputs at
 the camera-token positions ARE the new camera tokens (no added residual), decoded by
 lingbot's camera head, frozen and causal as lingbot runs it.
@@ -37,7 +39,7 @@ import train_pose_refine as tp  # noqa: E402
 from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 
 D, HEADS, A, WINDOW, NPATCH = 2048, 16, 8, 64, 999
-INPUTS = Path("/group/compact-3dmem/datasets/lingbot-poserefine-v1")
+INPUTS = Path("/data/lingbot-poserefine-v1")
 
 
 class Clip:
@@ -78,41 +80,49 @@ def rope1d(x, pos, theta=10000.0):
 
 
 class Block(nn.Module):
-    def __init__(self):
+    def __init__(self, w=D):
         super().__init__()
-        self.n1, self.qkv, self.o = nn.LayerNorm(D), nn.Linear(D, 3 * D), nn.Linear(D, D)
-        self.n2, self.mlp = nn.LayerNorm(D), nn.Sequential(nn.Linear(D, 4 * D), nn.GELU(), nn.Linear(4 * D, D))
+        self.h = w // (D // HEADS)
+        self.n1, self.qkv, self.o = nn.LayerNorm(w), nn.Linear(w, 3 * w), nn.Linear(w, w)
+        self.n2, self.mlp = nn.LayerNorm(w), nn.Sequential(nn.Linear(w, 4 * w), nn.GELU(), nn.Linear(4 * w, w))
 
     def forward(self, x, pos):
-        B, N, _ = x.shape
-        q, k, v = self.qkv(self.n1(x)).view(B, N, 3, HEADS, D // HEADS).permute(2, 0, 3, 1, 4)
+        B, N, W = x.shape
+        q, k, v = self.qkv(self.n1(x)).view(B, N, 3, self.h, W // self.h).permute(2, 0, 3, 1, 4)
         q, k = rope1d(q, pos), rope1d(k, pos)
-        x = x + self.o(F.scaled_dot_product_attention(q, k, v).transpose(1, 2).reshape(B, N, D))
+        x = x + self.o(F.scaled_dot_product_attention(q, k, v).transpose(1, 2).reshape(B, N, W))
         return x + self.mlp(self.n2(x))
 
 
 class BidirRefiner(nn.Module):
-    def __init__(self, head, anchors_fixed, depth=4, ckpt=False):
+    def __init__(self, head, anchors_fixed, depth=4, ckpt=False, width=D):
         super().__init__()
-        self.type_emb = nn.Parameter(torch.zeros(7, D))          # 6 special kinds + patch
-        self.patch_pos = nn.Parameter(torch.zeros(NPATCH, D))
-        self.blocks = nn.ModuleList(Block() for _ in range(depth))
+        self.type_emb = nn.Parameter(torch.zeros(7, width))      # 6 special kinds + patch
+        self.patch_pos = nn.Parameter(torch.zeros(NPATCH, width))
+        self.blocks = nn.ModuleList(Block(width) for _ in range(depth))
+        self.inp = self.out = None
+        if width != D:
+            self.inp = nn.Linear(D, width)
+            self.out = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, D))
         self.head, self.anchors_fixed, self.ckpt = head.requires_grad_(False), anchors_fixed, ckpt
 
     def forward(self, spec, lingbot_pose, patches=None, pframes=None):
         """spec [B,t,6,D]; patches [B,F,999,D] of frames pframes [F] -> list of pose encodings [B,t,9]."""
         B, t = spec.shape[:2]
         dev = spec.device
-        x = (spec.float() + self.type_emb[:6]).reshape(B, t * 6, D)
+        proj = self.inp if self.inp is not None else (lambda z: z)
+        x = (proj(spec.float()) + self.type_emb[:6]).reshape(B, t * 6, -1)
         pos = torch.arange(t, device=dev).repeat_interleave(6)
         if patches is not None:
-            p = (patches.float() + self.type_emb[6] + self.patch_pos).reshape(B, -1, D)
+            p = (proj(patches.float()) + self.type_emb[6] + self.patch_pos).reshape(B, -1, x.shape[-1])
             x = torch.cat([x, p], 1)
             pos = torch.cat([pos, torch.as_tensor(pframes, device=dev).repeat_interleave(NPATCH)])
         pos = pos[None].expand(B, -1)
         for blk in self.blocks:
             x = checkpoint(blk, x, pos, use_reentrant=False) if self.ckpt and self.training else blk(x, pos)
-        cam = x[:, : t * 6].reshape(B, t, 6, D)[:, :, 0]
+        cam = x[:, : t * 6].reshape(B, t, 6, -1)[:, :, 0]
+        if self.out is not None:
+            cam = self.out(cam)
         if self.anchors_fixed:
             cam = torch.cat([spec[:, :A, 0].to(cam.dtype), cam[:, A:]], 1)
         # lingbot's head on lingbot's camera head inputs: frozen, causal, 8 scale frames.
@@ -210,6 +220,7 @@ def main():
     ap.add_argument("--inputs", type=Path, default=INPUTS)
     ap.add_argument("--patches", action="store_true")
     ap.add_argument("--anchors", choices=["fixed", "free"], required=True)
+    ap.add_argument("--width", type=int, default=D)
     ap.add_argument("--steps", type=int, default=6000)
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--lr", type=float, default=5e-5)
@@ -221,7 +232,10 @@ def main():
     ap.add_argument("--nrgbd-lengths", default="64,128,256,320,500")
     ap.add_argument("--grad-ckpt", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--no-wandb", action="store_true")
     ap.add_argument("--max-train", type=int, default=0, help="smoke: first N train clips per dir")
+    ap.add_argument("--overfit", action="store_true",
+                    help="train on one ScanNet++ clip (the first with >= t-max frames), also evaluated as set 'train1'")
     args = ap.parse_args()
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
@@ -230,7 +244,7 @@ def main():
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
 
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=False)
-    model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt).to(dev)
+    model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt, width=args.width).to(dev)
 
     def load(d, store):
         fs = sorted(f for f in (args.inputs / d / "specials").glob("*.npz") if ".tmp" not in f.stem)
@@ -240,6 +254,10 @@ def main():
     train = load("train", "cpu") + load("train_v5", "cpu")
     lens = [int(x) for x in args.nrgbd_lengths.split(",")]
     sets = [("val24", load("val24", dev), [320]), ("nrgbd", load("nrgbd", dev), lens)]
+    if args.overfit:
+        train = [next(c for c in train if c.T >= args.t_max)]
+        sets.append(("train1", train, [args.t_max]))
+        print(f"[overfit] clip {train[0].name} ({train[0].T} frames)", flush=True)
     print(f"[data] train {len(train)} clips; val24 {len(sets[0][1])}; nrgbd {len(sets[1][1])} at t={lens}; "
           f"patches={args.patches} anchors={args.anchors}", flush=True)
     params = [p for p in model.parameters() if p.requires_grad]
@@ -256,16 +274,25 @@ def main():
                     row[f"{s}@{t}/{k}"] = m[k]
         return row
 
+    run = None if args.no_wandb else tp.wandb_run(args, group="bidir_refiner")
+
+    def wlog(row):
+        if run is not None:
+            run.log({**{f"val/{k}": v for k, v in row.items() if k != "step"},
+                     **{f"ratio/{k[:-4]}": v / row[k[:-4] + "/lingbot_ate"] for k, v in row.items()
+                        if k.endswith("/ate") and "lingbot" not in k}}, step=row["step"])
+
     hist, best = [], float("inf")
     r = evaluate(model, sets, dev, args.patches)
     hist.append({"step": 0, **summarise(r)})
     print(f"[val 0] {hist[-1]}", flush=True)
+    wlog(hist[-1])
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(2)   # patch tokens are ~150 MB per sample of /data memmap reads
 
     def submit():
         t = int(rng.choice(tchoices))
-        return t, pool.submit(batch_cpu, train, rng.choice(len(train), args.batch, replace=False), t, args.patches)
+        return t, pool.submit(batch_cpu, train, rng.choice(len(train), args.batch, replace=len(train) < args.batch), t, args.patches)
 
     queue = [submit(), submit()]
     t0 = time.time()
@@ -286,11 +313,15 @@ def main():
         if step % 50 == 0:
             print(f"[{step:6d}] loss {loss.item():.4f} abs {la.item():.4f} rel {lr_.item():.4f} t {t} "
                   f"|g| {gn.item():.3f} {(time.time()-t0)/step:.2f}s/it", flush=True)
+            if run is not None:
+                run.log({"train/loss": loss.item(), "train/abs": la.item(), "train/rel": lr_.item(),
+                         "train/t": t, "train/grad_norm": gn.item(), "train/lr": lr}, step=step)
         if step % args.val_every == 0 or step == args.steps:
             r = evaluate(model, sets, dev, args.patches)
             row = {"step": step, **summarise(r)}
             hist.append(row)
             print(f"[val {step}] {row}", flush=True)
+            wlog(row)
             ck = {"model": {k: v for k, v in model.state_dict().items() if not k.startswith("head.")},
                   "args": vars(args), "step": step, "val": row}
             torch.save(ck, args.out / "last.pt")

@@ -8,8 +8,9 @@
 set -euo pipefail
 cd "$HOME/lingbot-map"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
+dataset pull lingbot-poserefine-v1 >/dev/null
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
-IN=/group/compact-3dmem/datasets/lingbot-poserefine-v1
+IN=/data/lingbot-poserefine-v1
 S=/scratch/$USER/poserefine_kv_smoke
 # "$P" scripts/memory/pose_refine/verify_kv_reconstruction.py --scene /group/compact-3dmem/campaigns/lingbot_map/default/kitti/04
 C="--inputs $IN --memory kvcache --anchor-frames 8 --scale-free-loss --norm-trans --rel-w 1 --train-store cpu

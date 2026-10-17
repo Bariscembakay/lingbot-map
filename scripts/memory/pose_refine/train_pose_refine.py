@@ -406,6 +406,22 @@ def build_head(ckpt, rope_on, max_frames=1024):
     return head
 
 
+def wandb_run(args, **kw):
+    """wandb run named after the output dir, or None (history.json has everything regardless)."""
+    import os
+    # wandb's default dir is ./wandb; in the repo root that directory then shadows the wandb
+    # package for every later run (REPO is on sys.path), which silently disabled logging.
+    os.environ.setdefault("WANDB_DIR", "/group/compact-3dmem/wandb"
+                          if Path("/group/compact-3dmem/wandb").is_dir() else f"/scratch/{os.environ.get('USER')}")
+    try:
+        import wandb
+        return wandb.init(project="spatial_memory", name=args.out.name,
+                          config={k: str(v) for k, v in vars(args).items()}, **kw)
+    except Exception as e:  # no egress / no login on this node
+        print(f"[wandb] disabled: {e}", flush=True)
+        return None
+
+
 # -- loss / metrics ------------------------------------------------------------
 def pose_loss(preds, gt, gamma=0.6, w_fov=0.5, skip=0, scale_free=False, norm_trans=False,
               rel_w=0.0, hw=None, rel_steps=(1, 2, 4, 8, 16, 32, 64)):
@@ -636,7 +652,7 @@ def main():
                     help="evaluate the causal head with its own FlexAttention mask instead of the "
                          "equivalent dense one (bit-identical on val24/NRGBD, but minutes per long clip)")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--wandb", action="store_true")
+    ap.add_argument("--no-wandb", action="store_true")
     args = ap.parse_args()
     if args.ckpt:
         ck = torch.load(args.ckpt, map_location="cpu", weights_only=False)
@@ -713,14 +729,7 @@ def main():
     print(f"[model] refiner {sum(p.numel() for p in ref_p)/1e6:.1f} M, head "
           f"{sum(p.numel() for p in head_p)/1e6:.1f} M", flush=True)
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
-    run = None
-    if args.wandb:
-        try:
-            import wandb
-            run = wandb.init(project="spatial_memory", name=args.out.name,
-                             config={k: str(v) for k, v in vars(args).items()})
-        except Exception as e:  # no egress / no login on this node: history.json still has it all
-            print(f"[wandb] disabled: {e}", flush=True)
+    run = None if args.no_wandb else wandb_run(args)
 
     hist, best = [], float("inf")
     sel = args.select.split(",") if args.select else []

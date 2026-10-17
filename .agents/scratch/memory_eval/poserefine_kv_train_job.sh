@@ -9,12 +9,13 @@
 set -euo pipefail
 cd "$HOME/lingbot-map"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
+dataset pull lingbot-poserefine-v1 >/dev/null
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 "$P" -c "import wandb" 2>/dev/null || "$P" -m pip install -q wandb  # lingbot_map env ships without it
-IN=/group/compact-3dmem/datasets/lingbot-poserefine-v1
+IN=/data/lingbot-poserefine-v1
 CAMP=/group/compact-3dmem/campaigns/spatial_memory
 ARM=$1; shift
-"$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $CAMP/$ARM --wandb "$@"
+"$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $CAMP/$ARM "$@"
 "$P" scripts/memory/pose_refine/train_pose_refine.py --inputs $IN --out $CAMP/$ARM --eval-only \
     --ckpt $CAMP/$ARM/best.pt --max-frames-rope 20000 \
     --eval-sets ${FINAL_EVAL:-val24:320,kitti360_val:full,nrgbd:500,kitti:full,vbr:full}
