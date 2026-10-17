@@ -6,8 +6,9 @@ frames of a few sequences, resized as the benchmark does (area budget 255000, al
 candidate convention turns the raw poses into OpenCV camera-to-world; per candidate:
   rel-rot     mean angle between consecutive relative rotations, lingbot vs GT (deg/frame):
               invariant to the world frame, so it isolates the camera-axis convention
-  pitch/yaw   median camera-frame direction of motion, GT minus lingbot (deg): a constant
-              offset here is an off-centre principal point (the KITTI-360 failure)
+  motion      per frame, the angle between GT's and lingbot's camera-frame direction of motion
+              (median), and the median wrapped pitch / yaw difference: a constant pitch offset is
+              an off-centre principal point (the KITTI-360 failure)
   ATE / AUC@3 Sim3-aligned, metres / %
 plus lingbot's predicted horizontal FoV against the true one.
 Candidates: tartan*  raw body axes (NED: x fwd, y right, z down) vs NED->OpenCV
@@ -72,14 +73,24 @@ def sequences(ds, n, frames):
     raise ValueError(ds)
 
 
-def motion_dir(T, step=5):
-    p, y = [], []
-    for i in range(len(T) - step):
-        v = T[i, :3, :3].T @ (T[i + step, :3, 3] - T[i, :3, 3])
-        if np.linalg.norm(v) > 1e-6:
-            p.append(np.degrees(np.arctan2(v[1], v[2])))
-            y.append(np.degrees(np.arctan2(v[0], v[2])))
-    return (float(np.median(p)), float(np.median(y))) if p else (float("nan"), float("nan"))
+def motion_vecs(T, step=5):
+    """camera-frame unit direction of motion over `step` frames, per frame (nan where static)"""
+    v = np.einsum("nji,nj->ni", T[:-step, :3, :3], T[step:, :3, 3] - T[:-step, :3, 3])
+    n = np.linalg.norm(v, axis=1, keepdims=True)
+    return np.where(n > 1e-9, v / np.maximum(n, 1e-12), np.nan)
+
+
+def motion_diff(G, L, step=5):
+    """per-frame GT-vs-lingbot motion direction: median angle between them, and median wrapped pitch / yaw
+    differences (a constant pitch offset is an off-centre principal point)"""
+    a, b = motion_vecs(G, step), motion_vecs(L, step)
+    ok = np.isfinite(a).all(1) & np.isfinite(b).all(1)
+    a, b = a[ok], b[ok]
+    ang = np.degrees(np.arccos(np.clip((a * b).sum(1), -1, 1)))
+    wrap = lambda x: (x + 180) % 360 - 180
+    dp = wrap(np.degrees(np.arctan2(a[:, 1], a[:, 2]) - np.arctan2(b[:, 1], b[:, 2])))
+    dy = wrap(np.degrees(np.arctan2(a[:, 0], a[:, 2]) - np.arctan2(b[:, 0], b[:, 2])))
+    return float(np.median(ang)), float(np.median(dp)), float(np.median(dy))
 
 
 def rel_rot(A, B):
@@ -116,13 +127,12 @@ def main():
             G = Traw.copy()
             G[:, :3, :3] = G[:, :3, :3] @ M
             G = np.linalg.inv(G[0])[None] @ G
-            pg, yg = motion_dir(G)
-            pl, yl = motion_dir(L)
+            ang, dp, dy = motion_diff(G, L)
             m = tp.traj_metrics(torch.from_numpy(L), torch.from_numpy(G), 1.0)
-            r[cname] = {"rel_rot_deg": rel_rot(L, G), "pitch_gt_minus_lb": pg - pl, "yaw_gt_minus_lb": yg - yl,
+            r[cname] = {"rel_rot_deg": rel_rot(L, G), "motion_angle_deg": ang, "pitch_gt_minus_lb": dp, "yaw_gt_minus_lb": dy,
                         "ate_m": float(m["ate"]), "auc3": float(m["auc3"]),
                         "path_m": float(np.linalg.norm(np.diff(G[:, :3, 3], axis=0), axis=1).sum())}
-            print(f"[{args.dataset}] {name} {cname:16s}: rel-rot {r[cname]['rel_rot_deg']:.3f} deg/frame, motion pitch/yaw diff "
+            print(f"[{args.dataset}] {name} {cname:16s}: rel-rot {r[cname]['rel_rot_deg']:.3f} deg/frame, motion dir angle {ang:.2f}, pitch/yaw diff "
                   f"{r[cname]['pitch_gt_minus_lb']:+.2f}/{r[cname]['yaw_gt_minus_lb']:+.2f} deg, ATE {m['ate']:.2f} m "
                   f"over {r[cname]['path_m']:.0f} m, AUC@3 {m['auc3']:.1f}", flush=True)
         print(f"[{args.dataset}] {name} FoV_x lingbot {fov_l:.1f} vs GT {fov_gt:.1f} deg", flush=True)
