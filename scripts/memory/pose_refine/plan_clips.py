@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Plan the 1048-frame cache clips of a dataset: per sequence, the frame stride and the clip frame lists.
 
-The stride keeps consecutive cached frames overlapping: it is the largest s <= --max-stride such
-that at least --keep of the pairs (i, i+s) of the sequence rotate by <= --max-rot degrees and
-translate by <= --max-trans x the sequence's median scene depth (median of the valid GT depth of
---depth-samples frames; --metric-depth metres for datasets without depth). Larger strides are
-tried only while every smaller one passes, so the chosen stride never skips an unsafe one.
-At that stride a sequence becomes one clip when it fits in --length frames, otherwise
-consecutive --length-frame clips; a remainder shorter than --min-tail frames is dropped.
+The stride is the densest one that fits the whole sequence in one --length-frame clip,
+ceil(N / length), as long as consecutive cached frames still overlap: it is capped by the
+largest s <= --max-stride for which at least --keep of the pairs (i, i+s) rotate by <= --max-rot
+degrees and translate by <= --max-trans x the sequence's median scene depth (median valid GT depth
+of --depth-samples frames; --metric-depth metres without depth; larger strides are tried only
+while every smaller one passes). When the overlap cap is below ceil(N / length), the sequence is
+cut into consecutive --length-frame clips at the capped stride; a remainder shorter than
+--min-tail frames is dropped.
 Runs of invalid poses split a sequence (ScanNet v2). Sequences shorter than --min-len are skipped.
 Usage: plan_clips.py --dataset tartanair-v2 --out plan.json
 """
@@ -72,14 +73,15 @@ def plan_seq(seq):
             except Exception as e:
                 info.setdefault("depth_errors", []).append(str(e)[:120])
                 dmed = A.metric_depth
-        s = choose_stride(T[a:b], dmed)
+        s_max = choose_stride(T[a:b], dmed)
+        s = min(s_max, max(1, -(-(b - a) // A.length)))     # densest stride that fits the run in one clip, if overlap allows
         ids = list(range(a, b, s))
         chunks = [ids[k:k + A.length] for k in range(0, len(ids), A.length)]
         if len(chunks) > 1 and len(chunks[-1]) < A.min_tail:
             chunks = chunks[:-1]
         chunks = [c for c in chunks if len(c) >= A.min_len]
         clips += [{"seq": seq, "frames": c, "stride": s, "depth_med": dmed} for c in chunks]
-        info["runs"].append({"range": [a, b], "stride": s, "depth_med": dmed, "clips": len(chunks)})
+        info["runs"].append({"range": [a, b], "stride": s, "stride_overlap_max": s_max, "depth_med": dmed, "clips": len(chunks)})
     return seq, clips, info
 
 
