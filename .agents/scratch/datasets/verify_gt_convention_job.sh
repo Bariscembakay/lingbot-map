@@ -16,7 +16,7 @@ P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 &
 KA=$!; trap 'kill $KA 2>/dev/null' EXIT
 for ds in "$@"; do
-    case $ds in matrixcity) dataset pull matrix_city >/dev/null;; *) dataset pull $ds >/dev/null;; esac
+    case $ds in matrixcity) dataset pull matrix_city >/dev/null;; scannet-v2) dataset pull scannet-v2-extracted >/dev/null;; *) dataset pull $ds >/dev/null;; esac
     "$P" scripts/memory/pose_refine/verify_gt_convention.py --dataset $ds --seqs 3 --frames 400 \
         --out ${OUT_DIR:-/scratch/$USER}/verify_gt_convention_$ds.json
 done

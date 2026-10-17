@@ -10,7 +10,7 @@ set -euo pipefail
 SETS=$1
 cd "$HOME/lingbot-map"
 git pull -q --ff-only || true
-for d in ${SETS//,/ }; do case $d in scannetpp) dataset pull ScanNetpp >/dev/null;; matrixcity) dataset pull matrix_city >/dev/null;; *) dataset pull $d >/dev/null;; esac; done
+for d in ${SETS//,/ }; do case $d in scannetpp) dataset pull ScanNetpp >/dev/null;; matrixcity) dataset pull matrix_city >/dev/null;; scannet-v2) dataset pull scannet-v2-extracted >/dev/null;; *) dataset pull $d >/dev/null;; esac; done
 if [ -x "${MAMBA_ROOT_PREFIX:-/nonexistent}/envs/lingbot_map/bin/python" ]; then P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 else V=/scratch/$USER/hfvenv; [ -x $V/bin/python ] || python3 -m venv $V; $V/bin/pip install -q numpy; P=$V/bin/python; fi
 OUT=${OUT:-/scratch/$USER/check_training_data_${SETS//,/_}.json}

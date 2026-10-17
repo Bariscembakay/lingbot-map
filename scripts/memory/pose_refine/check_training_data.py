@@ -7,7 +7,7 @@ content: a frame is a revisit when an earlier frame >= G metres of path before i
 r metres (pos), and also within 60 deg of relative rotation (view, the matchable kind).
 r / G per domain: indoor 1 / 5, TartanAir-style 3 / 30, driving 10 / 200 metres.
 Usage: check_training_data.py --sets tartanair-v1,tartanair-v2,tartanground --out x.json
-       sets: tartanair-v1 tartanair-v2 tartanground scannetpp kitti360 matrixcity
+       sets: tartanair-v1 tartanair-v2 tartanground scannetpp scannet-v2 kitti360 matrixcity
 """
 from __future__ import annotations
 
@@ -97,6 +97,15 @@ def matrixcity(road):
     return summarise(str(road).split("/data/", 1)[-1], M[:, :3, 3], R, nfiles(road, "*.png"), None, "driving")
 
 
+def scannetv2(scene):
+    a = np.loadtxt(scene / "poses.txt").reshape(-1, 4, 4)
+    ok = np.isfinite(a).all((1, 2))
+    r = summarise(scene.name, a[ok, :3, 3], a[ok, :3, :3], nfiles(scene / "color", "*.jpg"), nfiles(scene / "depth", "*.png"),
+                  "indoor", {"invalid_poses": int((~ok).sum())})
+    r["counts_match"] = r["n_img"] == r["n_depth"] == len(a)
+    return r
+
+
 def jobs(name):
     if name == "tartanair-v1":
         return [(tartan, (t, "pose_left.txt", "image_left", "depth_left"))
@@ -112,6 +121,8 @@ def jobs(name):
                 if (s / "iphone/pose_intrinsic_imu.json").exists()]
     if name == "kitti360":
         return [(kitti360, (d,)) for d in sorted(Path("/data/kitti360").glob("*_sync"))]
+    if name == "scannet-v2":
+        return [(scannetv2, (s,)) for s in sorted(Path("/data/scannet-v2-extracted").iterdir()) if (s / "poses.txt").exists()]
     if name == "matrixcity":
         return [(matrixcity, (r,)) for r in sorted(Path("/data/matrix_city/small_city/street").glob("*/small_city_road_*"))
                 if (r / "transforms.json").exists()]

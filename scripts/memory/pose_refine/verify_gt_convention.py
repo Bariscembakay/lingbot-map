@@ -13,6 +13,7 @@ candidate convention turns the raw poses into OpenCV camera-to-world; per candid
 plus lingbot's predicted horizontal FoV against the true one.
 Candidates: tartan*  raw body axes (NED: x fwd, y right, z down) vs NED->OpenCV
             matrixcity  raw Blender/OpenGL vs OpenGL->OpenCV (flip y, z)
+            scannet-v2  raw (expected OpenCV) vs an OpenGL flip
 Usage: verify_gt_convention.py --dataset tartanair-v2 [--seqs 3] [--frames 400]
 """
 from __future__ import annotations
@@ -61,6 +62,19 @@ def sequences(ds, n, frames):
             T[:, :3, :3], T[:, :3, 3] = quat_to_R(a[:frames, 3:7]), a[:frames, :3]
             out.append((str(t).split("/data/")[1], [t / img.format(i) for i in range(frames)], T,
                         {"raw_body": np.eye(3), "ned_to_opencv": NED_TO_CV}, cam))
+            if len(out) == n:
+                break
+        return out
+    if ds == "scannet-v2":
+        from clip_sources import ScanNetV2
+        src, out = ScanNetV2(), []
+        for sc in src.seqs()[::200]:
+            T = src.poses(sc)
+            ok = np.isfinite(T).all((1, 2))
+            if ok[:frames].all():
+                m = src.meta(sc)
+                out.append((sc, [src.ROOT / sc / "color" / f"{i:06d}.jpg" for i in range(frames)], T[:frames],
+                            {"raw": np.eye(3), "opengl_flip": GL_TO_CV}, (m["color_wh"][0], m["color_wh"][1], m["intrinsic_color"][0][0])))
             if len(out) == n:
                 break
         return out
