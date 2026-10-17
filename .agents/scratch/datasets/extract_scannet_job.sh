@@ -2,7 +2,7 @@
 #SBATCH --partition=login
 #SBATCH --constraint=zone-msp3
 #SBATCH --nodelist=msp3-login-3
-#SBATCH --cpus-per-task=48
+#SBATCH --cpus-per-task=32
 #SBATCH --mem=96G
 #SBATCH --time=36:00:00
 #SBATCH --output=/scratch/baris_bakay/%j_%x.log
@@ -17,7 +17,7 @@ $V/bin/pip install -q numpy pillow
 dataset pull scannet-v2 >/dev/null
 S=/scratch/$USER/stage_scannet-v2-extracted
 mkdir -p $S
-$V/bin/python scripts/memory/pose_refine/extract_scannet_sens.py --root /data/scannet-v2/scans --out $S --workers 48
+$V/bin/python scripts/memory/pose_refine/extract_scannet_sens.py --root /data/scannet-v2/scans --out $S --workers 32
 n_src=$(find $S -type f | wc -l)
 echo "[sens] $(date) staged $n_src files, $(du -sh $S | cut -f1)"
 dataset create scannet-v2-extracted $S
