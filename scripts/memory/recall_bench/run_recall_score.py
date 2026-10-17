@@ -70,7 +70,7 @@ def main() -> int:
     args = ap.parse_args()
 
     od = args.out / args.method / f"{args.scene}_n{args.tier}"
-    if (od / "metrics.json").exists():
+    if (od / "metrics.json").exists() and (args.no_ply or (od / "recalled_cloud_err.ply").exists()):
         print(f"[skip] {args.scene}_n{args.tier} already scored")
         return 0
     f = args.dump_dir / args.method / f"{args.scene}_n{args.tier}.npz"

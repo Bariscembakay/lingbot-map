@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 import numpy as np
 
-W = Path("/group/compact-3dmem/campaigns/lingbot_map/context_token_ablation")
+W = Path("/group/compact-3dmem/campaigns/context_token_ablation/default")
 CONTROL = "lingbot_map_traj6"
 ARMS = ["lingbot_map_traj_noreg", "lingbot_map_traj_nocam", "lingbot_map_traj_noscale",
         "lingbot_map_traj_regonly", "lingbot_map_traj_camonly"]

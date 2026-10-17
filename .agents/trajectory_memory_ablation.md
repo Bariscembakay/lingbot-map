@@ -94,7 +94,7 @@ actually need? §3.2 keeps camera + anchor + 4 registers for every frame evicted
 from the anchor set and the sliding window; these arms vary WHICH survive.
 Anchor and window frames keep all 783 of their tokens in every arm.
 
-Results: `campaigns/lingbot_map/context_token_ablation/` — 13 method configs,
+Results: `campaigns/context_token_ablation/default/` — 13 method configs,
 20 arm-runs (all 13 on Oxford across 3 protocols, 7 on NRGBD). Provenance (base
 commit + working-tree diff + config snapshot) under its `_provenance/`.
 

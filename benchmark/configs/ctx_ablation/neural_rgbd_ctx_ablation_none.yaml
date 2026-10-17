@@ -2,7 +2,7 @@
 # Same workspace as the other arms so it lands in the same eval/*.json. Kept in its
 # own config because evaluate.py scores every method a config lists, and re-scoring
 # the finished arms would cost hours of ICP for numbers that already exist.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+workspace: /group/compact-3dmem/campaigns/context_token_ablation/default
 
 datasets:
   - neural_rgbd

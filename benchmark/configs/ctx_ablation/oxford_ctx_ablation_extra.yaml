@@ -7,7 +7,7 @@
 #
 #   lingbot_map_traj_regonly  register only    4 of 6
 #   lingbot_map_traj_camonly  camera only      1 of 6
-workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+workspace: /group/compact-3dmem/campaigns/context_token_ablation/default
 
 datasets:
   - oxford

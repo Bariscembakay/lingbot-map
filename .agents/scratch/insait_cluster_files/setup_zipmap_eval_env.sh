@@ -25,6 +25,11 @@ mkdir -p "$MAMBA_ROOT"
     # imports, i.e. upstream ran with the main-repo package installed alongside.
     # --no-deps keeps this env's torch==2.5.1 pin (ZipMap pyproject wants 2.6).
     PY="$ENV_PREFIX/bin/python"
+    # Their videodepth code calls matplotlib.cm.get_cmap, removed in mpl 3.9.
+    if ! "$PY" -c "import matplotlib.cm as cm; cm.get_cmap" >/dev/null 2>&1; then
+        echo "[setup_zipmap_eval_env] Pinning matplotlib<3.9 ..."
+        "$PY" -m pip install "matplotlib<3.9"
+    fi
     # The embedded ttt3r/cut3r wrappers import beyond the harness requirements.
     if ! "$PY" -c "import transformers, roma" >/dev/null 2>&1; then
         echo "[setup_zipmap_eval_env] Installing ttt3r/cut3r extras ..."

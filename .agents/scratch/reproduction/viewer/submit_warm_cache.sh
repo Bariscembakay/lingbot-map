@@ -24,7 +24,7 @@ TIME_LIMIT="${2:-12:00:00}"
 DATASET="${3:-}"
 
 REPO="/home/baris_bakay/lingbot-map"
-WORKSPACE="/group/compact-3dmem/campaigns/reproduction/viewer_workspace"
+WORKSPACE="/group/compact-3dmem/campaigns/reproduction/_viewer_workspace"
 LOGDIR="/group/compact-3dmem/campaigns/_joblogs"
 mkdir -p "$LOGDIR"
 

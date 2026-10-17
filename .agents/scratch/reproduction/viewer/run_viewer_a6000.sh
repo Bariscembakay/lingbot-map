@@ -25,7 +25,7 @@
 # Usage: bash run_viewer_a6000.sh [workspace_dir] [port]
 set -euo pipefail
 
-WORKSPACE="${1:-/group/compact-3dmem/campaigns/reproduction/viewer_workspace}"
+WORKSPACE="${1:-/group/compact-3dmem/campaigns/reproduction/_viewer_workspace}"
 PORT="${2:-20540}"
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"

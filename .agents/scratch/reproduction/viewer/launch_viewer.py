@@ -11,7 +11,7 @@ not bench):
 e.g.:
     micromamba run -n lingbot_map python \
         ../.agents/scratch/reproduction/viewer/launch_viewer.py \
-        /group/compact-3dmem/campaigns/reproduction/viewer_workspace 20540
+        /group/compact-3dmem/campaigns/reproduction/_viewer_workspace 20540
 
 Then from your own machine:
     ssh -L 20540:localhost:20540 baris_bakay@sof1-h200-0

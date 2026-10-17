@@ -3,7 +3,7 @@
 # 504x378 is exactly 4:3 at essentially the shipped patch count (972 vs 999), so
 # it isolates the aspect fix from any resolution change. 1008x756 is the same
 # aspect at 4x the pixels.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/oxford_aspect
+workspace: /group/compact-3dmem/campaigns/reproduction/oxford_aspect
 
 datasets:
   - oxford_ar504

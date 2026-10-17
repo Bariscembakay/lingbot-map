@@ -1,7 +1,7 @@
 # 7-Scenes reconstruction with colour-frame-registered GT depth.
 # Control arm is configs/seven_scenes.yaml (raw depth-camera-frame depth), whose
-# results sit under campaigns/lingbot_map/default/seven_scenes.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/depthproj
+# results sit under campaigns/reproduction/default/seven_scenes.
+workspace: /group/compact-3dmem/campaigns/reproduction/depthproj
 
 datasets:
   - seven_scenes_depthproj

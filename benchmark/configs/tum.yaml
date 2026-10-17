@@ -7,7 +7,7 @@
 # duplicated dataset level was flattened away, so the ARM dir is now the
 # workspace root and `datasets:` below selects the subdir under it. One root
 # therefore serves every dataset sharing that arm.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/tum_fr1
+workspace: /group/compact-3dmem/campaigns/reproduction/tum_fr1
 
 datasets:
   - tum

@@ -155,7 +155,7 @@ trajectory memory.
 
 ## Part 2 — Numbers: paper vs upstream README vs our runs
 
-Ours = on-disk aggregates under `/group/compact-3dmem/campaigns/lingbot_map/`,
+Ours = on-disk aggregates under `/group/compact-3dmem/campaigns/reproduction/`,
 read directly from `eval/*.json` (not transcribed). `#sc` = scenes evaluated.
 
 ### 2.1 Trajectory — ATE / RPE-trans / RPE-rot
@@ -334,7 +334,7 @@ mismatch.
   local changes to files cited: none in `lingbot_map/models/`, `demo.py`,
   `gct_profile.py`, `resize.py`, `eth3d.py`, `preprocess/oxford.py`.
 - Our numbers read from `eval/*.json` aggregates under
-  `/group/compact-3dmem/campaigns/lingbot_map/{default,sparse_s12,dense_s1}/`.
+  `/group/compact-3dmem/campaigns/reproduction/{default,sparse_s12,dense_s1}/`.
 - Not verified: the ~20 FPS / ~10.5 FPS throughput claims (no harness),
   anything in Part 1.1 (no code exists), and the exact contents of Pi3's
   7-Scenes preprocessing (inferred from the filename and `benchmark/README.md`).

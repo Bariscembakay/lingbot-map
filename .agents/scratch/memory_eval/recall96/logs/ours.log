@@ -1,0 +1,50 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+Dataset 'lingbot-tapcache-v4-40' already exists
+=== ours 210f741378 (/data/lingbot-tapcache-v4-40/val_top/210f741378_c0) 07:31:10 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_210f741378.npz
+=== ours 260db9cf5a (/data/lingbot-tapcache-v4-40/val_top/260db9cf5a_c0) 07:32:00 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_260db9cf5a.npz
+=== ours 2ab7bea148 (/data/lingbot-tapcache-v4-40/val_top/2ab7bea148_c0) 07:32:51 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_2ab7bea148.npz
+=== ours 47eb87b5bb (/data/lingbot-tapcache-v4-40/val_top/47eb87b5bb_c0) 07:33:39 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_47eb87b5bb.npz
+=== ours 0a7cc12c0e (/data/lingbot-tapcache-v4-40/val_median/0a7cc12c0e_c0) 07:34:26 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_0a7cc12c0e.npz
+=== ours 1730c7d709 (/data/lingbot-tapcache-v4-40/val_median/1730c7d709_c0) 07:35:15 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_1730c7d709.npz
+=== ours 1841a0b525 (/data/lingbot-tapcache-v4-40/val_median/1841a0b525_c0) 07:36:04 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_1841a0b525.npz
+=== ours 4291be3b44 (/data/lingbot-tapcache-v4-40/val_median/4291be3b44_c0) 07:36:51 ===
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[ckpt] step 5400 head=smallread_lingbot frames=96
+[saved] /scratch/baris_bakay/recall96/ours_4291be3b44.npz
+total 7869820
+drwxr-xr-x  2 baris_bakay baris_bakay      4096 Aug 31 07:37 .
+drwx------ 14 baris_bakay baris_bakay      4096 Aug 31 07:31 ..
+-rw-r--r--  1 baris_bakay baris_bakay 504392865 Aug 31 07:32 cut3r_210f741378.npz
+-rw-r--r--  1 baris_bakay baris_bakay 530117797 Aug 31 07:34 cut3r_260db9cf5a.npz
+-rw-r--r--  1 baris_bakay baris_bakay 516104734 Aug 31 07:35 cut3r_2ab7bea148.npz
+-rw-r--r--  1 baris_bakay baris_bakay 527167873 Aug 31 07:37 cut3r_47eb87b5bb.npz
+-rw-r--r--  1 baris_bakay baris_bakay 748188585 Aug 31 07:35 ours_0a7cc12c0e.npz
+-rw-r--r--  1 baris_bakay baris_bakay 740327520 Aug 31 07:36 ours_1730c7d709.npz
+-rw-r--r--  1 baris_bakay baris_bakay 752153655 Aug 31 07:36 ours_1841a0b525.npz
+-rw-r--r--  1 baris_bakay baris_bakay 731845269 Aug 31 07:32 ours_210f741378.npz
+-rw-r--r--  1 baris_bakay baris_bakay 751900450 Aug 31 07:32 ours_260db9cf5a.npz
+-rw-r--r--  1 baris_bakay baris_bakay 759930959 Aug 31 07:33 ours_2ab7bea148.npz
+-rw-r--r--  1 baris_bakay baris_bakay 738341702 Aug 31 07:37 ours_4291be3b44.npz
+-rw-r--r--  1 baris_bakay baris_bakay 758130307 Aug 31 07:34 ours_47eb87b5bb.npz

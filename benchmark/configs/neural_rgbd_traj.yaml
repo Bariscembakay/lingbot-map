@@ -3,7 +3,7 @@
 # benchmark has no pose numbers even though upstream's README publishes them.
 # Same workspace and same predictions as neural_rgbd.yaml -- evaluation only,
 # no re-inference; points stay off so points.json is not touched.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/default
+workspace: /group/compact-3dmem/campaigns/reproduction/default
 
 datasets:
   - neural_rgbd

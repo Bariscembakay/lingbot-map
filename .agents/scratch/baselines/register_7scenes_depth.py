@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 
 # name of the folder where we download the original 7scenes dataset to
 # we restructure the dataset by creating symbolic links to that folder
-src_folder = '/group/compact-3dmem/datasets/7-scenes'
+src_folder = '/data/7-Scenes'
 focal_length = 525.0
 
 # focal length of the depth sensor (source: https://www.microsoft.com/en-us/research/project/rgb-d-dataset-7-scenes/)

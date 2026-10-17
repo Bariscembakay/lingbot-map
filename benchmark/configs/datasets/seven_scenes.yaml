@@ -1,5 +1,5 @@
 dataset: seven_scenes
-raw_data_root: /group/compact-3dmem/datasets/7-scenes
+raw_data_root: /data/7-Scenes
 _split: test
 sampling:
   strategy: sequence

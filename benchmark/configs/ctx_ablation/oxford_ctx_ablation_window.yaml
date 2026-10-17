@@ -10,7 +10,7 @@
 #
 # NOTE: _w8 and _w4 rows are a DIFFERENT PROTOCOL from the unsuffixed rows and
 # from each other. Compare only within a suffix group, never across.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+workspace: /group/compact-3dmem/campaigns/context_token_ablation/default
 
 datasets:
   - oxford

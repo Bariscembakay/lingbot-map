@@ -3,7 +3,7 @@
 # depth-camera-frame depth is warped into the colour frame before use, which is
 # what upstream's `.depth.proj.png` already is. See datasets/seven_scenes.py.
 dataset: seven_scenes
-raw_data_root: /group/compact-3dmem/datasets/7-scenes
+raw_data_root: /data/7-Scenes
 _split: test
 _register_depth: true
 sampling:

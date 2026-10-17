@@ -37,9 +37,15 @@ here are in `fixes.md`.
   `Robbyant/lingbot-map`. Push auth: PAT via `credential.helper store`
   (see `fixes.md`). msp3 has its own clone.
 - Retired campaigns keep metrics only, under `archive/retired/<name>/`.
-- `/group/compact-3dmem`: run outputs → `campaigns/lingbot_map/<arm>/<benchmark>/`
-  (arm above benchmark since 2026-08-20); raw downloads → `datasets/<name>/`;
-  preprocessed → `datasets/<name>_processed/`.
+- `/group/compact-3dmem`: campaigns are research questions; layout and the
+  point-cloud convention are in `~/.claude/CLAUDE.md`. This repo's campaigns:
+  `reproduction/` (paper protocol arms `default`, `dense_s1`, `sparse_s12`,
+  `depthproj`, `tum_fr1`, `*_useproj_s1`), `context_token_ablation/default/`,
+  `pose_oracle/` (gtpose_oracle, predpose_rerun, gtdepth_predpose,
+  gtpose_framescale, gtpose_gtintr), `spatial_memory/`. Until 2026-10-11 all
+  but the last sat under `campaigns/lingbot_map/`. A BSS `workspace:` is the
+  arm dir. Raw downloads → `datasets/<name>/`; preprocessed →
+  `datasets/<name>_processed/`.
 - `campaigns/paper_reproduction/` is a different project's — don't touch.
 
 ## Dataset status

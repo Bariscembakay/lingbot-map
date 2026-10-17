@@ -1,5 +1,5 @@
 dataset: neural_rgbd
-raw_data_root: /group/compact-3dmem/datasets/nrgbd
+raw_data_root: /data/NRGBD
 sampling:
   strategy: sequence
   stride: 5

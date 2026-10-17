@@ -12,7 +12,7 @@
 #   lingbot_map_traj_noscale  SDPA,       camera + register   (anchor dropped)
 #
 # All five are siblings under one arm so they land in the same eval/*.json.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+workspace: /group/compact-3dmem/campaigns/context_token_ablation/default
 
 methods:
   - lingbot_map

@@ -18,7 +18,7 @@
 # mode is documented stable to ~3,000 frames, so 3,840 keyframes is just past that.
 # The control absorbs it (all arms share the length), but check the control's own
 # absolute quality per scene before trusting any delta.
-workspace: /group/compact-3dmem/campaigns/lingbot_map/context_token_ablation
+workspace: /group/compact-3dmem/campaigns/context_token_ablation/default
 
 datasets:
   - oxford_long

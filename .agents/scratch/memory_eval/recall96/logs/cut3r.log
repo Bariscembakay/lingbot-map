@@ -1,0 +1,303 @@
+[setup_cut3r_env] cut3r env already exists, skipping install.
+[setup_cut3r_env] Done.
+Dataset 'lingbot-tapcache-v4-40' already exists
+Dataset 'ScanNetpp' already exists
+=== cut3r 210f741378 (/data/lingbot-tapcache-v4-40/val_top/210f741378_c0) 07:31:12 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.80127896   0.         254.48328909]
+ [  0.         380.80127728 193.03962054]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.6s
+[query] 96 raymap-only queries in 15.2s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_210f741378.npz (504.4 MB) total 85.4s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 260db9cf5a (/data/lingbot-tapcache-v4-40/val_top/260db9cf5a_c0) 07:32:46 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.69009411   0.         254.59812379]
+ [  0.         380.69007316 193.18236917]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.6s
+[query] 96 raymap-only queries in 14.9s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_260db9cf5a.npz (530.1 MB) total 71.6s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 2ab7bea148 (/data/lingbot-tapcache-v4-40/val_top/2ab7bea148_c0) 07:34:06 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.67274976   0.         254.82863779]
+ [  0.         380.67274306 192.78427269]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.6s
+[query] 96 raymap-only queries in 15.3s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_2ab7bea148.npz (516.1 MB) total 95.4s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 47eb87b5bb (/data/lingbot-tapcache-v4-40/val_top/47eb87b5bb_c0) 07:35:50 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.62684001   0.         254.65275097]
+ [  0.         380.62686012 192.78571429]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.6s
+[query] 96 raymap-only queries in 15.1s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_47eb87b5bb.npz (527.2 MB) total 89.7s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 0a7cc12c0e (/data/lingbot-tapcache-v4-40/val_median/0a7cc12c0e_c0) 07:37:28 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.15778837   0.         255.07706926]
+ [  0.         380.1578001  193.04078311]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.5s
+[query] 96 raymap-only queries in 15.0s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_0a7cc12c0e.npz (528.3 MB) total 76.6s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 1730c7d709 (/data/lingbot-tapcache-v4-40/val_median/1730c7d709_c0) 07:38:53 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.84305623   0.         254.70611125]
+ [  0.         380.84306796 193.12960379]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.8s
+[query] 96 raymap-only queries in 14.4s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_1730c7d709.npz (512.7 MB) total 86.9s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 1841a0b525 (/data/lingbot-tapcache-v4-40/val_median/1841a0b525_c0) 07:40:28 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[380.38718629   0.         254.65326375]
+ [  0.         380.38721478 193.39944506]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.4s
+[query] 96 raymap-only queries in 15.2s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_1841a0b525.npz (519.8 MB) total 77.4s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+=== cut3r 4291be3b44 (/data/lingbot-tapcache-v4-40/val_median/4291be3b44_c0) 07:41:54 ===
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:73: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=not inference):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:217: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/heads/dpt_head.py:226: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+/home/baris_bakay/lingbot-map/CUT3R/src/dust3r/inference.py:254: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Warning, cannot find cuda-compiled version of RoPE2D, using a slow pytorch version instead
+[pre] 96 frames -> 384x512; K[0]=
+[[381.57326858   0.         254.87065637]
+ [  0.         381.57328869 192.49789187]
+ [  0.           0.           1.        ]]
+[model] loading /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+... loading model from /group/compact-3dmem/checkpoints/CUT3R/cut3r_512_dpt_4_64.pth
+instantiating : ARCroco3DStereo(ARCroco3DStereoConfig(freeze='encoder',state_size=768,state_pe='2d',pos_embed='RoPE100',rgb_head=True,pose_head=True,patch_embed_cls='PatchEmbedDust3R',img_size=(512,512),head_type='dpt',output_mode='pts3d+pose',depth_mode=('exp',-inf,inf),conf_mode=('exp',1,inf),pose_mode=('exp',-inf,inf),enc_embed_dim=1024,enc_depth=24,enc_num_heads=16,dec_embed_dim=768,dec_depth=12,dec_num_heads=12,landscape_only=False))
+<All keys matched successfully>
+>> Inference with model on 96 image/raymaps
+[ingest] 96 frames in 10.6s
+[query] 96 raymap-only queries in 14.7s
+[check] final state bitwise identical before/after all queries
+[saved] /scratch/baris_bakay/recall96/cut3r_4291be3b44.npz (524.3 MB) total 82.6s
+  pred_pts_self: (96, 384, 512, 3) float32
+  pred_pts_world: (96, 384, 512, 3) float32
+  pred_conf: (96, 384, 512) float32
+  pred_conf_other: (96, 384, 512) float32
+  pred_query_c2w: (96, 4, 4) float32
+  ingest_c2w: (96, 4, 4) float32
+  query_c2w_used: (96, 4, 4) float32
+  intrinsics_used: (96, 3, 3) float32
+  gt_scale: () float64
+  hw: (2,) int64
+  video_frame_ids: (96,) int64
+  cache_indices: (96,) int64
+total 9906028
+drwxr-xr-x  2 baris_bakay baris_bakay      4096 Aug 31 07:42 .
+drwx------ 13 baris_bakay baris_bakay      4096 Aug 31 07:37 ..
+-rw-r--r--  1 baris_bakay baris_bakay 528296613 Aug 31 07:38 cut3r_0a7cc12c0e.npz
+-rw-r--r--  1 baris_bakay baris_bakay 512678963 Aug 31 07:40 cut3r_1730c7d709.npz
+-rw-r--r--  1 baris_bakay baris_bakay 519819372 Aug 31 07:41 cut3r_1841a0b525.npz
+-rw-r--r--  1 baris_bakay baris_bakay 504392865 Aug 31 07:32 cut3r_210f741378.npz
+-rw-r--r--  1 baris_bakay baris_bakay 530117797 Aug 31 07:34 cut3r_260db9cf5a.npz
+-rw-r--r--  1 baris_bakay baris_bakay 516104734 Aug 31 07:35 cut3r_2ab7bea148.npz
+-rw-r--r--  1 baris_bakay baris_bakay 524262398 Aug 31 07:43 cut3r_4291be3b44.npz
+-rw-r--r--  1 baris_bakay baris_bakay 527167873 Aug 31 07:37 cut3r_47eb87b5bb.npz
+-rw-r--r--  1 baris_bakay baris_bakay 748188585 Aug 31 07:35 ours_0a7cc12c0e.npz
+-rw-r--r--  1 baris_bakay baris_bakay 740327520 Aug 31 07:36 ours_1730c7d709.npz
+-rw-r--r--  1 baris_bakay baris_bakay 752153655 Aug 31 07:36 ours_1841a0b525.npz
+-rw-r--r--  1 baris_bakay baris_bakay 731845269 Aug 31 07:32 ours_210f741378.npz
+-rw-r--r--  1 baris_bakay baris_bakay 751900450 Aug 31 07:32 ours_260db9cf5a.npz
+-rw-r--r--  1 baris_bakay baris_bakay 759930959 Aug 31 07:33 ours_2ab7bea148.npz
+-rw-r--r--  1 baris_bakay baris_bakay 738341702 Aug 31 07:37 ours_4291be3b44.npz
+-rw-r--r--  1 baris_bakay baris_bakay 758130307 Aug 31 07:34 ours_47eb87b5bb.npz

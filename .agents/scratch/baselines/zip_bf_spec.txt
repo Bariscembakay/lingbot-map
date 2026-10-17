@@ -1,0 +1,1 @@
+zipmap,breakfast_room,500

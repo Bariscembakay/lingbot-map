@@ -11,7 +11,7 @@
 #     not the old ~1 MB/s scare); `-` to skip shipping anything back.
 #
 #   e.g. bash submit_msp3.sh oxford_spires_processed /scratch/$USER/ws \
-#          /group/compact-3dmem/campaigns/lingbot_map/oxford_spires/sparse_s12 \
+#          /group/compact-3dmem/campaigns/reproduction/sparse_s12/oxford_spires \
 #          bash .agents/scratch/run_stage.sh prepare configs/oxford.yaml
 set -euo pipefail
 

@@ -2,7 +2,7 @@
 # NRGBD recall benchmark, CPU phase: score one scene's n100/n300/n500 dumps
 # (posed, no Sim(3)). Skips cells already scored; clouds (~1.5 GB/cell) only
 # for PLY_SCENE at n500.
-# Usage: sbatch --array=0-6 nrgbd_recall_score.sh <method> [ply_scene]
+# Usage: sbatch --array=0-6 nrgbd_recall_score.sh <method> [ply_scene|all]
 set -uo pipefail
 METHOD=$1; PLY_SCENE=${2:-whiteroom}
 SCENES=(whiteroom kitchen grey_white_room green_room complete_kitchen breakfast_room staircase)
@@ -16,7 +16,7 @@ dataset pull NRGBD >/dev/null 2>&1 || true
 rc=0
 for T in 100 300 500; do
     od="$CAMP/recallbench/$METHOD/${S}_n$T"
-    want_ply=0; [ "$S" = "$PLY_SCENE" ] && [ "$T" = 500 ] && want_ply=1
+    want_ply=0; { [ "$S" = "$PLY_SCENE" ] || [ "$PLY_SCENE" = all ]; } && [ "$T" = 500 ] && want_ply=1
     if [ -f "$od/metrics.json" ] && { [ $want_ply = 0 ] || [ -f "$od/recalled_cloud_err.ply" ]; }; then
         echo "[skip] $S n$T scored"; continue
     fi

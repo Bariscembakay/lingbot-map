@@ -2,7 +2,7 @@
 
 Three-way: paper vs. upstream's own `benchmark/README.md` vs. our runs. Ours are
 read from `eval/*.json` aggregates on disk under
-`/group/compact-3dmem/campaigns/lingbot_map/<arm>/<benchmark>/`, not transcribed.
+`/group/compact-3dmem/campaigns/reproduction/<arm>/<benchmark>/`, not transcribed.
 Scene counts in parentheses. `—` = not reported by that source.
 
 `benchmark/README.md` is what upstream gets from the released `lingbot-map.pt`
@@ -93,7 +93,7 @@ Only depth-consuming metrics move; pose is unaffected. Full derivation in
 **Fix, and it works.** `_register_depth` in `datasets/seven_scenes.py` warps
 depth into the colour frame before use — intrinsics untouched — using the
 Kinect calibration estimated by `zinsmatt/7-Scenes-Calibration` (Microsoft ship
-none). Arm `campaigns/lingbot_map/depthproj`, job 738368.
+none). Arm `campaigns/reproduction/depthproj`, job 738368.
 
 Every one of the six point-cloud metrics moved toward upstream; F1 went from
 3.32 below their row to 0.60 above it. Two controls say the effect is real:
