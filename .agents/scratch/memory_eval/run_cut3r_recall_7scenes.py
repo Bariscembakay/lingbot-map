@@ -80,7 +80,7 @@ def main() -> int:
     ap.add_argument("--cache", type=Path, default=Path(
         "/group/compact-3dmem/campaigns/spatial_memory/eval_7scenes_cache/chess_seq03_c0"))
     ap.add_argument("--out", type=Path,
-                    default=Path(__file__).parent / "cut3r_recall_7scenes_chess03.npz")
+                    default=Path("/group/compact-3dmem/campaigns/spatial_memory/_recall_dumps/cut3r_recall_7scenes_chess03.npz"))
     ap.add_argument("--frame-start", type=int, default=0)
     ap.add_argument("--frame-step", type=int, default=40)
     ap.add_argument("--num-frames", type=int, default=16)

@@ -16,7 +16,7 @@ import argparse
 import numpy as np
 from pathlib import Path
 
-D = Path(__file__).parent
+D = Path("/group/compact-3dmem/campaigns/spatial_memory/_recall_dumps")
 
 
 def to_grid(pts, h, w):

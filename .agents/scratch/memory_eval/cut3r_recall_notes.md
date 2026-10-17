@@ -1,6 +1,6 @@
 # CUT3R official recall probe — conventions (scene 210f741378, 16 frames)
 
-Produced by `run_cut3r_recall.py` → `cut3r_recall_210f741378.npz`.
+Produced by `run_cut3r_recall.py` → `cut3r_recall_210f741378.npz` (now in `/group/compact-3dmem/campaigns/spatial_memory/_recall_dumps/`).
 Model: official `cut3r_512_dpt_4_64.pth` (512-res DPT head, ViT patch 16),
 loaded with `ARCroco3DStereo.from_pretrained`.
 
