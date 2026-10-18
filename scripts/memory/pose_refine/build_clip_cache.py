@@ -42,12 +42,14 @@ A = 8
 
 
 def load_megaloc():
-    """From the local hub checkout and the HF cache when present: dozens of shards starting together
-    re-fetch github's zipball into the same ~/.cache/torch/hub path and collide."""
-    local = Path(os.environ.get("MEGALOC_DIR", Path.home() / ".cache/torch/hub/gmberton_MegaLoc_main"))
-    if (local / "hubconf.py").exists():
+    """From a stored copy (hub checkout + HF weights) under checkpoints/MegaLoc in each zone, offline:
+    ~/.cache is node-local /scratch on sof1-side nodes and shared /home on msp3, and dozens of shards
+    fetching github's zipball into one hub path collided."""
+    root = Path(os.environ.get("MEGALOC_ROOT", "/group/compact-3dmem/checkpoints/MegaLoc"))
+    if (root / "repo/hubconf.py").exists():
+        os.environ["HF_HOME"] = str(root / "hf")
         os.environ["HF_HUB_OFFLINE"] = "1"
-        return torch.hub.load(str(local), "get_trained_model", source="local")
+        return torch.hub.load(str(root / "repo"), "get_trained_model", source="local")
     return torch.hub.load("gmberton/MegaLoc", "get_trained_model")
 
 
