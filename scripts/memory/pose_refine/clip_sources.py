@@ -162,7 +162,7 @@ class ScanNetPP:
 
     def seqs(self):
         return sorted(p.name for p in (self.ROOT / "data").iterdir() if (p / "iphone/pose_intrinsic_imu.json").exists()
-                      and (p / "iphone/rgb.mkv").exists())
+                      and (p / "iphone/rgb.mkv").exists() and (p / "iphone/depth.bin").exists())
 
     def _meta(self, seq):
         return json.loads((self.ROOT / "data" / seq / "iphone/pose_intrinsic_imu.json").read_text())

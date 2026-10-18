@@ -94,20 +94,18 @@ def main():
     std = torch.tensor([0.229, 0.224, 0.225], device=dev)[:, None, None]
     args.out.mkdir(parents=True, exist_ok=True)
     print(f"[cache] {ds}: shard {args.shard}/{args.nshards}, {len(clips)} clips, attention {'flashinfer' if args.flashinfer else 'sdpa'}, compile {args.compile}", flush=True)
+
     def clip_name(c):
         return f"{c['seq'].replace('/', '__')}__f{c['frames'][0]:06d}_s{c['stride']}_n{len(c['frames'])}"
 
-    todo = [c for c in clips if not (args.out / f"{clip_name(c)}.npz").exists()]
+    todo = [c for c in clips if not (args.out / f"{clip_name(c)}.npz").exists()
+            and not (args.out / f"{clip_name(c)}.failed").exists()]
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(1)      # decode the next clip's images while lingbot runs on this one
     nxt = pool.submit(src.frames, todo[0]["seq"], todo[0]["frames"]) if todo else None
-    for ci, c in enumerate(todo):
-        name = clip_name(c)
-        f = args.out / f"{name}.npz"
-        t0 = time.time()
-        ids = c["frames"]
-        imgs, K = nxt.result()
-        nxt = pool.submit(src.frames, todo[ci + 1]["seq"], todo[ci + 1]["frames"]) if ci + 1 < len(todo) else None
+
+    def build_one(fut, c, ids, name, f, t0, ci):
+        imgs, K = fut.result()
         t_load = time.time() - t0
         x = torch.from_numpy(np.ascontiguousarray(imgs.transpose(0, 3, 1, 2))).float().div_(255)
         acc = {"spec": [], "cls": [], "mean": [], "gem": []}
@@ -162,6 +160,19 @@ def main():
         tmp.rename(f)
         print(f"[cache] {ci + 1}/{len(todo)} {name}: {len(ids)} frames {hw}, scale {scale:.3f}, rel-rot {res:.3f} deg/frame, "
               f"{len(ids) / (time.time() - t0):.1f} fps (wait-for-images {t_load:.0f} s, lingbot {t_inf:.0f} s, rest {time.time() - t0 - t_load - t_inf:.0f} s)", flush=True)
+
+    for ci, c in enumerate(todo):
+        name = clip_name(c)
+        f = args.out / f"{name}.npz"
+        t0 = time.time()
+        ids = c["frames"]
+        fut, nxt = nxt, (pool.submit(src.frames, todo[ci + 1]["seq"], todo[ci + 1]["frames"]) if ci + 1 < len(todo) else None)
+        try:
+            build_one(fut, c, ids, name, f, t0, ci)
+        except Exception as e:  # one broken sequence (e.g. a ScanNet++ scene without depth.bin) must not end the shard
+            (args.out / f"{name}.failed").write_text(f"{type(e).__name__}: {e}\n")
+            print(f"[cache] {ci + 1}/{len(todo)} {name}: FAILED {type(e).__name__}: {e}", flush=True)
+            torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
