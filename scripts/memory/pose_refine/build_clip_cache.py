@@ -41,6 +41,16 @@ GEM_P = 3.0
 A = 8
 
 
+def load_megaloc():
+    """From the local hub checkout and the HF cache when present: dozens of shards starting together
+    re-fetch github's zipball into the same ~/.cache/torch/hub path and collide."""
+    local = Path(os.environ.get("MEGALOC_DIR", Path.home() / ".cache/torch/hub/gmberton_MegaLoc_main"))
+    if (local / "hubconf.py").exists():
+        os.environ["HF_HUB_OFFLINE"] = "1"
+        return torch.hub.load(str(local), "get_trained_model", source="local")
+    return torch.hub.load("gmberton/MegaLoc", "get_trained_model")
+
+
 def rel_rot_residual(P, G):
     ra = np.einsum("nji,njk->nik", P[:-1, :3, :3], P[1:, :3, :3])
     rb = np.einsum("nji,njk->nik", G[:-1, :3, :3], G[1:, :3, :3])
@@ -68,7 +78,7 @@ def main():
     model = build_model(margs, dev)
     agg = model.aggregator
     psi = agg.patch_start_idx
-    mega = None if args.no_megaloc else torch.hub.load("gmberton/MegaLoc", "get_trained_model").to(dev).eval()
+    mega = None if args.no_megaloc else load_megaloc().to(dev).eval()
     mean = torch.tensor([0.485, 0.456, 0.406], device=dev)[:, None, None]
     std = torch.tensor([0.229, 0.224, 0.225], device=dev)[:, None, None]
     args.out.mkdir(parents=True, exist_ok=True)
