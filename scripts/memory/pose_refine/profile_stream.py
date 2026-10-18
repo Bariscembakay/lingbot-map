@@ -26,6 +26,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--plan", type=Path, required=True)
     ap.add_argument("--frames", type=int, default=160)
+    ap.add_argument("--profile-frames", type=int, default=96)
     args = ap.parse_args()
     plan = json.loads(args.plan.read_text())
     c = plan["clips"][0]
@@ -37,6 +38,14 @@ def main():
     model = build_model(m, torch.device("cuda"))
     model.depth_head = None
     print(f"frames {len(x)} {tuple(x.shape[-2:])}", flush=True)
+    stamps = []
+    h = model.aggregator.register_forward_hook(lambda *_: (torch.cuda.synchronize(), stamps.append(time.time())))
+    with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
+        model.inference_streaming(x, num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
+    h.remove()
+    dt = np.diff(stamps) * 1000
+    for a in range(0, len(dt), 100):
+        print(f"[per-frame] frames {a + 9}-{min(a + 108, len(dt) + 8)}: {dt[a:a + 100].mean():.0f} ms/frame", flush=True)
     for label, out_dev in (("output cpu", torch.device("cpu")), ("output gpu", None)):
         torch.cuda.synchronize()
         t = time.time()
@@ -47,7 +56,7 @@ def main():
     from torch.profiler import ProfilerActivity, profile
     with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof, torch.no_grad(), \
             torch.amp.autocast("cuda", dtype=torch.bfloat16):
-        model.inference_streaming(x[:96], num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
+        model.inference_streaming(x[:args.profile_frames], num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
     ka = prof.key_averages()
     print(ka.table(sort_by="cuda_time_total", row_limit=18), flush=True)
     print(ka.table(sort_by="cpu_time_total", row_limit=12), flush=True)
