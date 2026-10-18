@@ -40,6 +40,7 @@ from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 
 D, HEADS, A, WINDOW, NPATCH = 2048, 16, 8, 64, 999
 INPUTS = Path("/data/lingbot-poserefine-v1")
+VAL24 = Path(__file__).resolve().parents[3] / ".agents/scratch/memory_eval/val24.txt"
 
 
 class Clip:
@@ -47,7 +48,9 @@ class Clip:
 
     def __init__(self, f: Path, device, patches: bool):
         z = np.load(f)
-        self.name, self.src = f.stem, str(z["source"])
+        self.name = f.stem
+        # poserefine-v1 inputs carry the tap-cache path; cache1048 clips carry dataset/seq instead
+        self.src = str(z["source"]) if "source" in z.files else f"{z['dataset']}/{z['seq']}"
         self.spec = torch.from_numpy(np.ascontiguousarray(z["specials"][:, tp.TAP23])).to(device)   # [T,6,D]
         self.T = len(self.spec)
         self.hw = tuple(int(x) for x in z["hw"])
@@ -234,6 +237,10 @@ def main():
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--no-wandb", action="store_true")
     ap.add_argument("--max-train", type=int, default=0, help="smoke: first N train clips per dir")
+    ap.add_argument("--caches", default="",
+                    help="train on lingbot-cache1048 datasets instead of poserefine-v1 train/train_v5, e.g. "
+                         "scannetpp,tartanair-v2,matrixcity (ScanNet++ val24 scenes are left out)")
+    ap.add_argument("--cache-root", type=Path, default=Path("/data"))
     ap.add_argument("--overfit", action="store_true",
                     help="train on one ScanNet++ clip (the first with >= t-max frames), also evaluated as set 'train1'")
     args = ap.parse_args()
@@ -251,7 +258,23 @@ def main():
         fs = fs[: args.max_train] if args.max_train and d.startswith("train") else fs
         return [Clip(f, store, args.patches) for f in fs]
 
-    train = load("train", "cpu") + load("train_v5", "cpu")
+    if args.caches:
+        val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in VAL24.read_text().split()}
+        train = []
+        for ds in args.caches.split(","):
+            if ds == "kitti360":
+                # metric GT (no depth for the canonical scale) against lingbot's canonical-unit
+                # predictions: this trainer's loss has no scale-free branch for it yet
+                print("[data] kitti360 skipped: metric GT needs a scale-free loss", flush=True)
+                continue
+            fs = sorted((args.cache_root / f"lingbot-cache1048-{ds}").glob("*.npz"))
+            if ds == "scannetpp":
+                fs = [f for f in fs if f.name.split("__")[0] not in val_scenes]
+            fs = fs[: args.max_train] if args.max_train else fs
+            train += [Clip(f, "cpu", False) for f in fs]
+            print(f"[data] {ds}: {len(fs)} clips", flush=True)
+    else:
+        train = load("train", "cpu") + load("train_v5", "cpu")
     lens = [int(x) for x in args.nrgbd_lengths.split(",")]
     sets = [("val24", load("val24", dev), [320]), ("nrgbd", load("nrgbd", dev), lens)]
     if args.overfit:
@@ -290,9 +313,15 @@ def main():
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(2)   # patch tokens are ~150 MB per sample of /data memmap reads
 
+    lengths = np.array([c.T for c in train])
+
     def submit():
         t = int(rng.choice(tchoices))
-        return t, pool.submit(batch_cpu, train, rng.choice(len(train), args.batch, replace=len(train) < args.batch), t, args.patches)
+        pool_idx = np.flatnonzero(lengths >= t)          # clip lengths vary in the cache1048 sets
+        if len(pool_idx) == 0:
+            t, pool_idx = int(lengths.max()), np.flatnonzero(lengths == lengths.max())
+        idx = rng.choice(pool_idx, args.batch, replace=len(pool_idx) < args.batch)
+        return t, pool.submit(batch_cpu, train, idx, t, args.patches)
 
     queue = [submit(), submit()]
     t0 = time.time()
