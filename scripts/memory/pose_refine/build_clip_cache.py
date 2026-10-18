@@ -100,6 +100,12 @@ def main():
         return f"{c['seq'].replace('/', '__')}__f{c['frames'][0]:06d}_s{c['stride']}_n{len(c['frames'])}"
 
     done = set(args.skip_list.read_text().split()) if args.skip_list and args.skip_list.exists() else set()
+    final = Path(f"/group/compact-3dmem/datasets/_staging/lingbot-cache1048-{ds}")
+    if args.out.resolve() != final:   # msp3 shard on local scratch: clips already staged on sof1 are done
+        import subprocess
+        r = subprocess.run(["ssh", "sof1", f"ls {final}"], capture_output=True, text=True, timeout=120)
+        done |= set(r.stdout.split())
+        print(f"[cache] {len(done)} clips already staged on sof1", flush=True)
     todo = [c for c in clips if not (args.out / f"{clip_name(c)}.npz").exists()
             and not (args.out / f"{clip_name(c)}.failed").exists() and f"{clip_name(c)}.npz" not in done]
     from concurrent.futures import ThreadPoolExecutor
