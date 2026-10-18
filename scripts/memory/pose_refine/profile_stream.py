@@ -27,6 +27,7 @@ def main():
     ap.add_argument("--plan", type=Path, required=True)
     ap.add_argument("--frames", type=int, default=160)
     ap.add_argument("--profile-frames", type=int, default=96)
+    ap.add_argument("--compile", action="store_true")
     args = ap.parse_args()
     plan = json.loads(args.plan.read_text())
     c = plan["clips"][0]
@@ -37,6 +38,9 @@ def main():
                         use_sdpa=True, camera_num_iterations=4, ckpt=str(REPO / "ckpt/lingbot-map.pt"))
     model = build_model(m, torch.device("cuda"))
     model.depth_head = None
+    if args.compile:
+        from scripts.benchmark_gct_memory import compile_model
+        compile_model(model)
     print(f"frames {len(x)} {tuple(x.shape[-2:])}", flush=True)
     stamps = []
     def stamp(*_):   # must return None: a forward hook's return value replaces the module output

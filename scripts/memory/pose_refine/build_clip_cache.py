@@ -36,6 +36,7 @@ import train_pose_refine as tp  # noqa: E402
 from clip_sources import source  # noqa: E402
 from lingbot_map.memory.gt import canonical_scale  # noqa: E402
 from scripts.memory.build_cache import build_model  # noqa: E402
+from scripts.benchmark_gct_memory import compile_model  # noqa: E402
 
 GEM_P = 3.0
 A = 8
@@ -68,6 +69,7 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
     ap.add_argument("--no-megaloc", action="store_true")
+    ap.add_argument("--compile", action="store_true", help="CUDA-graph the per-frame blocks (lingbot's compile_model)")
     ap.add_argument("--flashinfer", action="store_true",
                     help="FlashInfer attention; its JIT build fails on msp3/gcp nodes (glibc math headers vs nvcc)")
     args = ap.parse_args()
@@ -83,13 +85,15 @@ def main():
     # the DPT depth head is not cached and is most of the per-frame cost; specials and the
     # camera head do not depend on it, and GCTBase.forward skips a None head
     model.depth_head = None
+    if args.compile:
+        compile_model(model)
     agg = model.aggregator
     psi = agg.patch_start_idx
     mega = None if args.no_megaloc else load_megaloc().to(dev).eval()
     mean = torch.tensor([0.485, 0.456, 0.406], device=dev)[:, None, None]
     std = torch.tensor([0.229, 0.224, 0.225], device=dev)[:, None, None]
     args.out.mkdir(parents=True, exist_ok=True)
-    print(f"[cache] {ds}: shard {args.shard}/{args.nshards}, {len(clips)} clips, attention {'flashinfer' if args.flashinfer else 'sdpa'}", flush=True)
+    print(f"[cache] {ds}: shard {args.shard}/{args.nshards}, {len(clips)} clips, attention {'flashinfer' if args.flashinfer else 'sdpa'}, compile {args.compile}", flush=True)
     def clip_name(c):
         return f"{c['seq'].replace('/', '__')}__f{c['frames'][0]:06d}_s{c['stride']}_n{len(c['frames'])}"
 
