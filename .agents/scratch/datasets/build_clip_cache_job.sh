@@ -21,6 +21,9 @@ if findmnt -n -o SOURCE -T /group/compact-3dmem | grep -q msp3; then
     [ -f $PLAN ] || { mkdir -p $(dirname $PLAN); rsync -a sof1:$PLAN $PLAN; }
     OUT=/scratch/$USER/cache1048_$DS
     mkdir -p $OUT; ssh sof1 mkdir -p $FINAL
+    # clips already on sof1 (earlier rounds) are skipped, not rebuilt from an empty local scratch
+    ssh sof1 "ls $FINAL" > $OUT/.done_on_sof1 || true
+    CACHE_ARGS="${CACHE_ARGS:-} --skip-list $OUT/.done_on_sof1"
     ( while sleep 600; do rsync -a --include='*.npz' --exclude='*' $OUT/ sof1:$FINAL/; done ) & SY=$!
     trap 'kill $SY 2>/dev/null; rsync -a --include="*.npz" --exclude="*" $OUT/ sof1:$FINAL/; kill $KA 2>/dev/null' EXIT
 else

@@ -69,6 +69,7 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
     ap.add_argument("--no-megaloc", action="store_true")
+    ap.add_argument("--skip-list", type=Path, help="file of clip npz names already built elsewhere (msp3 shards: sof1 staging)")
     ap.add_argument("--compile", action="store_true", help="CUDA-graph the per-frame blocks (lingbot's compile_model)")
     ap.add_argument("--flashinfer", action="store_true",
                     help="FlashInfer attention; its JIT build fails on msp3/gcp nodes (glibc math headers vs nvcc)")
@@ -98,8 +99,9 @@ def main():
     def clip_name(c):
         return f"{c['seq'].replace('/', '__')}__f{c['frames'][0]:06d}_s{c['stride']}_n{len(c['frames'])}"
 
+    done = set(args.skip_list.read_text().split()) if args.skip_list and args.skip_list.exists() else set()
     todo = [c for c in clips if not (args.out / f"{clip_name(c)}.npz").exists()
-            and not (args.out / f"{clip_name(c)}.failed").exists()]
+            and not (args.out / f"{clip_name(c)}.failed").exists() and f"{clip_name(c)}.npz" not in done]
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(1)      # decode the next clip's images while lingbot runs on this one
     nxt = pool.submit(src.frames, todo[0]["seq"], todo[0]["frames"]) if todo else None
