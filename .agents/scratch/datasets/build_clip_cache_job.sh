@@ -28,4 +28,4 @@ else
     trap 'kill $KA 2>/dev/null' EXIT
 fi
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 & KA=$!
-"$P" scripts/memory/pose_refine/build_clip_cache.py --plan $PLAN --out $OUT --shard $SH --nshards $NSH
+"$P" scripts/memory/pose_refine/build_clip_cache.py --plan $PLAN --out ${OUT_OVERRIDE:-$OUT} --shard $SH --nshards $NSH ${CACHE_ARGS:-}
