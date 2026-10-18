@@ -112,29 +112,32 @@ def main():
         x = torch.from_numpy(np.ascontiguousarray(imgs.transpose(0, 3, 1, 2))).float().div_(255)
         acc = {"spec": [], "cls": [], "mean": [], "gem": []}
 
+        # captures stay on the GPU until the clip ends: a per-frame .cpu() synchronises every frame
+        # and cost ~40% of the streaming throughput
         def on_agg(_m, _i, o):
-            acc["spec"].append(torch.stack(o[0], 2)[0][:, :, :psi].half().cpu())
+            acc["spec"].append(torch.stack(o[0], 2)[0][:, :, :psi].half())
 
         def on_dino(_m, _i, o):
             p = o["x_norm_patchtokens"].float()
-            acc["cls"].append(o["x_norm_clstoken"].half().cpu())
-            acc["mean"].append(p.mean(1).half().cpu())
-            acc["gem"].append(p.clamp(min=1e-6).pow(GEM_P).mean(1).pow(1 / GEM_P).half().cpu())
+            acc["cls"].append(o["x_norm_clstoken"].half())
+            acc["mean"].append(p.mean(1).half())
+            acc["gem"].append(p.clamp(min=1e-6).pow(GEM_P).mean(1).pow(1 / GEM_P).half())
 
         hs = [agg.register_forward_hook(on_agg), agg.patch_embed.register_forward_hook(on_dino)]
         try:
             with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=1, output_device=torch.device("cpu"))
+                pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=1, output_device=None)
         finally:
             for h in hs:
                 h.remove()
         t_inf = time.time() - t0 - t_load
-        spec = torch.cat(acc["spec"]).numpy()
-        pose = pred["pose_enc"][0].float()
+        spec = torch.cat(acc["spec"]).cpu().numpy()
+        pose = pred["pose_enc"][0].float().cpu()
         assert len(spec) == len(ids) == len(pose), (len(spec), len(ids), len(pose))
         out = {"specials": spec, "pose_enc": pose.numpy(),
-               "lbdino_cls": torch.cat(acc["cls"]).numpy(), "lbdino_mean": torch.cat(acc["mean"]).numpy(),
-               "lbdino_gem": torch.cat(acc["gem"]).numpy()}
+               "lbdino_cls": torch.cat(acc["cls"]).cpu().numpy(), "lbdino_mean": torch.cat(acc["mean"]).cpu().numpy(),
+               "lbdino_gem": torch.cat(acc["gem"]).cpu().numpy()}
+        del pred, acc
         if mega is not None:
             m = []
             for a in range(0, len(x), 64):
