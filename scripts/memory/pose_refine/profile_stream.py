@@ -39,7 +39,11 @@ def main():
     model.depth_head = None
     print(f"frames {len(x)} {tuple(x.shape[-2:])}", flush=True)
     stamps = []
-    h = model.aggregator.register_forward_hook(lambda *_: (torch.cuda.synchronize(), stamps.append(time.time())))
+    def stamp(*_):   # must return None: a forward hook's return value replaces the module output
+        torch.cuda.synchronize()
+        stamps.append(time.time())
+
+    h = model.aggregator.register_forward_hook(stamp)
     with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
         model.inference_streaming(x, num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
     h.remove()
