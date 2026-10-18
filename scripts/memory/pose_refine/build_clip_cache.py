@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Build the 1048-frame lingbot caches from a plan_clips.py plan (one npz per clip).
 
-lingbot streams each clip as the NRGBD / ScanNet++ caches were built (GCTStream, sliding window
-64 + 8 scale frames, every frame a keyframe, bf16 aggregator), with the benchmark's FlashInfer
-attention (--sdpa for the SDPA path; the first clips of tartanair-v2 / matrixcity used it). Per clip:
+lingbot streams each clip as the NRGBD / ScanNet++ caches were built (GCTStream, SDPA attention,
+sliding window 64 + 8 scale frames, every frame a keyframe, bf16 aggregator). Per clip:
   specials [T, 4, 6, 2048] fp16   camera / 4 registers / scale token at taps 4, 11, 17, 23
   pose_enc [T, 9]                 lingbot's causal camera-head output
   gt_c2w   [T, 4, 4]              OpenCV camera-to-world relative to the clip's first frame, divided
@@ -67,7 +66,8 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
     ap.add_argument("--no-megaloc", action="store_true")
-    ap.add_argument("--sdpa", action="store_true", help="SDPA attention instead of FlashInfer (~4x slower here)")
+    ap.add_argument("--flashinfer", action="store_true",
+                    help="FlashInfer attention; its JIT build fails on msp3/gcp nodes (glibc math headers vs nvcc)")
     args = ap.parse_args()
     plan = json.loads(args.plan.read_text())
     ds = plan["summary"]["dataset"]
@@ -76,7 +76,7 @@ def main():
     dev = torch.device("cuda")
     # 3D RoPE frequencies are a fixed table indexed by frame: 2048 rows reproduce the first 1024 exactly and cover 1048-frame clips
     margs = SimpleNamespace(image_size=518, patch_size=14, max_frame_num=2048, kv_cache_sliding_window=64, num_scale_frames=A,
-                            use_sdpa=args.sdpa, camera_num_iterations=4, ckpt=str(REPO / "ckpt/lingbot-map.pt"))
+                            use_sdpa=not args.flashinfer, camera_num_iterations=4, ckpt=str(REPO / "ckpt/lingbot-map.pt"))
     model = build_model(margs, dev)
     # the DPT depth head is not cached and is most of the per-frame cost; specials and the
     # camera head do not depend on it, and GCTBase.forward skips a None head
@@ -87,7 +87,7 @@ def main():
     mean = torch.tensor([0.485, 0.456, 0.406], device=dev)[:, None, None]
     std = torch.tensor([0.229, 0.224, 0.225], device=dev)[:, None, None]
     args.out.mkdir(parents=True, exist_ok=True)
-    print(f"[cache] {ds}: shard {args.shard}/{args.nshards}, {len(clips)} clips, attention {'sdpa' if args.sdpa else 'flashinfer'}", flush=True)
+    print(f"[cache] {ds}: shard {args.shard}/{args.nshards}, {len(clips)} clips, attention {'flashinfer' if args.flashinfer else 'sdpa'}", flush=True)
     def clip_name(c):
         return f"{c['seq'].replace('/', '__')}__f{c['frames'][0]:06d}_s{c['stride']}_n{len(c['frames'])}"
 
@@ -147,7 +147,7 @@ def main():
         res = rel_rot_residual(np.linalg.inv(P[0])[None] @ P, G)
         out.update(gt_c2w=G.astype(np.float32), K=K.astype(np.float32), hw=np.int32(hw), gt_scale=np.float64(scale),
                    dataset=ds, seq=c["seq"], frame_ids=np.int32(ids), stride=np.int32(c["stride"]),
-                   rel_rot_residual_deg=np.float32(res), attn_backend="sdpa" if args.sdpa else "flashinfer")
+                   rel_rot_residual_deg=np.float32(res), attn_backend="flashinfer" if args.flashinfer else "sdpa")
         tmp = f.with_suffix(f".tmp{os.getpid()}.npz")
         np.savez(tmp, **out)
         tmp.rename(f)
