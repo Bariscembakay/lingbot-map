@@ -78,6 +78,9 @@ def main():
     margs = SimpleNamespace(image_size=518, patch_size=14, max_frame_num=2048, kv_cache_sliding_window=64, num_scale_frames=A,
                             use_sdpa=args.sdpa, camera_num_iterations=4, ckpt=str(REPO / "ckpt/lingbot-map.pt"))
     model = build_model(margs, dev)
+    # the DPT depth head is not cached and is most of the per-frame cost; specials and the
+    # camera head do not depend on it, and GCTBase.forward skips a None head
+    model.depth_head = None
     agg = model.aggregator
     psi = agg.patch_start_idx
     mega = None if args.no_megaloc else load_megaloc().to(dev).eval()
