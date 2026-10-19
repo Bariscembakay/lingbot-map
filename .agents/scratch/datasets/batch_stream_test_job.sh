@@ -13,4 +13,4 @@ case $DS in scannetpp) dataset pull ScanNetpp;; scannet-v2) dataset pull scannet
 PLAN=/group/compact-3dmem/campaigns/spatial_memory/_data_prep/plans/$DS.json
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 & KA=$!
 trap 'kill $KA 2>/dev/null' EXIT
-"$P" scripts/memory/pose_refine/batch_stream_test.py --plan $PLAN --batches $BS 2>&1 | grep -v "Streaming inference"
+"$P" scripts/memory/pose_refine/batch_stream_test.py --plan $PLAN --batches $BS --frames ${FRAMES:-256} 2>&1 | grep -v "Streaming inference"
