@@ -366,15 +366,16 @@ class AggregatorStream(AggregatorBase):
             # Streaming mode: expand with S_true, then slice to get current frames
             effective_scale_frames = min(scale_frames, S_true)
 
-            camera_token_full = slice_expand_and_flatten(self.camera_token, B, S_true)
-            camera_token = camera_token_full[-S_global:, :, :]
+            # the flattened tokens are batch-major [B*S_true]: keep each sample's last S_global frames
+            # (a flat [-S_global:] slice is only right for B == 1)
+            def last_frames(t):
+                return t.reshape(B, S_true, *t.shape[1:])[:, -S_global:].reshape(B * S_global, *t.shape[1:])
 
-            register_token_full = slice_expand_and_flatten(self.register_token, B, S_true)
-            register_token = register_token_full[-S_global:, :, :]
-            scale_token_full = slice_expand_and_flatten(
+            camera_token = last_frames(slice_expand_and_flatten(self.camera_token, B, S_true))
+            register_token = last_frames(slice_expand_and_flatten(self.register_token, B, S_true))
+            scale_token = last_frames(slice_expand_and_flatten(
                 self.scale_token, B, S_true, first_num_frame=effective_scale_frames
-            )
-            scale_token = scale_token_full[-S_global:, :, :]
+            ))
         else:
             # Batch mode or first inference: expand directly
             effective_scale_frames = min(scale_frames, S_global)
