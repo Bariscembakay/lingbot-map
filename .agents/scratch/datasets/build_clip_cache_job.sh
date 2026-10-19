@@ -25,7 +25,7 @@ if findmnt -n -o SOURCE -T /group/compact-3dmem | grep -q msp3; then
     ssh sof1 "ls $FINAL" > $OUT/.done_on_sof1 || true
     CACHE_ARGS="${CACHE_ARGS:-} --skip-list $OUT/.done_on_sof1"
     # .failed markers travel too, so sof1 staging alone tells whether a dataset is complete
-    sync() { rsync -a --include='*.npz' --include='*.failed' --exclude='*.tmp*' --exclude='*' $OUT/ sof1:$FINAL/; }
+    sync() { rsync -a --exclude='*.tmp*' --include='*.npz' --include='*.failed' --exclude='*' $OUT/ sof1:$FINAL/; }
     ( while sleep 600; do sync || true; done ) & SY=$!
     # the final sync once failed silently and left a shard's last clip on msp3 scratch: retry it
     trap 'kill $SY 2>/dev/null; for i in 1 2 3; do sync && break; sleep 30; done; kill $KA 2>/dev/null' EXIT
