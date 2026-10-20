@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Where does lingbot's per-frame streaming time go? Profiles inference_streaming on N frames of
 the first clip of a plan (same model settings as build_clip_cache.py) and prints the top ops.
-Usage: profile_stream.py --plan plan.json [--frames 160]
+Usage: profile_stream.py --plan plan.json [--frames 160] [--batch B]
 """
 from __future__ import annotations
 
@@ -28,12 +28,15 @@ def main():
     ap.add_argument("--frames", type=int, default=160)
     ap.add_argument("--profile-frames", type=int, default=96)
     ap.add_argument("--compile", action="store_true")
+    ap.add_argument("--batch", type=int, default=1, help="stream the clip B times at once")
+    ap.add_argument("--skip-timing", action="store_true")
     args = ap.parse_args()
     plan = json.loads(args.plan.read_text())
     c = plan["clips"][0]
     src = source(plan["summary"]["dataset"])
     imgs, _ = src.frames(c["seq"], c["frames"][:args.frames])
     x = torch.from_numpy(np.ascontiguousarray(imgs.transpose(0, 3, 1, 2))).float().div_(255)
+    x = x[None].expand(args.batch, -1, -1, -1, -1).contiguous()
     m = SimpleNamespace(image_size=518, patch_size=14, max_frame_num=2048, kv_cache_sliding_window=64, num_scale_frames=8,
                         use_sdpa=True, camera_num_iterations=4, ckpt=str(REPO / "ckpt/lingbot-map.pt"))
     model = build_model(m, torch.device("cuda"))
@@ -41,30 +44,31 @@ def main():
     if args.compile:
         from scripts.benchmark_gct_memory import compile_model
         compile_model(model)
-    print(f"frames {len(x)} {tuple(x.shape[-2:])}", flush=True)
+    print(f"batch {args.batch}, frames {x.shape[1]} {tuple(x.shape[-2:])}, {torch.cuda.get_device_name()}", flush=True)
     stamps = []
     def stamp(*_):   # must return None: a forward hook's return value replaces the module output
         torch.cuda.synchronize()
         stamps.append(time.time())
 
-    h = model.aggregator.register_forward_hook(stamp)
-    with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
-        model.inference_streaming(x, num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
-    h.remove()
-    dt = np.diff(stamps) * 1000
-    for a in range(0, len(dt), 100):
-        print(f"[per-frame] frames {a + 9}-{min(a + 108, len(dt) + 8)}: {dt[a:a + 100].mean():.0f} ms/frame", flush=True)
-    for label, out_dev in (("output cpu", torch.device("cpu")), ("output gpu", None)):
+    if not args.skip_timing:
+        h = model.aggregator.register_forward_hook(stamp)
+        with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
+            model.inference_streaming(x, num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
+        h.remove()
+        dt = np.diff(stamps) * 1000
+        for a in range(0, len(dt), 100):
+            print(f"[per-frame] frames {a + 9}-{min(a + 108, len(dt) + 8)}: {dt[a:a + 100].mean():.0f} ms/frame", flush=True)
+    for label, out_dev in (() if args.skip_timing else (("output cpu", torch.device("cpu")), ("output gpu", None))):
         torch.cuda.synchronize()
         t = time.time()
         with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
             model.inference_streaming(x, num_scale_frames=8, keyframe_interval=1, output_device=out_dev)
         torch.cuda.synchronize()
-        print(f"[time] {label}: {len(x) / (time.time() - t):.2f} fps", flush=True)
+        print(f"[time] {label}: {x.shape[1] / (time.time() - t):.2f} fps", flush=True)
     from torch.profiler import ProfilerActivity, profile
     with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof, torch.no_grad(), \
             torch.amp.autocast("cuda", dtype=torch.bfloat16):
-        model.inference_streaming(x[:args.profile_frames], num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
+        model.inference_streaming(x[:, :args.profile_frames], num_scale_frames=8, keyframe_interval=1, output_device=torch.device("cpu"))
     ka = prof.key_averages()
     print(ka.table(sort_by="cuda_time_total", row_limit=18), flush=True)
     print(ka.table(sort_by="cpu_time_total", row_limit=12), flush=True)

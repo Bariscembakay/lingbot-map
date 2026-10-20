@@ -13,7 +13,7 @@ sliding window 64 + 8 scale frames, every frame a keyframe, bf16 aggregator). Pe
   megaloc [T, 8448]               MegaLoc place descriptor per frame
   rel_rot_residual_deg            lingbot-vs-GT consecutive relative rotation (convention check)
 Patch tokens are not stored: tap 23 alone is 4.1 MB per frame.
-Usage: build_clip_cache.py --plan plan.json --out DIR [--shard i --nshards n]
+Usage: build_clip_cache.py --plan plan.json --out DIR [--shard i --nshards n] [--batch B]
 """
 from __future__ import annotations
 
@@ -69,6 +69,7 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--nshards", type=int, default=1)
     ap.add_argument("--no-megaloc", action="store_true")
+    ap.add_argument("--batch", type=int, default=1, help="clips streamed together (B dimension of inference_streaming)")
     ap.add_argument("--skip-list", type=Path, help="file of clip npz names already built elsewhere (msp3 shards: sof1 staging)")
     ap.add_argument("--compile", action="store_true", help="CUDA-graph the per-frame blocks (lingbot's compile_model)")
     ap.add_argument("--flashinfer", action="store_true",
@@ -108,26 +109,32 @@ def main():
         print(f"[cache] {len(done)} clips already staged on sof1", flush=True)
     todo = [c for c in clips if not (args.out / f"{clip_name(c)}.npz").exists()
             and not (args.out / f"{clip_name(c)}.failed").exists() and f"{clip_name(c)}.npz" not in done]
+    # longest first so lengths inside a batch are close: a shorter clip is padded by repeating its last
+    # frame, which cannot change its real frames (streaming is causal)
+    todo.sort(key=lambda c: -len(c["frames"]))
+    batches = [todo[k:k + args.batch] for k in range(0, len(todo), args.batch)]
     from concurrent.futures import ThreadPoolExecutor
-    pool = ThreadPoolExecutor(1)      # decode the next clip's images while lingbot runs on this one
-    nxt = pool.submit(src.frames, todo[0]["seq"], todo[0]["frames"]) if todo else None
+    pool = ThreadPoolExecutor(1)      # decode the next batch's images while lingbot runs on this one
 
-    def build_one(fut, c, ids, name, f, t0, ci):
-        imgs, K = fut.result()
-        t_load = time.time() - t0
-        x = torch.from_numpy(np.ascontiguousarray(imgs.transpose(0, 3, 1, 2))).float().div_(255)
+    def load(batch):
+        return [src.frames(c["seq"], c["frames"]) for c in batch]
+
+    def stream(xs):
+        """xs: list of [T_i, 3, H, W] float CPU tensors of one size -> per clip (specials, pose, cls, mean, gem)"""
+        B, S = len(xs), max(len(x) for x in xs)
+        x = torch.stack([torch.cat([x, x[-1:].expand(S - len(x), -1, -1, -1)]) for x in xs])
         acc = {"spec": [], "cls": [], "mean": [], "gem": []}
 
-        # captures stay on the GPU until the clip ends: a per-frame .cpu() synchronises every frame
+        # captures stay on the GPU until the batch ends: a per-frame .cpu() synchronises every frame
         # and cost ~40% of the streaming throughput
         def on_agg(_m, _i, o):
-            acc["spec"].append(torch.stack(o[0], 2)[0][:, :, :psi].half())
+            acc["spec"].append(torch.stack(o[0], 2)[:, :, :, :psi].half())
 
         def on_dino(_m, _i, o):
             p = o["x_norm_patchtokens"].float()
-            acc["cls"].append(o["x_norm_clstoken"].half())
-            acc["mean"].append(p.mean(1).half())
-            acc["gem"].append(p.clamp(min=1e-6).pow(GEM_P).mean(1).pow(1 / GEM_P).half())
+            acc["cls"].append(o["x_norm_clstoken"].half().reshape(B, -1, 1024))
+            acc["mean"].append(p.mean(1).half().reshape(B, -1, 1024))
+            acc["gem"].append(p.clamp(min=1e-6).pow(GEM_P).mean(1).pow(1 / GEM_P).half().reshape(B, -1, 1024))
 
         hs = [agg.register_forward_hook(on_agg), agg.patch_embed.register_forward_hook(on_dino)]
         try:
@@ -136,14 +143,19 @@ def main():
         finally:
             for h in hs:
                 h.remove()
-        t_inf = time.time() - t0 - t_load
-        spec = torch.cat(acc["spec"]).cpu().numpy()
-        pose = pred["pose_enc"][0].float().cpu()
+        out = {k: torch.cat(v, 1).cpu().numpy() for k, v in acc.items()}
+        pose = pred["pose_enc"].float().cpu()
+        assert out["spec"].shape[1] == pose.shape[1] == S, (out["spec"].shape, pose.shape, S)
+        return x, [(out["spec"][b, :len(xs[b])], pose[b, :len(xs[b])], out["cls"][b, :len(xs[b])],
+                 out["mean"][b, :len(xs[b])], out["gem"][b, :len(xs[b])]) for b in range(B)]
+
+    def finish(c, imgs, K, x, cap):
+        name = clip_name(c)
+        f = args.out / f"{name}.npz"
+        ids = c["frames"]
+        spec, pose, cls, mn, gem = cap
         assert len(spec) == len(ids) == len(pose), (len(spec), len(ids), len(pose))
-        out = {"specials": spec, "pose_enc": pose.numpy(),
-               "lbdino_cls": torch.cat(acc["cls"]).cpu().numpy(), "lbdino_mean": torch.cat(acc["mean"]).cpu().numpy(),
-               "lbdino_gem": torch.cat(acc["gem"]).cpu().numpy()}
-        del pred, acc
+        out = {"specials": spec, "pose_enc": pose.numpy(), "lbdino_cls": cls, "lbdino_mean": mn, "lbdino_gem": gem}
         if mega is not None:
             m = []
             for a in range(0, len(x), 64):
@@ -166,21 +178,55 @@ def main():
         tmp = f.with_suffix(f".tmp{os.getpid()}.npz")
         np.savez(tmp, **out)
         tmp.rename(f)
-        print(f"[cache] {ci + 1}/{len(todo)} {name}: {len(ids)} frames {hw}, scale {scale:.3f}, rel-rot {res:.3f} deg/frame, "
-              f"{len(ids) / (time.time() - t0):.1f} fps (wait-for-images {t_load:.0f} s, lingbot {t_inf:.0f} s, rest {time.time() - t0 - t_load - t_inf:.0f} s)", flush=True)
+        return f"{name}: {len(ids)} frames {hw}, scale {scale:.3f}, rel-rot {res:.3f} deg/frame"
 
-    for ci, c in enumerate(todo):
-        name = clip_name(c)
-        f = args.out / f"{name}.npz"
+    def fail(c, e):  # one broken sequence (e.g. a ScanNet++ scene without depth.bin) must not end the shard
+        (args.out / f"{clip_name(c)}.failed").write_text(f"{type(e).__name__}: {e}\n")
+        print(f"[cache] {clip_name(c)}: FAILED {type(e).__name__}: {e}", flush=True)
+
+    nxt = pool.submit(load, batches[0]) if batches else None
+    done_n = 0
+    for bi, batch in enumerate(batches):
         t0 = time.time()
-        ids = c["frames"]
-        fut, nxt = nxt, (pool.submit(src.frames, todo[ci + 1]["seq"], todo[ci + 1]["frames"]) if ci + 1 < len(todo) else None)
+        fut, nxt = nxt, (pool.submit(load, batches[bi + 1]) if bi + 1 < len(batches) else None)
         try:
-            build_one(fut, c, ids, name, f, t0, ci)
-        except Exception as e:  # one broken sequence (e.g. a ScanNet++ scene without depth.bin) must not end the shard
-            (args.out / f"{name}.failed").write_text(f"{type(e).__name__}: {e}\n")
-            print(f"[cache] {ci + 1}/{len(todo)} {name}: FAILED {type(e).__name__}: {e}", flush=True)
+            loaded = fut.result()
+        except Exception:   # find the broken clip(s) one by one
+            loaded = []
+            for c in batch:
+                try:
+                    loaded.append(src.frames(c["seq"], c["frames"]))
+                except Exception as e:
+                    fail(c, e)
+                    loaded.append(None)
+        ok = [(c, im) for c, im in zip(batch, loaded) if im is not None]
+        t_load = time.time() - t0
+        xs = [torch.from_numpy(np.ascontiguousarray(im.transpose(0, 3, 1, 2))).float().div_(255) for _, (im, _) in ok]
+        groups = {}
+        for i, x in enumerate(xs):   # a batch whose clips differ in image size streams as several
+            groups.setdefault(tuple(x.shape[-2:]), []).append(i)
+        caps = [None] * len(ok)
+        try:
+            for idx in groups.values():
+                xb, cb = stream([xs[i] for i in idx])
+                for j, i in enumerate(idx):   # views into the padded batch, so the clip frames are not held twice
+                    caps[i], xs[i] = cb[j], xb[j, :len(xs[i])]
+        except Exception as e:
+            for c, _ in ok:
+                fail(c, e)
             torch.cuda.empty_cache()
+            continue
+        t_inf = time.time() - t0 - t_load
+        nfr = sum(len(c["frames"]) for c, _ in ok)
+        for (c, (im, K)), x, cap in zip(ok, xs, caps):
+            try:
+                msg = finish(c, im, K, x, cap)
+                done_n += 1
+                print(f"[cache] {done_n}/{len(todo)} {msg}", flush=True)
+            except Exception as e:
+                fail(c, e)
+        print(f"[cache] batch {bi + 1}/{len(batches)}: {len(ok)} clips, {nfr} frames, {nfr / (time.time() - t0):.1f} clip-frames/s "
+              f"(wait-for-images {t_load:.0f} s, lingbot {t_inf:.0f} s, rest {time.time() - t0 - t_load - t_inf:.0f} s)", flush=True)
 
 
 if __name__ == "__main__":
