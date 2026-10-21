@@ -606,6 +606,10 @@ class GCTStream(GCTBase):
             flex = _compiled_flex(flex_attention)
             n_ev_max = max(0, S - kv_scale - window)
             kv_len = n_ev_max * n_special + (kv_scale + window + chunk) * P
+            # flex's default tiles need ~118 KB of shared memory per block: fine on A100/H100/H200
+            # (sm_80/sm_90), over the ~99 KB of consumer/workstation parts such as the RTX PRO 6000
+            kopts = (None if torch.cuda.get_device_capability(dev) in ((8, 0), (9, 0))
+                     else {"BLOCK_M": 64, "BLOCK_N": 64, "num_stages": 2})
         try:
             for f0 in range(A, S, chunk):
                 c = min(chunk, S - f0)
@@ -636,7 +640,7 @@ class GCTStream(GCTBase):
                                             | ((kd == 1) & kspec_p[ki]))
 
                     bm = create_block_mask(mask_mod, None, None, c * P, kv_len, device=dev, _compile=True)
-                    kv["_chunk_mask"] = {"fn": flex, "block_mask": bm, "kv_len": kv_len}
+                    kv["_chunk_mask"] = {"fn": flex, "block_mask": bm, "kv_len": kv_len, "kernel_options": kopts}
                 else:
                     q, k = qf[:, None], kf[None]
                     mask = ((kind[None] == 0) | (k < kv_scale) | ((k >= q - window + 1) & (k <= q))
