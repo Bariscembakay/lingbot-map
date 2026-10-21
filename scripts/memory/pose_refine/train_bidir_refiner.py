@@ -429,9 +429,9 @@ def main():
     print(f"[data] sampling: " + ", ".join(f"{g} {p:.2f}" for g, p in zip(gnames, gw)) + f"; t {args.t_min}-{args.t_max} "
           f"step {args.t_step} {args.t_weight}", flush=True)
 
-    def submit():
+    def submit(force_t=None):
         g = gnames[rng.choice(len(gnames), p=gw)]     # dataset first, then t, then clips at least t long
-        t = int(rng.choice(tchoices, p=tprob))
+        t = force_t or int(rng.choice(tchoices, p=tprob))
         ing = group == g
         pool_idx = np.flatnonzero(ing & (lengths >= t))
         if len(pool_idx) == 0:
@@ -440,7 +440,7 @@ def main():
         idx = rng.choice(pool_idx, args.batch, replace=len(pool_idx) < args.batch)
         return t, train[idx[0]].hw, pool.submit(batch_cpu, train, idx, t, args.patches)
 
-    queue = [submit(), submit()]
+    queue = [submit(force_t=int(tchoices.max())), submit()]   # the longest prefix first: an OOM shows at step 1
     t0 = time.time()
     for step in range(1, args.steps + 1):
         lr = args.lr * min(1.0, step / args.warmup) * 0.5 * (1 + math.cos(math.pi * step / args.steps))
