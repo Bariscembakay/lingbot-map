@@ -610,6 +610,19 @@ class GCTStream(GCTBase):
             # (sm_80/sm_90), over the ~99 KB of consumer/workstation parts such as the RTX PRO 6000
             kopts = (None if torch.cuda.get_device_capability(dev) in ((8, 0), (9, 0))
                      else {"BLOCK_M": 64, "BLOCK_N": 64, "num_stages": 2})
+            # one mask_mod over buffers refilled in place every chunk: a new closure or a changed
+            # Python constant per chunk makes dynamo recompile, and past its cache limit flex falls
+            # back to eager attention, which materialises the full score matrix
+            kf_b = torch.full((kv_len,), -10**9, dtype=torch.long, device=dev)
+            kind_b = torch.full((kv_len,), 3, dtype=torch.long, device=dev)
+            kspec_b = torch.zeros(kv_len, dtype=torch.bool, device=dev)
+            f0_b = torch.zeros((), dtype=torch.long, device=dev)
+
+            def mask_mod(b, h, qi, ki):
+                qfr = f0_b + qi // P
+                kfr, kd = kf_b[ki], kind_b[ki]
+                return (kd != 3) & ((kd == 0) | (kfr < kv_scale) | ((kfr >= qfr - window + 1) & (kfr <= qfr))
+                                    | ((kd == 1) & kspec_b[ki]))
         try:
             for f0 in range(A, S, chunk):
                 c = min(chunk, S - f0)
@@ -628,17 +641,11 @@ class GCTStream(GCTBase):
                                    (tok < n_special).repeat(kv_scale + n_win + c)])
                 if attn == "flex":
                     n_k = len(kf)
-                    pad = kv_len - n_k
-                    kf_p = torch.cat([kf, torch.full((pad,), -10**9, device=dev)])
-                    kind_p = torch.cat([kind, torch.full((pad,), 3, dtype=torch.long, device=dev)])
-                    kspec_p = torch.cat([kspec, torch.zeros(pad, dtype=torch.bool, device=dev)])
-
-                    def mask_mod(b, h, qi, ki, f0=f0):
-                        qfr = f0 + qi // P
-                        kfr, kd = kf_p[ki], kind_p[ki]
-                        return (kd != 3) & ((kd == 0) | (kfr < kv_scale) | ((kfr >= qfr - window + 1) & (kfr <= qfr))
-                                            | ((kd == 1) & kspec_p[ki]))
-
+                    kf_b.fill_(-10**9)
+                    kind_b.fill_(3)
+                    kspec_b.zero_()
+                    kf_b[:n_k], kind_b[:n_k], kspec_b[:n_k] = kf, kind, kspec
+                    f0_b.fill_(f0)
                     bm = create_block_mask(mask_mod, None, None, c * P, kv_len, device=dev, _compile=True)
                     kv["_chunk_mask"] = {"fn": flex, "block_mask": bm, "kv_len": kv_len, "kernel_options": kopts}
                 else:
