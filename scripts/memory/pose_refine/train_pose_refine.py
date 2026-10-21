@@ -424,12 +424,12 @@ def wandb_run(args, **kw):
 
 # -- loss / metrics ------------------------------------------------------------
 def pose_loss(preds, gt, gamma=0.6, w_fov=0.5, skip=0, scale_free=False, norm_trans=False,
-              rel_w=0.0, hw=None, rel_steps=(1, 2, 4, 8, 16, 32, 64)):
+              rel_w=0.0, hw=None, rel_steps=(1, 2, 4, 8, 16, 32, 64), trans_floor=1e-3):
     """scale_free: metric GT (driving) has no canonical scale, so its translations are
     first rescaled per sample by the closed-form factor that best fits the (detached)
     prediction; frame 0 is the origin of both, so a scale is the only freedom left.
     norm_trans: translation errors are divided by the sample's mean GT camera distance from
-    frame 0, so a 2 km drive and a 3 m room weigh alike in a mixed batch.
+    frame 0 (at least trans_floor), so a 2 km drive and a 3 m room weigh alike in a mixed batch.
     rel_w: adds, on the final iteration, L1 on relative poses (translation in camera i's frame
     and rotation-matrix entries) for pairs (i, i+d), d in rel_steps, at least one past `skip`."""
     total, n = 0.0, len(preds)
@@ -439,7 +439,7 @@ def pose_loss(preds, gt, gamma=0.6, w_fov=0.5, skip=0, scale_free=False, norm_tr
         pd, g = preds[-1][:, skip:, :3].detach(), gtt_all[:, skip:]
         k = (pd * g).sum((1, 2), keepdim=True) / (g * g).sum((1, 2), keepdim=True).clamp(min=1e-8)
     gtt_all = gtt_all * k
-    unit = (gtt_all.norm(dim=-1).mean(1, keepdim=True).clamp(min=1e-3) if norm_trans
+    unit = (gtt_all.norm(dim=-1).mean(1, keepdim=True).clamp(min=trans_floor) if norm_trans
             else torch.ones(gt.shape[0], 1, device=gt.device))
     for i, p in enumerate(preds):
         p = p[:, skip:]

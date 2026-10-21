@@ -16,7 +16,13 @@ the loss; free: they are refined and supervised like every other frame.
 Loss, lingbot paper Sec. 3.3 (training code unreleased; lambdas not given, so 1): absolute pose
 as VGGT on the camera-to-world encoding over the head iterations, plus a relative-pose loss
 over all frame pairs within a 64-frame window (geodesic rotation + L1 translation).
-GT is the caches' anchor-scale-normalised pose.
+GT is the caches' anchor-scale-normalised pose. --norm extent divides translation errors by the
+sample's mean GT camera distance from frame 0, floored at --trans-floor (1 = the anchor scene
+depth), so long outdoor prefixes do not dominate and short/indoor ones keep the plain loss.
+--packs trains on lingbot-cache1048 datasets packed by build_tap23_pack.py, up to 1048 frames,
+sampling the dataset first, then t, then clips at least t long; --longval holds out whole
+environments/scenes per dataset and evaluates them at 320/640/1048 (best.pt by their mean ATE
+ratio to lingbot). --head-mode bidir runs lingbot's camera head without its causal mask.
 Usage: train_bidir_refiner.py --out DIR [--patches] [--anchors fixed|free]
 """
 from __future__ import annotations
@@ -40,6 +46,10 @@ from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 
 D, HEADS, A, WINDOW, NPATCH = 2048, 16, 8, 64, 999
 INPUTS = Path("/data/lingbot-poserefine-v1")
+PACK_ROOT = Path("/data/lingbot-tap23pack-1048")
+GT_JUMPS = Path("/group/compact-3dmem/campaigns/spatial_memory/_data_prep/lingbot_error_vs_length/gt_jump_scan.json")
+# held out from --packs training, evaluated at long t: whole environments / scenes
+LONGVAL_ENVS = {"hospital", "seasidetown", "gascola"}            # TartanAir V1, V2, TartanGround
 VAL24 = Path(__file__).resolve().parents[3] / ".agents/scratch/memory_eval/val24.txt"
 
 
@@ -62,11 +72,52 @@ class Clip:
         self._taps = None
         self.patches = patches
 
+    def get_spec(self, t):
+        return self.spec[:t]
+
     def patch_tokens(self, frames):
         if self._taps is None:
             c = ClipCache(self.src)
             self._taps, self._ti, self._psi = c.taps, c.meta.tap_layers.index(23), c.meta.patch_start_idx
         return torch.from_numpy(np.asarray(self._taps[frames, self._ti, self._psi:]))      # [F,999,D] fp16
+
+
+class PackClip:
+    """One clip of a build_tap23_pack.py pack: small arrays in RAM, specials read from the memmap per batch."""
+
+    def __init__(self, ds, mm, idx, i, device="cpu"):
+        o, n = int(idx["offset"][i]), int(idx["length"][i])
+        self.ds, self.name, self.seq = ds, str(idx["name"][i]), str(idx["seq"][i])
+        self.src, self.T, self.hw = f"{ds}/{self.seq}", n, tuple(int(x) for x in idx["hw"][i])
+        self.scale = float(idx["gt_scale"][i])
+        self._mm, self._o = mm, o
+        self.lingbot = torch.from_numpy(idx["pose_enc"][o:o + n]).to(device)
+        self.gt_c2w = torch.from_numpy(idx["gt_c2w"][o:o + n]).to(device)
+        K = torch.from_numpy(idx["K"][o:o + n]).to(device)
+        self.gt_enc = tp.extri_intri_to_pose_encoding(self.gt_c2w[None, :, :3], K[None], self.hw)[0]
+        self.spec = None
+        self.patches = False
+
+    def get_spec(self, t):
+        if self.spec is not None:
+            return self.spec[:t]
+        return torch.from_numpy(np.ascontiguousarray(self._mm[self._o:self._o + t]))
+
+    def to(self, device):
+        self.spec = self.get_spec(self.T).to(device)
+        self.lingbot, self.gt_c2w, self.gt_enc = self.lingbot.to(device), self.gt_c2w.to(device), self.gt_enc.to(device)
+        return self
+
+
+def longval_split(ds, seq):
+    """True if the sequence is held out for long validation"""
+    if ds.startswith("tartan"):
+        return seq.split("/")[0].lower() in LONGVAL_ENVS
+    if ds == "matrixcity":
+        return int(seq.replace("route", "")) % 10 == 0
+    if ds == "scannet-v2":
+        return int(seq[5:9]) % 20 == 0
+    return False
 
 
 def patch_frames(t):
@@ -98,7 +149,7 @@ class Block(nn.Module):
 
 
 class BidirRefiner(nn.Module):
-    def __init__(self, head, anchors_fixed, depth=4, ckpt=False, width=D):
+    def __init__(self, head, anchors_fixed, depth=4, ckpt=False, width=D, head_mode="causal"):
         super().__init__()
         self.type_emb = nn.Parameter(torch.zeros(7, width))      # 6 special kinds + patch
         self.patch_pos = nn.Parameter(torch.zeros(NPATCH, width))
@@ -108,6 +159,7 @@ class BidirRefiner(nn.Module):
             self.inp = nn.Linear(D, width)
             self.out = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, D))
         self.head, self.anchors_fixed, self.ckpt = head.requires_grad_(False), anchors_fixed, ckpt
+        self.head_mode = head_mode
 
     def forward(self, spec, lingbot_pose, patches=None, pframes=None):
         """spec [B,t,6,D]; patches [B,F,999,D] of frames pframes [F] -> list of pose encodings [B,t,9]."""
@@ -128,15 +180,18 @@ class BidirRefiner(nn.Module):
             cam = self.out(cam)
         if self.anchors_fixed:
             cam = torch.cat([spec[:, :A, 0].to(cam.dtype), cam[:, A:]], 1)
-        # lingbot's head on lingbot's camera head inputs: frozen, causal, 8 scale frames.
+        # lingbot's head on lingbot's camera head inputs: frozen, causal, 8 scale frames
+        # (--head-mode bidir: every frame is a "scale frame", so the head attends both ways).
         # In eval, the equivalent dense mask (bit-identical, see train_pose_refine.py decode):
         # the FlexAttention one recompiles for every new length.
-        nfs, restore = 8, None
+        bidir = self.head_mode == "bidir"
+        nfs, restore = (t if bidir else 8), None
         if not torch.is_grad_enabled():
             restore = [b._prepare_blockwise_causal_attn_mask for b in self.head.trunk]
             for b in self.head.trunk:
                 b._prepare_blockwise_causal_attn_mask = (
                     lambda device, num_frames, frame_seqlen, num_frame_per_block:
+                    torch.ones(num_frames, num_frames, dtype=torch.bool, device=device) if bidir else
                     torch.ones(num_frames, num_frames, dtype=torch.bool, device=device).tril()
                     | tp.anchor_block(num_frames, A, device))
             nfs = -1
@@ -155,10 +210,13 @@ def geodesic(Ra, Rb):
     return torch.acos(c.clamp(-1 + 1e-6, 1 - 1e-6))
 
 
-def loss_fn(preds, gt, hw, skip):
+def loss_fn(preds, gt, hw, skip, norm=False, floor=1.0):
     """lingbot Sec. 3.3: VGGT absolute-pose loss (over head iterations) + relative-pose loss over
-    all pairs within a 64-frame window (final iteration), frames < skip excluded."""
-    l_abs = tp.pose_loss(preds, gt, skip=skip)
+    all pairs within a 64-frame window (final iteration), frames < skip excluded. norm: both
+    translation terms divided by the sample's mean GT distance from frame 0, at least floor."""
+    l_abs = tp.pose_loss(preds, gt, skip=skip, norm_trans=norm, trans_floor=floor)
+    unit = (gt[..., :3].norm(dim=-1).mean(1).clamp(min=floor) if norm
+            else torch.ones(gt.shape[0], device=gt.device))[:, None]
     P, G = tp.pose_enc_to_c2w(preds[-1], hw), tp.pose_enc_to_c2w(gt, hw)
     t = gt.shape[1]
     i, j = torch.meshgrid(torch.arange(t, device=gt.device), torch.arange(t, device=gt.device), indexing="ij")
@@ -169,12 +227,12 @@ def loss_fn(preds, gt, hw, skip):
     rel_g = Rg_i.transpose(-1, -2) @ Rg_j
     tp_ = (Rp_i.transpose(-1, -2) @ (P[:, j, :3, 3] - P[:, i, :3, 3])[..., None])[..., 0]
     tg_ = (Rg_i.transpose(-1, -2) @ (G[:, j, :3, 3] - G[:, i, :3, 3])[..., None])[..., 0]
-    l_rel = geodesic(rel_p, rel_g).mean() + (tp_ - tg_).abs().sum(-1).mean()
+    l_rel = geodesic(rel_p, rel_g).mean() + ((tp_ - tg_).abs().sum(-1) / unit).mean()
     return l_abs + l_rel, l_abs.detach(), l_rel.detach()
 
 
 def batch_cpu(clips, idx, t, patches):
-    spec = torch.stack([clips[i].spec[:t] for i in idx])
+    spec = torch.stack([clips[i].get_spec(t) for i in idx])
     gt = torch.stack([clips[i].gt_enc[:t] for i in idx])
     lp = torch.stack([clips[i].lingbot[:t] for i in idx])
     pf = patch_frames(t) if patches else None
@@ -199,17 +257,17 @@ def evaluate(model, sets, dev, patches):
     for name, clips, ts in sets:
         res = {}
         for c in clips:
-            for t in ts:
-                t = min(t, c.T)
+            for t_req in ts:
+                t = min(t_req, c.T)
                 spec, gt, lp, pt, pf = batch([c], [0], t, dev, patches)
                 with torch.autocast("cuda", dtype=torch.bfloat16):
                     p = model(spec, lp, pt, pf)[-1][0].float()
                 r = tp.traj_metrics(tp.pose_enc_to_c2w(p, c.hw), c.gt_c2w[:t], c.scale)
                 r["lingbot"] = tp.traj_metrics(tp.pose_enc_to_c2w(c.lingbot[:t].float(), c.hw), c.gt_c2w[:t], c.scale)
-                res[f"{c.name}@{t}"] = r
+                res[f"{c.name}@{t_req}"] = r
         summ = {}
         for t in ts:
-            rows = [r for k, r in res.items() if k.endswith(f"@{min(t, max(c.T for c in clips))}")]
+            rows = [r for k, r in res.items() if k.endswith(f"@{t}")]
             summ[str(t)] = {m: float(np.mean([r[m] for r in rows])) for m in tp.METRICS}
             summ[str(t)].update({f"lingbot_{m}": float(np.mean([r["lingbot"][m] for r in rows])) for m in tp.METRICS})
         out[name] = {"summary": summ, "per_clip": res}
@@ -241,6 +299,21 @@ def main():
                     help="train on lingbot-cache1048 datasets instead of poserefine-v1 train/train_v5, e.g. "
                          "scannetpp,tartanair-v2,matrixcity (ScanNet++ val24 scenes are left out)")
     ap.add_argument("--cache-root", type=Path, default=Path("/data"))
+    ap.add_argument("--packs", default="",
+                    help="train on build_tap23_pack.py packs of lingbot-cache1048 datasets, e.g. "
+                         "tartanair-v1,tartanair-v2,tartanground,matrixcity,scannetpp,scannet-v2")
+    ap.add_argument("--pack-root", type=Path, default=PACK_ROOT)
+    ap.add_argument("--ds-weights", default="", help="dataset-first sampling weights, e.g. matrixcity:2 (default 1 each)")
+    ap.add_argument("--t-weight", choices=["uniform", "linear"], default="uniform",
+                    help="linear: P(t) proportional to t")
+    ap.add_argument("--longval", action="store_true", help="hold out LONGVAL_ENVS / every 10th route / 20th scene")
+    ap.add_argument("--longval-per-ds", type=int, default=8)
+    ap.add_argument("--longval-lengths", default="320,640,1048")
+    ap.add_argument("--keep-bad-gt", action="store_true",
+                    help="keep the sequences GT_JUMPS flags (dropped whole by default)")
+    ap.add_argument("--norm", choices=["none", "extent"], default="none")
+    ap.add_argument("--trans-floor", type=float, default=1.0)
+    ap.add_argument("--head-mode", choices=["causal", "bidir"], default="causal")
     ap.add_argument("--overfit", action="store_true",
                     help="train on one ScanNet++ clip (the first with >= t-max frames), also evaluated as set 'train1'")
     args = ap.parse_args()
@@ -251,15 +324,48 @@ def main():
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
 
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=False)
-    model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt, width=args.width).to(dev)
+    model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt, width=args.width,
+                         head_mode=args.head_mode).to(dev)
 
     def load(d, store):
         fs = sorted(f for f in (args.inputs / d / "specials").glob("*.npz") if ".tmp" not in f.stem)
         fs = fs[: args.max_train] if args.max_train and d.startswith("train") else fs
         return [Clip(f, store, args.patches) for f in fs]
 
-    if args.caches:
-        val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in VAL24.read_text().split()}
+    val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in VAL24.read_text().split()}
+    longval = {}
+    if args.packs:
+        jumps = {} if args.keep_bad_gt else json.loads(GT_JUMPS.read_text())
+        train = []
+        for ds in args.packs.split(","):
+            if ds == "kitti360":
+                print("[data] kitti360 skipped: metric GT, not in lingbot's anchor scale", flush=True)
+                continue
+            idx = dict(np.load(args.pack_root / ds / "index.npz"))
+            mm = np.load(args.pack_root / ds / "spec23.npy", mmap_mode="r")
+            bad = {b[0].rsplit("__f", 1)[0] for b in jumps.get(ds, [])}
+            n_bad = n_val = 0
+            lv = []
+            for i in range(len(idx["name"])):
+                name = str(idx["name"][i])
+                seq_key = name.rsplit("__f", 1)[0]
+                if seq_key in bad:
+                    n_bad += 1
+                    continue
+                c = PackClip(ds, mm, idx, i)
+                held = (ds == "scannetpp" and name.split("__")[0] in val_scenes) or \
+                       (args.longval and longval_split(ds, c.seq))
+                if held:
+                    n_val += 1
+                    lv.append(c)
+                else:
+                    train.append(c)
+            if args.longval and lv:
+                lv.sort(key=lambda c: (-c.T, c.name))
+                longval[ds] = [c.to(dev) for c in lv[: args.longval_per_ds]]
+            print(f"[data] {ds}: {sum(c.ds == ds for c in train)} train clips, {n_val} held out, "
+                  f"{n_bad} dropped (bad-GT sequences)", flush=True)
+    elif args.caches:
         train = []
         for ds in args.caches.split(","):
             if ds == "kitti360":
@@ -277,10 +383,13 @@ def main():
         train = load("train", "cpu") + load("train_v5", "cpu")
     lens = [int(x) for x in args.nrgbd_lengths.split(",")]
     sets = [("val24", load("val24", dev), [320]), ("nrgbd", load("nrgbd", dev), lens)]
+    lv_lens = [int(x) for x in args.longval_lengths.split(",")]
+    sets += [(f"longval_{ds}", cl, lv_lens) for ds, cl in longval.items()]
     if args.overfit:
         train = [next(c for c in train if c.T >= args.t_max)]
         sets.append(("train1", train, [args.t_max]))
         print(f"[overfit] clip {train[0].name} ({train[0].T} frames)", flush=True)
+    print(f"[data] longval: " + ", ".join(f"{ds} {len(cl)}" for ds, cl in longval.items()), flush=True)
     print(f"[data] train {len(train)} clips; val24 {len(sets[0][1])}; nrgbd {len(sets[1][1])} at t={lens}; "
           f"patches={args.patches} anchors={args.anchors}", flush=True)
     params = [p for p in model.parameters() if p.requires_grad]
@@ -288,6 +397,7 @@ def main():
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.05, betas=(0.9, 0.95))
     skip = A if args.anchors == "fixed" else 0
     tchoices = np.arange(args.t_min, args.t_max + 1, args.t_step)
+    tprob = tchoices / tchoices.sum() if args.t_weight == "linear" else None
 
     def summarise(r):
         row = {}
@@ -314,14 +424,24 @@ def main():
     pool = ThreadPoolExecutor(2)   # patch tokens are ~150 MB per sample of /data memmap reads
 
     lengths = np.array([c.T for c in train])
+    group = np.array([getattr(c, "ds", "all") for c in train])
+    gnames = sorted(set(group))
+    w = dict(x.split(":") for x in args.ds_weights.split(",") if x)
+    gw = np.array([float(w.get(g, 1)) for g in gnames])
+    gw = gw / gw.sum()
+    print(f"[data] sampling: " + ", ".join(f"{g} {p:.2f}" for g, p in zip(gnames, gw)) + f"; t {args.t_min}-{args.t_max} "
+          f"step {args.t_step} {args.t_weight}", flush=True)
 
     def submit():
-        t = int(rng.choice(tchoices))
-        pool_idx = np.flatnonzero(lengths >= t)          # clip lengths vary in the cache1048 sets
+        g = gnames[rng.choice(len(gnames), p=gw)]     # dataset first, then t, then clips at least t long
+        t = int(rng.choice(tchoices, p=tprob))
+        ing = group == g
+        pool_idx = np.flatnonzero(ing & (lengths >= t))
         if len(pool_idx) == 0:
-            t, pool_idx = int(lengths.max()), np.flatnonzero(lengths == lengths.max())
+            t = int(lengths[ing].max())
+            pool_idx = np.flatnonzero(ing & (lengths == t))
         idx = rng.choice(pool_idx, args.batch, replace=len(pool_idx) < args.batch)
-        return t, pool.submit(batch_cpu, train, idx, t, args.patches)
+        return t, train[idx[0]].hw, pool.submit(batch_cpu, train, idx, t, args.patches)
 
     queue = [submit(), submit()]
     t0 = time.time()
@@ -329,12 +449,13 @@ def main():
         lr = args.lr * min(1.0, step / args.warmup) * 0.5 * (1 + math.cos(math.pi * step / args.steps))
         for g in opt.param_groups:
             g["lr"] = lr
-        t, fut = queue.pop(0)
+        t, hw, fut = queue.pop(0)
         queue.append(submit())
         spec, gt, lp, pt, pf = to_dev(fut.result(), dev)
         with torch.autocast("cuda", dtype=torch.bfloat16):
             preds = model(spec, lp, pt, pf)
-        loss, la, lr_ = loss_fn([p.float() for p in preds], gt, train[0].hw, skip)
+        loss, la, lr_ = loss_fn([p.float() for p in preds], gt, hw, skip, norm=args.norm == "extent",
+                                floor=args.trans_floor)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         gn = torch.nn.utils.clip_grad_norm_(params, 1.0)
@@ -354,8 +475,12 @@ def main():
             ck = {"model": {k: v for k, v in model.state_dict().items() if not k.startswith("head.")},
                   "args": vars(args), "step": step, "val": row}
             torch.save(ck, args.out / "last.pt")
-            if row["val24@320/ate"] < best:
-                best = row["val24@320/ate"]
+            lv_t = max(lv_lens)
+            score = (float(np.mean([row[f"longval_{ds}@{lv_t}/ate"] / row[f"longval_{ds}@{lv_t}/lingbot_ate"]
+                                    for ds in longval])) if longval else row["val24@320/ate"])
+            row["select"] = score
+            if score < best:
+                best = score
                 torch.save(ck, args.out / "best.pt")
                 (args.out / "best_eval.json").write_text(json.dumps(r, indent=1))
             (args.out / "history.json").write_text(json.dumps(hist, indent=1))
