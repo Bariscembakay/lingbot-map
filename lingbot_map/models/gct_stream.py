@@ -559,3 +559,68 @@ class GCTStream(GCTBase):
         predictions["is_keyframe"] = is_keyframe
 
         return predictions
+
+    @torch.no_grad()
+    def inference_chunked(
+        self,
+        images: torch.Tensor,
+        chunk: int = 16,
+        num_scale_frames: Optional[int] = None,
+        output_device: Optional[torch.device] = None,
+    ) -> Dict[str, torch.Tensor]:
+        """inference_streaming (every frame a keyframe, SDPA backend) with `chunk` frames per forward
+        pass instead of one. Each frame of a chunk gets exactly the context frame-by-frame streaming
+        gives it -- the scale frames, the last `window` frames up to itself, and the special tokens of
+        every earlier evicted frame -- through an attention mask over [evicted specials | cached
+        frames | chunk frames], and the camera head attends causally within the chunk; the caches are
+        then appended and evicted as `chunk` single-frame steps leave them. Same outputs up to float
+        rounding, from large kernels instead of one small launch sequence per frame.
+        Returns pose_enc only (the depth head is not chunk-aware)."""
+        assert self.aggregator.use_sdpa, "chunked streaming is implemented for the SDPA KV cache"
+        if images.dim() == 4:
+            images = images.unsqueeze(0)
+        B, S, _, H, W = images.shape
+        A = min(num_scale_frames if num_scale_frames is not None else self.num_frame_for_scale, S)
+        attn = self.aggregator.global_blocks[0].attn
+        window, kv_scale = attn.kv_cache_sliding_window, attn.kv_cache_scale_frames
+        n_special = self.aggregator.patch_start_idx
+        P = n_special + (H // self.aggregator.patch_size) * (W // self.aggregator.patch_size)
+        dev = next(self.parameters()).device
+        out = (lambda t: t.to(output_device)) if output_device is not None else (lambda t: t)
+
+        self.clean_kv_cache()
+        poses = [out(self.forward(images[:, :A].to(dev), num_frame_for_scale=A, num_frame_per_block=A,
+                                  causal_inference=True)["pose_enc"])]
+        head_caches = self.camera_head.kv_cache if self.camera_head is not None else []
+        for d in head_caches:
+            d["_chunk_causal"] = True
+        kv = self.aggregator.kv_cache
+        tok = torch.arange(P, device=dev)
+        try:
+            for f0 in range(A, S, chunk):
+                c = min(chunk, S - f0)
+                n_win = min(window, f0 - kv_scale)               # cached frames past the scale frames
+                n_ev = f0 - kv_scale - n_win                      # frames already reduced to specials
+                qf = f0 + torch.arange(c * P, device=dev) // P
+                # keys: evicted specials | cached scale + window frames | chunk frames
+                kf = torch.cat([kv_scale + torch.arange(n_ev, device=dev).repeat_interleave(n_special),
+                                torch.cat([torch.arange(kv_scale, device=dev),
+                                           torch.arange(f0 - n_win, f0, device=dev)]).repeat_interleave(P),
+                                torch.arange(f0, f0 + c, device=dev).repeat_interleave(P)])
+                kind = torch.cat([torch.zeros(n_ev * n_special, dtype=torch.long, device=dev),
+                                  torch.ones((kv_scale + n_win) * P, dtype=torch.long, device=dev),
+                                  torch.full((c * P,), 2, dtype=torch.long, device=dev)])
+                kspec = torch.cat([torch.ones(n_ev * n_special, dtype=torch.bool, device=dev),
+                                   (tok < n_special).repeat(kv_scale + n_win + c)])
+                q, k = qf[:, None], kf[None]
+                mask = ((kind[None] == 0) | (k < kv_scale) | ((k >= q - window + 1) & (k <= q))
+                        | ((kind[None] == 1) & kspec[None]))
+                kv["_chunk_mask"] = mask[None, None]
+                poses.append(out(self.forward(images[:, f0:f0 + c].to(dev), num_frame_for_scale=A,
+                                              num_frame_per_block=c, causal_inference=True)["pose_enc"]))
+                del mask
+        finally:
+            kv["_chunk_mask"] = None
+            for d in head_caches:
+                d["_chunk_causal"] = False
+        return {"pose_enc": torch.cat(poses, 1)}

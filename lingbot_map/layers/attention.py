@@ -323,6 +323,10 @@ class CausalAttention(nn.Module):
                 # Use mask-based SDPA to ensure same kernel as batch mode
                 # The causal constraint is enforced by KV cache contents, not by mask
                 mask = torch.ones(B, 1, q.shape[2], k.shape[2], dtype=torch.bool, device=q.device)
+                if kv_cache.get("_chunk_causal") and q.shape[2] > 1:
+                    # chunked streaming: the chunk's frames are the cache's last q_len entries
+                    # (one token per frame), each sees the cache and the chunk frames up to itself
+                    mask = mask.tril(diagonal=k.shape[2] - q.shape[2])
                 x = F.scaled_dot_product_attention(
                     q,
                     k,
@@ -681,6 +685,10 @@ class SDPAAttention(Attention):
             camera_token_idx = 0
             scale_token_idx = camera_token_idx + num_register_tokens + 1
 
+            if kv_cache.get("_chunk_mask") is not None and kv_cache[f"k_{global_idx}"] is not None:
+                return self._forward_chunk(q, k, v, kv_cache, global_idx, camera_token_idx, scale_token_idx,
+                                           num_register_tokens, B, N)
+
             # Check if we should skip appending to cache (non-keyframe in keyframe mode)
             skip_append = kv_cache.get("_skip_append", False)
 
@@ -735,6 +743,29 @@ class SDPAAttention(Attention):
         x = self.proj(x)
         x = self.proj_drop(x)
         return x
+
+    def _forward_chunk(self, q, k, v, kv_cache, global_idx, camera_token_idx, scale_token_idx,
+                       num_register_tokens, B, N):
+        """C frames in one call, each with exactly the context frame-by-frame streaming gives it
+        (kv_cache["_chunk_mask"], built by GCTStream.inference_chunked over the keys
+        [evicted specials | cached frames | chunk frames]); the cache is then appended and evicted
+        as C single-frame steps would leave it."""
+        kc, vc = kv_cache[f"k_{global_idx}"], kv_cache[f"v_{global_idx}"]
+        P = kc.shape[3]
+        C = N // P
+        k_new = k.view(B, self.num_heads, C, P, self.head_dim)
+        v_new = v.view(B, self.num_heads, C, P, self.head_dim)
+        flat = lambda t: t.reshape(B, self.num_heads, -1, self.head_dim)
+        ks, vs = [flat(kc), flat(k_new)], [flat(vc), flat(v_new)]
+        if kv_cache.get(f"k_{global_idx}_special") is not None:
+            ks.insert(0, flat(kv_cache[f"k_{global_idx}_special"]))
+            vs.insert(0, flat(kv_cache[f"v_{global_idx}_special"]))
+        x = F.scaled_dot_product_attention(q, torch.cat(ks, 2), torch.cat(vs, 2), attn_mask=kv_cache["_chunk_mask"])
+        x = x.transpose(1, 2).reshape(B, N, self.num_heads * self.head_dim)
+        kv_cache[f"k_{global_idx}"] = torch.cat((kc, k_new), dim=2)
+        kv_cache[f"v_{global_idx}"] = torch.cat((vc, v_new), dim=2)
+        self._apply_kv_cache_eviction(kv_cache, global_idx, camera_token_idx, scale_token_idx, num_register_tokens)
+        return self.proj_drop(self.proj(x))
 
     def _apply_kv_cache_eviction(self, kv_cache, global_idx, camera_token_idx, scale_token_idx, num_register_tokens):
         """Apply sliding window eviction to KV cache."""
