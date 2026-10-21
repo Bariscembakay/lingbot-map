@@ -765,7 +765,8 @@ class SDPAAttention(Attention):
             K, V = torch.cat(ks, 2), torch.cat(vs, 2)
             pad = mask["kv_len"] - K.shape[2]
             K, V = F.pad(K, (0, 0, 0, pad)), F.pad(V, (0, 0, 0, pad))
-            x = mask["fn"](q, K, V, block_mask=mask["block_mask"])
+            dt = V.dtype   # autocast casts SDPA's inputs to bf16; flex_attention is not autocast-aware
+            x = mask["fn"](q.to(dt), K.to(dt), V, block_mask=mask["block_mask"])
         else:
             x = F.scaled_dot_product_attention(q, torch.cat(ks, 2), torch.cat(vs, 2), attn_mask=mask)
         x = x.transpose(1, 2).reshape(B, N, self.num_heads * self.head_dim)
