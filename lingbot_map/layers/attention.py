@@ -760,7 +760,14 @@ class SDPAAttention(Attention):
         if kv_cache.get(f"k_{global_idx}_special") is not None:
             ks.insert(0, flat(kv_cache[f"k_{global_idx}_special"]))
             vs.insert(0, flat(kv_cache[f"v_{global_idx}_special"]))
-        x = F.scaled_dot_product_attention(q, torch.cat(ks, 2), torch.cat(vs, 2), attn_mask=kv_cache["_chunk_mask"])
+        mask = kv_cache["_chunk_mask"]
+        if isinstance(mask, dict):   # FlexAttention: keys padded to a fixed length so it compiles once
+            K, V = torch.cat(ks, 2), torch.cat(vs, 2)
+            pad = mask["kv_len"] - K.shape[2]
+            K, V = F.pad(K, (0, 0, 0, pad)), F.pad(V, (0, 0, 0, pad))
+            x = mask["fn"](q, K, V, block_mask=mask["block_mask"])
+        else:
+            x = F.scaled_dot_product_attention(q, torch.cat(ks, 2), torch.cat(vs, 2), attn_mask=mask)
         x = x.transpose(1, 2).reshape(B, N, self.num_heads * self.head_dim)
         kv_cache[f"k_{global_idx}"] = torch.cat((kc, k_new), dim=2)
         kv_cache[f"v_{global_idx}"] = torch.cat((vc, v_new), dim=2)

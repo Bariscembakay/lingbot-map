@@ -25,7 +25,7 @@ from scripts.memory.build_cache import build_model  # noqa: E402
 A = 8
 
 
-def run(model, x, chunk):
+def run(model, x, chunk, attn="sdpa"):
     agg = model.aggregator
     psi = agg.patch_start_idx
     acc = {"spec": [], "cls": []}
@@ -37,7 +37,7 @@ def run(model, x, chunk):
     try:
         with torch.no_grad(), torch.amp.autocast("cuda", dtype=torch.bfloat16):
             if chunk:
-                pred = model.inference_chunked(x, chunk=chunk, num_scale_frames=A)
+                pred = model.inference_chunked(x, chunk=chunk, num_scale_frames=A, attn=attn)
             else:
                 pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=1, output_device=None)
         torch.cuda.synchronize()
@@ -61,6 +61,7 @@ def main():
     ap.add_argument("--frames", type=int, default=320)
     ap.add_argument("--chunks", type=int, nargs="+", default=[4, 16, 32])
     ap.add_argument("--clips", type=int, default=2)
+    ap.add_argument("--attn", nargs="+", default=["sdpa", "flex"])
     args = ap.parse_args()
     plan = json.loads(args.plan.read_text())
     src = source(plan["summary"]["dataset"])
@@ -79,14 +80,16 @@ def main():
         print(f"[stream] {len(x) / dt:.2f} fps, peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB", flush=True)
         again, _ = run(model, x, 0)
         print(f"   repeat: specials {diff(again['spec'], ref['spec'])} | pose {diff(again['pose'], ref['pose'])}", flush=True)
-        for ch in args.chunks:
+        for att, ch in [(a, c) for a in args.attn for c in args.chunks]:
             try:
-                out, dt = run(model, x, ch)
-            except torch.OutOfMemoryError as e:
-                print(f"[chunk {ch}] OOM: {str(e)[:120]}", flush=True)
+                if att == "flex":
+                    run(model, x[:8 + 2 * ch], ch, att)   # compile outside the timing
+                out, dt = run(model, x, ch, att)
+            except Exception as e:
+                print(f"[{att} chunk {ch}] FAILED {type(e).__name__}: {str(e)[:300]}", flush=True)
                 torch.cuda.empty_cache()
                 continue
-            print(f"[chunk {ch}] {len(x) / dt:.2f} fps ({dt:.1f} s), peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB", flush=True)
+            print(f"[{att} chunk {ch}] {len(x) / dt:.2f} fps ({dt:.1f} s), peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB", flush=True)
             print(f"   specials {diff(out['spec'], ref['spec'])} | pose {diff(out['pose'], ref['pose'])} | "
                   f"cls {diff(out['cls'], ref['cls'])}", flush=True)
             for a, b in ((8, 72), (72, 200), (200, len(x))):   # before / around / after the window fills

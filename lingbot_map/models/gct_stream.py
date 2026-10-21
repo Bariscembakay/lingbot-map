@@ -567,6 +567,7 @@ class GCTStream(GCTBase):
         chunk: int = 16,
         num_scale_frames: Optional[int] = None,
         output_device: Optional[torch.device] = None,
+        attn: str = "sdpa",
     ) -> Dict[str, torch.Tensor]:
         """inference_streaming (every frame a keyframe, SDPA backend) with `chunk` frames per forward
         pass instead of one. Each frame of a chunk gets exactly the context frame-by-frame streaming
@@ -575,6 +576,9 @@ class GCTStream(GCTBase):
         frames | chunk frames], and the camera head attends causally within the chunk; the caches are
         then appended and evicted as `chunk` single-frame steps leave them. Same outputs up to float
         rounding, from large kernels instead of one small launch sequence per frame.
+        attn="sdpa" passes the mask as a dense boolean tensor (memory-efficient kernel); "flex" builds
+        a FlexAttention block mask over keys padded to a fixed length, so the compiled kernel is
+        reused for every full chunk and fully masked blocks are skipped.
         Returns pose_enc only (the depth head is not chunk-aware)."""
         assert self.aggregator.use_sdpa, "chunked streaming is implemented for the SDPA KV cache"
         if images.dim() == 4:
@@ -596,6 +600,11 @@ class GCTStream(GCTBase):
             d["_chunk_causal"] = True
         kv = self.aggregator.kv_cache
         tok = torch.arange(P, device=dev)
+        if attn == "flex":
+            from torch.nn.attention.flex_attention import create_block_mask, flex_attention
+            flex = _compiled_flex(flex_attention)
+            n_ev_max = max(0, S - kv_scale - window)
+            kv_len = n_ev_max * n_special + (kv_scale + window + chunk) * P
         try:
             for f0 in range(A, S, chunk):
                 c = min(chunk, S - f0)
@@ -612,15 +621,41 @@ class GCTStream(GCTBase):
                                   torch.full((c * P,), 2, dtype=torch.long, device=dev)])
                 kspec = torch.cat([torch.ones(n_ev * n_special, dtype=torch.bool, device=dev),
                                    (tok < n_special).repeat(kv_scale + n_win + c)])
-                q, k = qf[:, None], kf[None]
-                mask = ((kind[None] == 0) | (k < kv_scale) | ((k >= q - window + 1) & (k <= q))
-                        | ((kind[None] == 1) & kspec[None]))
-                kv["_chunk_mask"] = mask[None, None]
+                if attn == "flex":
+                    n_k = len(kf)
+                    pad = kv_len - n_k
+                    kf_p = torch.cat([kf, torch.full((pad,), -10**9, device=dev)])
+                    kind_p = torch.cat([kind, torch.full((pad,), 3, dtype=torch.long, device=dev)])
+                    kspec_p = torch.cat([kspec, torch.zeros(pad, dtype=torch.bool, device=dev)])
+
+                    def mask_mod(b, h, qi, ki, f0=f0):
+                        qfr = f0 + qi // P
+                        kfr, kd = kf_p[ki], kind_p[ki]
+                        return (kd != 3) & ((kd == 0) | (kfr < kv_scale) | ((kfr >= qfr - window + 1) & (kfr <= qfr))
+                                            | ((kd == 1) & kspec_p[ki]))
+
+                    bm = create_block_mask(mask_mod, None, None, c * P, kv_len, device=dev, _compile=True)
+                    kv["_chunk_mask"] = {"fn": flex, "block_mask": bm, "kv_len": kv_len}
+                else:
+                    q, k = qf[:, None], kf[None]
+                    mask = ((kind[None] == 0) | (k < kv_scale) | ((k >= q - window + 1) & (k <= q))
+                            | ((kind[None] == 1) & kspec[None]))
+                    kv["_chunk_mask"] = mask[None, None]
+                    del mask
                 poses.append(out(self.forward(images[:, f0:f0 + c].to(dev), num_frame_for_scale=A,
                                               num_frame_per_block=c, causal_inference=True)["pose_enc"]))
-                del mask
         finally:
             kv["_chunk_mask"] = None
             for d in head_caches:
                 d["_chunk_causal"] = False
         return {"pose_enc": torch.cat(poses, 1)}
+
+
+_FLEX = None
+
+
+def _compiled_flex(flex_attention):
+    global _FLEX
+    if _FLEX is None:
+        _FLEX = torch.compile(flex_attention, dynamic=False)
+    return _FLEX
