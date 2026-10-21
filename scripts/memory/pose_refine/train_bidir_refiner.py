@@ -182,24 +182,21 @@ class BidirRefiner(nn.Module):
             cam = torch.cat([spec[:, :A, 0].to(cam.dtype), cam[:, A:]], 1)
         # lingbot's head on lingbot's camera head inputs: frozen, causal, 8 scale frames
         # (--head-mode bidir: every frame is a "scale frame", so the head attends both ways).
-        # In eval, the equivalent dense mask (bit-identical, see train_pose_refine.py decode):
-        # the FlexAttention one recompiles for every new length.
+        # Always the equivalent dense mask (bit-identical, see train_pose_refine.py decode): the
+        # FlexAttention one recompiles for every new length, and building it eagerly over t x t
+        # frames in every block and iteration cost ~25 s/step at t ~ 1000.
         bidir = self.head_mode == "bidir"
-        nfs, restore = (t if bidir else 8), None
-        if not torch.is_grad_enabled():
-            restore = [b._prepare_blockwise_causal_attn_mask for b in self.head.trunk]
-            for b in self.head.trunk:
-                b._prepare_blockwise_causal_attn_mask = (
-                    lambda device, num_frames, frame_seqlen, num_frame_per_block:
-                    torch.ones(num_frames, num_frames, dtype=torch.bool, device=device) if bidir else
-                    torch.ones(num_frames, num_frames, dtype=torch.bool, device=device).tril()
-                    | tp.anchor_block(num_frames, A, device))
-            nfs = -1
+        restore = [b._prepare_blockwise_causal_attn_mask for b in self.head.trunk]
+        for b in self.head.trunk:
+            b._prepare_blockwise_causal_attn_mask = (
+                lambda device, num_frames, frame_seqlen, num_frame_per_block:
+                torch.ones(num_frames, num_frames, dtype=torch.bool, device=device) if bidir else
+                torch.ones(num_frames, num_frames, dtype=torch.bool, device=device).tril()
+                | tp.anchor_block(num_frames, A, device))
         preds = self.head.trunk_fn(self.head.token_norm(cam), None, self.head.num_iterations,
-                                   num_frame_per_block=1, num_frame_for_scale=nfs, sliding_window_size=-1)
-        if restore is not None:
-            for b, f in zip(self.head.trunk, restore):
-                b._prepare_blockwise_causal_attn_mask = f
+                                   num_frame_per_block=1, num_frame_for_scale=-1, sliding_window_size=-1)
+        for b, f in zip(self.head.trunk, restore):
+            b._prepare_blockwise_causal_attn_mask = f
         if self.anchors_fixed:
             preds = [torch.cat([lingbot_pose[:, :A].to(q.dtype), q[:, A:]], 1) for q in preds]
         return preds
