@@ -581,12 +581,13 @@ class GCTStream(GCTBase):
         reused for every full chunk and fully masked blocks are skipped.
         Returns pose_enc only (the depth head is not chunk-aware)."""
         assert self.aggregator.use_sdpa, "chunked streaming is implemented for the SDPA KV cache"
+        assert attn in ("sdpa", "flex"), attn
         if images.dim() == 4:
             images = images.unsqueeze(0)
         B, S, _, H, W = images.shape
         A = min(num_scale_frames if num_scale_frames is not None else self.num_frame_for_scale, S)
-        attn = self.aggregator.global_blocks[0].attn
-        window, kv_scale = attn.kv_cache_sliding_window, attn.kv_cache_scale_frames
+        blk_attn = self.aggregator.global_blocks[0].attn
+        window, kv_scale = blk_attn.kv_cache_sliding_window, blk_attn.kv_cache_scale_frames
         n_special = self.aggregator.patch_start_idx
         P = n_special + (H // self.aggregator.patch_size) * (W // self.aggregator.patch_size)
         dev = next(self.parameters()).device
