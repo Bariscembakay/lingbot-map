@@ -15,6 +15,8 @@ these steps from frame 0, so no output grows with the distance travelled.
         CUT3R-rel keep a constant 0.1-0.2 deg/frame bias), L1 FoV x 0.5; final iteration: the
         same terms on the chained trajectory's relative pose for every pair less than
         --pair-window frames apart (lingbot's relative-pose term) x --pair-w.
+  --residual: each step is lingbot's own step (from its absolute poses) composed with the head's
+        output, which starts at no motion: step 0 is lingbot's trajectory exactly.
 --mode abs: the matched control -- the same head, data and schedule on lingbot's own setup (full
   causal attention, no RoPE, absolute pose + window pairs: train_bidir_refiner.loss_fn).
 Data: the refiner's packs (tap-23 specials of lingbot-cache1048, every frame a keyframe), its
@@ -97,7 +99,7 @@ class EvalClip:
                    tuple(int(x) for x in z["hw"]), float(z["gt_scale"]), z["pose_enc"], dev)
 
 
-def gt_steps(G):
+def to_steps(G):
     """[..., t, 4, 4] camera-to-world -> each frame in the previous camera; frame 0 the identity."""
     S = torch.eye(4, dtype=G.dtype, device=G.device).expand_as(G).clone()
     S[..., 1:, :, :] = rigid_inv(G[..., :-1, :, :]) @ G[..., 1:, :, :]
@@ -126,9 +128,9 @@ def chain(S):
 
 # -- model ---------------------------------------------------------------------
 class RelHead(nn.Module):
-    def __init__(self, head, mode, window, prev_token, init_identity=False):
+    def __init__(self, head, mode, window, prev_token, init_identity=False, residual=False):
         super().__init__()
-        self.head, self.mode, self.window = head, mode, window
+        self.head, self.mode, self.window, self.residual = head, mode, window, residual
         if init_identity:
             # lingbot's output layer maps to absolute poses; restart translation and the quaternion's
             # vector part at zero and its scalar part at a positive constant (summed over the head
@@ -177,18 +179,24 @@ def angle(Ra, Rb):
     return torch.atan2(torch.sqrt((v * v).sum(-1) + 1e-12), E.diagonal(dim1=-2, dim2=-1).sum(-1) - 1)
 
 
-def rel_loss(preds, G, fov, hw, args, gamma=0.6):
+def step_matrices(p, hw, lingbot_steps=None):
+    """Step encodings [..., t, 9] -> step camera-to-world [..., t, 4, 4], after lingbot's step if given."""
+    S = tp.pose_enc_to_c2w(p, hw)
+    return S if lingbot_steps is None else lingbot_steps @ S
+
+
+def rel_loss(preds, G, fov, hw, args, lingbot_steps=None, gamma=0.6):
     """preds: per-iteration step encodings [B,t,9]; G [B,t,4,4] GT camera-to-world; fov [B,t,2]."""
-    Sg = gt_steps(G)
+    Sg = to_steps(G)
     n, total, parts = len(preds), 0.0, {}
     for k, p in enumerate(preds):
-        P = tp.pose_enc_to_c2w(p[:, 1:], hw)
+        P = step_matrices(p, hw, lingbot_steps)[:, 1:]
         lt = (P[..., :3, 3] - Sg[:, 1:, :3, 3]).abs().sum(-1)
         lr = angle(P[..., :3, :3], Sg[:, 1:, :3, :3])
         lf = (p[:, 1:, 7:] - fov[:, 1:]).abs().sum(-1)
         total = total + gamma ** (n - 1 - k) * (args.trans_w * lt + args.rot_w * lr + 0.5 * lf).mean()
     parts.update(step_t=lt.mean().detach(), step_r_deg=torch.rad2deg(lr).mean().detach())
-    C = chain(tp.pose_enc_to_c2w(preds[-1], hw))
+    C = chain(step_matrices(preds[-1], hw, lingbot_steps))
     lp = []
     for d in range(1, min(args.pair_window, C.shape[1])):
         rp, rg = rigid_inv(C[:, :-d]) @ C[:, d:], rigid_inv(G[:, :-d]) @ G[:, d:]
@@ -217,9 +225,10 @@ def predict_c2w(model, c, t=None, chunk=2048):
         with torch.autocast("cuda", dtype=torch.bfloat16):
             p = model(cam[None, a:e])[-1][0].float()
         enc.append(p[s - a:])
-    M = tp.pose_enc_to_c2w(torch.cat(enc), c.hw).double()
     if model.mode == "abs":
-        return M
+        return tp.pose_enc_to_c2w(torch.cat(enc), c.hw).double()
+    M = step_matrices(torch.cat(enc), c.hw,
+                      to_steps(tp.pose_enc_to_c2w(c.lingbot[:T].float(), c.hw)) if model.residual else None).double()
     M[0] = torch.eye(4, dtype=M.dtype, device=M.device)
     M = M.cpu().numpy()
     out = np.empty_like(M)
@@ -258,6 +267,7 @@ def main():
     ap.add_argument("--window", type=int, default=64, help="rel: frames the head attends to, itself included")
     ap.add_argument("--no-rope", action="store_true", help="rel: lingbot's head as is, without temporal RoPE")
     ap.add_argument("--prev-token", action="store_true")
+    ap.add_argument("--residual", action="store_true", help="rel: correct lingbot's own steps (starts at lingbot)")
     ap.add_argument("--no-init-identity", action="store_true",
                     help="rel: keep lingbot's absolute-pose output layer instead of starting every step at no motion")
     ap.add_argument("--rot-w", type=float, default=10.0)
@@ -294,7 +304,8 @@ def main():
     rope = args.mode == "rel" and not args.no_rope
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=rope, max_frames=4096 if rope else 1024)
     model = RelHead(head, args.mode, args.window, args.prev_token,
-                    init_identity=args.mode == "rel" and not args.no_init_identity).to(dev)
+                    init_identity=args.mode == "rel" and not args.no_init_identity,
+                    residual=args.mode == "rel" and args.residual).to(dev)
 
     val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in br.VAL24.read_text().split()}
     jumps = json.loads(br.GT_JUMPS.read_text())
@@ -339,7 +350,7 @@ def main():
 
     params = [p for p in model.parameters() if p.requires_grad]
     print(f"[model] mode={args.mode} rope={rope} window={args.window} prev_token={args.prev_token} "
-          f"init_identity={args.mode == 'rel' and not args.no_init_identity} "
+          f"init_identity={args.mode == 'rel' and not args.no_init_identity} residual={args.residual} "
           f"trainable {sum(p.numel() for p in params) / 1e6:.1f} M", flush=True)
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.05, betas=(0.9, 0.95))
     tchoices = np.arange(args.t_min, args.t_max + 1, args.t_step)
@@ -410,7 +421,11 @@ def main():
                 preds = model(cam)
             preds = [p.float() for p in preds]
             if args.mode == "rel":
-                l, pt = rel_loss(preds, G, enc[..., 7:], hw, args)
+                ls = None
+                if args.residual:
+                    L = torch.from_numpy(np.stack([train[i].lingbot[:t] for i in mb])).to(dev)
+                    ls = to_steps(tp.pose_enc_to_c2w(L, hw))
+                l, pt = rel_loss(preds, G, enc[..., 7:], hw, args, lingbot_steps=ls)
             else:
                 l, la, lrel = br.loss_fn(preds, enc, hw, 0, norm=args.norm == "extent", floor=args.trans_floor)
                 pt = {"abs": la, "pair": lrel}
