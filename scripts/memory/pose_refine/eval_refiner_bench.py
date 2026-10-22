@@ -2,7 +2,7 @@
 """Refiners on lingbot's benchmark sequences, scored by the benchmark's own evaluators.
 
 cache: lingbot runs each test scene exactly as benchmark/run.py does (LingbotMapMethod, config
-       methods/lingbot_map_sdpa.yaml: streaming, auto keyframe interval ceil(N/320) beyond 320 frames,
+       methods/lingbot_map.yaml (FlashInfer) or _sdpa: streaming, auto keyframe interval ceil(N/320) beyond 320 frames,
        the benchmark's own image loading and resizing), and every frame's special tokens (4 taps) and
        pose are saved. Non-keyframes still pass through the aggregator, so every frame has specials.
 eval:  each refiner checkpoint re-predicts all poses of a scene in one pass (every frame, no
@@ -50,7 +50,9 @@ def cache(args):
     from benchmark.core.loader import BSSLoader
     from benchmark.core.storage import BSSArtifact
     from methods.lingbot_map import LingbotMapMethod
-    cfg = yaml.safe_load((REPO / "benchmark/configs/methods/lingbot_map_sdpa.yaml").read_text())
+    # flashinfer = lingbot's shipped config (paged KV, ~20 fps); sdpa re-concatenates the KV cache every
+    # frame and ran at <1 fps on long scenes
+    cfg = yaml.safe_load((REPO / f"benchmark/configs/methods/{'lingbot_map' if args.backend == 'flashinfer' else 'lingbot_map_sdpa'}.yaml").read_text())
     kw = {k[1:]: v for k, v in cfg.items() if k.startswith("_")}
     method = LingbotMapMethod(**kw)
     model, psi = method.model, method.model.aggregator.patch_start_idx
@@ -73,7 +75,7 @@ def cache(args):
             pose = pred["pose_enc"][0].float().numpy()
             assert len(spec) == len(pose) == len(images), (spec.shape, pose.shape, images.shape)
             tmp = f.with_suffix(f".tmp{os.getpid()}.npz")
-            np.savez(tmp, specials=spec, pose_enc=pose, hw=np.int32(images.shape[-2:]), bench=bench, scene=sc.name,
+            np.savez(tmp, backend=args.backend, specials=spec, pose_enc=pose, hw=np.int32(images.shape[-2:]), bench=bench, scene=sc.name,
                      gt_dir=str(sc / "gt"), keyframe_interval=np.int32(-(-len(images) // 320) if len(images) > 320 else 1))
             tmp.rename(f)
             print(f"[cache] {bench}/{sc.name}: {len(spec)} frames {tuple(images.shape[-2:])}", flush=True)
@@ -201,6 +203,7 @@ def main():
     ap.add_argument("--benches", required=True)
     ap.add_argument("--scenes")
     ap.add_argument("--runs", default="")
+    ap.add_argument("--backend", choices=["flashinfer", "sdpa"], default="flashinfer")
     args = ap.parse_args()
     if args.task in ("cache", "both"):
         cache(args)
