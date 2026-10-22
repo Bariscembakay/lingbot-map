@@ -1,0 +1,413 @@
+#!/usr/bin/env python3
+"""Relative-pose camera head on frozen lingbot tokens: CUT3R-rel's moving frame in lingbot (option A).
+
+lingbot's camera head, initialised from lingbot and trained, reads the tap-23 camera token of
+every frame and predicts that frame's pose relative to the previous one (camera-to-world of frame
+i in camera i-1; frame 0 is the identity) plus its field of view. The trajectory is the chain of
+these steps from frame 0, so no output grows with the distance travelled.
+--mode rel (default):
+  head  causal over a --window of frames, temporal RoPE on: lingbot's head has no position
+        signal, so it could not tell which earlier token is frame i-1; the bounded window keeps
+        RoPE distances inside what training saw at any stream length. --prev-token also feeds
+        frame i-1's token through a zero-initialised projection.
+  loss  every head iteration (VGGT's gamma decay): per-step L1 translation x --trans-w,
+        geodesic rotation x --rot-w (atan2 form, finite gradient at zero; a quaternion loss let
+        CUT3R-rel keep a constant 0.1-0.2 deg/frame bias), L1 FoV x 0.5; final iteration: the
+        same terms on the chained trajectory's relative pose for every pair less than
+        --pair-window frames apart (lingbot's relative-pose term) x --pair-w.
+--mode abs: the matched control -- the same head, data and schedule on lingbot's own setup (full
+  causal attention, no RoPE, absolute pose + window pairs: train_bidir_refiner.loss_fn).
+Data: the refiner's packs (tap-23 specials of lingbot-cache1048, every frame a keyframe), its
+hold-outs and bad-GT list; camera tokens are extracted once per node to /scratch. Validation:
+val24 @320, NRGBD, held-out long clips @320/640/1048, KITTI 00-10 and VBR at full length.
+Usage: train_rel_head.py --out DIR [--mode rel|abs] [--prev-token]
+"""
+from __future__ import annotations
+
+import argparse
+import fcntl
+import json
+import math
+import os
+import sys
+import time
+from pathlib import Path
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO / "scripts/memory/pose_refine"))
+import train_bidir_refiner as br  # noqa: E402
+import train_pose_refine as tp  # noqa: E402
+
+A, D = br.A, br.D
+INPUTS = br.INPUTS
+TOKENS = Path(f"/scratch/{os.environ.get('USER')}/relhead_cam23")
+PACKS = "tartanair-v1,tartanair-v2,tartanground,matrixcity,scannetpp,scannet-v2"
+
+
+# -- data ----------------------------------------------------------------------
+def pack_cam_tokens(pack_root: Path, ds: str) -> np.ndarray:
+    """[N, D] fp16 camera tokens of a pack, extracted once per node from its specials memmap."""
+    out = TOKENS / f"{ds}.npy"
+    TOKENS.mkdir(parents=True, exist_ok=True)
+    with open(TOKENS / f"{ds}.lock", "w") as lk:
+        fcntl.flock(lk, fcntl.LOCK_EX)
+        if not out.exists():
+            mm = np.load(pack_root / ds / "spec23.npy", mmap_mode="r")
+            tmp = TOKENS / f"{ds}.{os.getpid()}.tmp.npy"
+            dst = np.lib.format.open_memmap(tmp, mode="w+", dtype=mm.dtype, shape=(len(mm), D))
+            for s in range(0, len(mm), 1 << 16):
+                dst[s:s + (1 << 16)] = mm[s:s + (1 << 16), tp.CAM]
+            dst.flush()
+            del dst
+            tmp.rename(out)
+    return np.load(out)
+
+
+class TrainClip:
+    def __init__(self, ds, tok, idx, i):
+        o, n = int(idx["offset"][i]), int(idx["length"][i])
+        self.ds, self.name, self.seq = ds, str(idx["name"][i]), str(idx["seq"][i])
+        self.T, self.hw = n, tuple(int(x) for x in idx["hw"][i])
+        self.scale = float(idx["gt_scale"][i])
+        self.tok = tok[o:o + n]                                   # view into the dataset's array
+        self.gt_c2w = torch.from_numpy(idx["gt_c2w"][o:o + n])
+        self.K = torch.from_numpy(idx["K"][o:o + n])
+        self.gt_enc = tp.extri_intri_to_pose_encoding(self.gt_c2w[None, :, :3], self.K[None], self.hw)[0]
+        self.lingbot = idx["pose_enc"][o:o + n]
+
+
+class EvalClip:
+    """Camera tokens, GT, lingbot's poses on the GPU; from a pack clip or a poserefine-v1 npz."""
+
+    def __init__(self, name, tok, gt_c2w, K, hw, scale, lingbot, dev):
+        self.name, self.T, self.hw, self.scale = name, len(tok), hw, scale
+        self.tok = torch.as_tensor(np.ascontiguousarray(tok)).to(dev)
+        self.gt_c2w = torch.as_tensor(gt_c2w).to(dev)
+        self.K = torch.as_tensor(K).to(dev)
+        self.lingbot = torch.as_tensor(lingbot).to(dev)
+
+    @classmethod
+    def from_npz(cls, f, dev):
+        z = np.load(f)
+        return cls(f.stem, z["specials"][:, tp.TAP23, tp.CAM], z["gt_c2w"], z["K"],
+                   tuple(int(x) for x in z["hw"]), float(z["gt_scale"]), z["pose_enc"], dev)
+
+
+def gt_steps(G):
+    """[..., t, 4, 4] camera-to-world -> each frame in the previous camera; frame 0 the identity."""
+    S = torch.eye(4, dtype=G.dtype, device=G.device).expand_as(G).clone()
+    S[..., 1:, :, :] = rigid_inv(G[..., :-1, :, :]) @ G[..., 1:, :, :]
+    return S
+
+
+def rigid_inv(M):
+    R, t = M[..., :3, :3], M[..., :3, 3:]
+    out = torch.zeros_like(M)
+    out[..., :3, :3] = R.transpose(-1, -2)
+    out[..., :3, 3:] = -R.transpose(-1, -2) @ t
+    out[..., 3, 3] = 1
+    return out
+
+
+def chain(S):
+    """[B, t, 4, 4] steps -> [B, t, 4, 4] poses in frame 0's camera (S[:, 0] is ignored)."""
+    out = [torch.eye(4, dtype=S.dtype, device=S.device).expand(S.shape[0], 4, 4)]
+    for i in range(1, S.shape[1]):
+        out.append(out[-1] @ S[:, i])
+    return torch.stack(out, 1)
+
+
+# -- model ---------------------------------------------------------------------
+class RelHead(nn.Module):
+    def __init__(self, head, mode, window, prev_token):
+        super().__init__()
+        self.head, self.mode, self.window = head, mode, window
+        self.prev = None
+        if prev_token:
+            self.prev = nn.Linear(D, D)
+            nn.init.zeros_(self.prev.weight)
+            nn.init.zeros_(self.prev.bias)
+
+    def mask(self, t, dev):
+        i = torch.arange(t, device=dev)
+        causal = i[None, :] <= i[:, None]
+        if self.mode == "rel":
+            return causal & (i[:, None] - i[None, :] < self.window)
+        return causal | tp.anchor_block(t, A, dev)          # lingbot's: causal, 8 anchors both ways
+
+    def forward(self, cam):
+        """cam [B, t, D] -> pose encodings [B, t, 9] per head iteration (steps in rel mode)."""
+        x = cam
+        if self.prev is not None:
+            x = x + self.prev(torch.cat([x[:, :1], x[:, :-1]], 1))
+        m = self.mask(x.shape[1], x.device)
+        # the dense frame mask in place of the head's own (as train_bidir_refiner's decode does)
+        restore = [b._prepare_blockwise_causal_attn_mask for b in self.head.trunk]
+        for b in self.head.trunk:
+            b._prepare_blockwise_causal_attn_mask = lambda device, num_frames, frame_seqlen, num_frame_per_block: m
+        try:
+            return self.head.trunk_fn(self.head.token_norm(x), None, self.head.num_iterations,
+                                      num_frame_per_block=1, num_frame_for_scale=-1, sliding_window_size=-1)
+        finally:
+            for b, f in zip(self.head.trunk, restore):
+                b._prepare_blockwise_causal_attn_mask = f
+
+
+# -- loss ----------------------------------------------------------------------
+def angle(Ra, Rb):
+    """Geodesic angle (rad), atan2 form: finite gradient at zero, where acos's is not."""
+    E = Ra.transpose(-1, -2) @ Rb
+    v = torch.stack([E[..., 2, 1] - E[..., 1, 2], E[..., 0, 2] - E[..., 2, 0], E[..., 1, 0] - E[..., 0, 1]], -1)
+    return torch.atan2(torch.sqrt((v * v).sum(-1) + 1e-12), E.diagonal(dim1=-2, dim2=-1).sum(-1) - 1)
+
+
+def rel_loss(preds, G, fov, hw, args, gamma=0.6):
+    """preds: per-iteration step encodings [B,t,9]; G [B,t,4,4] GT camera-to-world; fov [B,t,2]."""
+    Sg = gt_steps(G)
+    n, total, parts = len(preds), 0.0, {}
+    for k, p in enumerate(preds):
+        P = tp.pose_enc_to_c2w(p[:, 1:], hw)
+        lt = (P[..., :3, 3] - Sg[:, 1:, :3, 3]).abs().sum(-1)
+        lr = angle(P[..., :3, :3], Sg[:, 1:, :3, :3])
+        lf = (p[:, 1:, 7:] - fov[:, 1:]).abs().sum(-1)
+        total = total + gamma ** (n - 1 - k) * (args.trans_w * lt + args.rot_w * lr + 0.5 * lf).mean()
+    parts.update(step_t=lt.mean().detach(), step_r_deg=torch.rad2deg(lr).mean().detach())
+    C = chain(tp.pose_enc_to_c2w(preds[-1], hw))
+    lp = []
+    for d in range(1, min(args.pair_window, C.shape[1])):
+        rp, rg = rigid_inv(C[:, :-d]) @ C[:, d:], rigid_inv(G[:, :-d]) @ G[:, d:]
+        lp.append((args.trans_w * (rp[..., :3, 3] - rg[..., :3, 3]).abs().sum(-1)
+                   + args.rot_w * angle(rp[..., :3, :3], rg[..., :3, :3])).mean())
+    lpair = torch.stack(lp).mean()
+    parts["pair"] = lpair.detach()
+    return total + args.pair_w * lpair, parts
+
+
+# -- evaluation ----------------------------------------------------------------
+@torch.no_grad()
+def predict_c2w(model, c, t=None, chunk=2048):
+    """Final-iteration poses of the first t frames as camera-to-world in frame 0's camera (float64).
+    The windowed head runs in chunks with (window-1) x iterations frames of context: every output
+    then sees exactly what one pass over the whole stream gives it (RoPE is relative)."""
+    cam = c.tok[:t]
+    T = len(cam)
+    if model.mode == "abs" or T <= chunk:
+        spans = [(0, 0, T)]
+    else:
+        ctx = (model.window - 1) * model.head.num_iterations
+        spans = [(max(0, s - ctx), s, min(T, s + chunk)) for s in range(0, T, chunk)]
+    enc = []
+    for a, s, e in spans:
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            p = model(cam[None, a:e])[-1][0].float()
+        enc.append(p[s - a:])
+    M = tp.pose_enc_to_c2w(torch.cat(enc), c.hw).double()
+    if model.mode == "abs":
+        return M
+    M[0] = torch.eye(4, dtype=M.dtype, device=M.device)
+    M = M.cpu().numpy()
+    out = np.empty_like(M)
+    out[0] = M[0]
+    for i in range(1, len(M)):
+        out[i] = out[i - 1] @ M[i]
+    return torch.from_numpy(out)
+
+
+def evaluate(model, sets, base):
+    """{set@t: mean metrics}; base (lingbot's, computed once when empty) is filled in place."""
+    model.eval()
+    out = {}
+    for name, clips, ts in sets:
+        for t_req in ts:
+            key = f"{name}@{t_req}" if t_req else name
+            rows, lrows = [], []
+            for c in clips:
+                t = min(t_req, c.T) if t_req else c.T
+                rows.append(tp.traj_metrics(predict_c2w(model, c, t), c.gt_c2w[:t], c.scale))
+                if key not in base:
+                    lrows.append(tp.traj_metrics(tp.pose_enc_to_c2w(c.lingbot[:t].float(), c.hw),
+                                                 c.gt_c2w[:t], c.scale))
+            out[key] = {m: float(np.mean([r[m] for r in rows])) for m in tp.METRICS}
+            if key not in base:
+                base[key] = {m: float(np.mean([r[m] for r in lrows])) for m in tp.METRICS}
+    model.train()
+    return out
+
+
+# -- main ----------------------------------------------------------------------
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--mode", choices=["rel", "abs"], default="rel")
+    ap.add_argument("--window", type=int, default=64, help="rel: frames the head attends to, itself included")
+    ap.add_argument("--no-rope", action="store_true", help="rel: lingbot's head as is, without temporal RoPE")
+    ap.add_argument("--prev-token", action="store_true")
+    ap.add_argument("--rot-w", type=float, default=10.0)
+    ap.add_argument("--trans-w", type=float, default=10.0)
+    ap.add_argument("--pair-w", type=float, default=1.0)
+    ap.add_argument("--pair-window", type=int, default=64)
+    ap.add_argument("--norm", choices=["none", "extent"], default="extent", help="abs: as train_bidir_refiner")
+    ap.add_argument("--trans-floor", type=float, default=1.0)
+    ap.add_argument("--steps", type=int, default=8000)
+    ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--lr", type=float, default=5e-5)
+    ap.add_argument("--warmup", type=int, default=500)
+    ap.add_argument("--t-min", type=int, default=64)
+    ap.add_argument("--t-max", type=int, default=1048)
+    ap.add_argument("--t-step", type=int, default=16)
+    ap.add_argument("--val-every", type=int, default=500)
+    ap.add_argument("--packs", default=PACKS)
+    ap.add_argument("--pack-root", type=Path, default=br.PACK_ROOT)
+    ap.add_argument("--longval-per-ds", type=int, default=8)
+    ap.add_argument("--longval-lengths", default="320,640,1048")
+    ap.add_argument("--nrgbd-lengths", default="64,128,256,320,500")
+    ap.add_argument("--no-drive-val", action="store_true", help="skip KITTI / VBR (smoke runs)")
+    ap.add_argument("--max-train", type=int, default=0, help="smoke: first N train clips per dataset")
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--no-wandb", action="store_true")
+    args = ap.parse_args()
+    torch.manual_seed(args.seed)
+    rng = np.random.default_rng(args.seed)
+    dev = torch.device("cuda")
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
+
+    rope = args.mode == "rel" and not args.no_rope
+    head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=rope, max_frames=4096 if rope else 1024)
+    model = RelHead(head, args.mode, args.window, args.prev_token).to(dev)
+
+    val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in br.VAL24.read_text().split()}
+    jumps = json.loads(br.GT_JUMPS.read_text())
+    train, longval = [], {}
+    for ds in args.packs.split(","):
+        if ds == "kitti360":
+            print("[data] kitti360 skipped: metric GT, not in lingbot's anchor scale", flush=True)
+            continue
+        idx = dict(np.load(args.pack_root / ds / "index.npz"))
+        t0 = time.time()
+        tok = pack_cam_tokens(args.pack_root, ds)
+        bad = {b[0].rsplit("__f", 1)[0] for b in jumps.get(ds, [])}
+        mine, lv = [], []
+        for i in range(len(idx["name"])):
+            name = str(idx["name"][i])
+            if name.rsplit("__f", 1)[0] in bad:
+                continue
+            c = TrainClip(ds, tok, idx, i)
+            if (ds == "scannetpp" and name.split("__")[0] in val_scenes) or br.longval_split(ds, c.seq):
+                lv.append(c)
+            else:
+                mine.append(c)
+        mine = mine[: args.max_train] if args.max_train else mine
+        train += mine
+        lv.sort(key=lambda c: (-c.T, c.name))
+        longval[ds] = [EvalClip(c.name, c.tok, c.gt_c2w, c.K, c.hw, c.scale, c.lingbot, dev)
+                       for c in lv[: args.longval_per_ds]]
+        print(f"[data] {ds}: {len(mine)} train clips, {len(lv)} held out, tokens {tok.shape} "
+              f"({time.time() - t0:.0f}s)", flush=True)
+
+    def load(d):
+        return [EvalClip.from_npz(f, dev) for f in sorted((INPUTS / d / "specials").glob("*.npz"))
+                if ".tmp" not in f.stem]
+
+    sets = [("val24", load("val24"), [320]),
+            ("nrgbd", load("nrgbd"), [int(x) for x in args.nrgbd_lengths.split(",")])]
+    sets += [(f"longval_{ds}", cl, [int(x) for x in args.longval_lengths.split(",")])
+             for ds, cl in longval.items() if cl]
+    if not args.no_drive_val:
+        sets += [("kitti", load("kitti"), [0]), ("vbr", load("vbr"), [0])]
+    print("[data] eval: " + ", ".join(f"{n} {len(c)}" for n, c, _ in sets), flush=True)
+
+    params = [p for p in model.parameters() if p.requires_grad]
+    print(f"[model] mode={args.mode} rope={rope} window={args.window} prev_token={args.prev_token} "
+          f"trainable {sum(p.numel() for p in params) / 1e6:.1f} M", flush=True)
+    opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.05, betas=(0.9, 0.95))
+    tchoices = np.arange(args.t_min, args.t_max + 1, args.t_step)
+    lengths = np.array([c.T for c in train])
+    group = np.array([c.ds for c in train])
+    gnames = sorted(set(group))
+
+    run = None
+    if not args.no_wandb:
+        # never ./wandb in the repo root: that directory shadows the wandb package
+        os.environ.setdefault("WANDB_DIR", "/group/compact-3dmem/wandb" if Path("/group/compact-3dmem/wandb").is_dir()
+                              else f"/scratch/{os.environ.get('USER')}")
+        try:
+            import wandb
+            run = wandb.init(project="lingbot-rel", group="relhead", name=args.out.name,
+                             config={k: str(v) for k, v in vars(args).items()})
+        except Exception as e:  # no egress / no login on this node
+            print(f"[wandb] disabled: {e}", flush=True)
+
+    base, hist, best = {}, [], float("inf")
+
+    def validate(step):
+        nonlocal best
+        r = evaluate(model, sets, base)
+        ratios = {k: v["ate"] / base[k]["ate"] for k, v in r.items()}
+        # selection: geometric mean ATE ratio to lingbot over each set's longest stream
+        longest = [k for k in r if "@" not in k] + [
+            max((k for k in r if k.startswith(n + "@")), key=lambda k: int(k.split("@")[1]))
+            for n in {k.split("@")[0] for k in r if "@" in k}]
+        score = float(np.exp(np.mean([np.log(ratios[k]) for k in longest])))
+        row = {"step": step, "select": score, **{f"{k}/{m}": v[m] for k, v in r.items() for m in v},
+               **{f"ratio/{k}": v for k, v in ratios.items()}}
+        hist.append(row)
+        print(f"[val {step}] select {score:.4f} | " + " ".join(f"{k} {ratios[k]:.3f}" for k in longest), flush=True)
+        if run is not None:
+            run.log({("val/" + k if not k.startswith("ratio/") else k): v for k, v in row.items() if k != "step"},
+                    step=step)
+        ck = {"model": model.state_dict(), "args": vars(args), "step": step, "val": row}
+        torch.save(ck, args.out / "last.pt")
+        if score < best:
+            best = score
+            torch.save(ck, args.out / "best.pt")
+        (args.out / "history.json").write_text(json.dumps({"lingbot": base, "hist": hist}, indent=1))
+
+    validate(0)
+    print("[lingbot] " + json.dumps({k: round(v["ate"], 4) for k, v in base.items()}), flush=True)
+
+    t0 = time.time()
+    for step in range(1, args.steps + 1):
+        lr = args.lr * min(1.0, step / args.warmup) * 0.5 * (1 + math.cos(math.pi * step / args.steps))
+        for g in opt.param_groups:
+            g["lr"] = lr
+        g = gnames[rng.integers(len(gnames))]                 # dataset first, then t, then clips >= t
+        t = int(rng.choice(tchoices))
+        pool_idx = np.flatnonzero((group == g) & (lengths >= t))
+        if len(pool_idx) == 0:
+            t = int(lengths[group == g].max())
+            pool_idx = np.flatnonzero((group == g) & (lengths == t))
+        idx = rng.choice(pool_idx, args.batch, replace=len(pool_idx) < args.batch)
+        cam = torch.from_numpy(np.stack([train[i].tok[:t] for i in idx])).pin_memory().to(dev, non_blocking=True)
+        G = torch.stack([train[i].gt_c2w[:t] for i in idx]).to(dev)
+        enc = torch.stack([train[i].gt_enc[:t] for i in idx]).to(dev)
+        hw = train[idx[0]].hw          # unused by pose_enc_to_c2w (no intrinsics built)
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            preds = model(cam)
+        preds = [p.float() for p in preds]
+        if args.mode == "rel":
+            loss, parts = rel_loss(preds, G, enc[..., 7:], hw, args)
+        else:
+            loss, la, lrel = br.loss_fn(preds, enc, hw, 0, norm=args.norm == "extent", floor=args.trans_floor)
+            parts = {"abs": la, "pair": lrel}
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        gn = torch.nn.utils.clip_grad_norm_(params, 1.0)
+        opt.step()
+        if step % 50 == 0:
+            msg = " ".join(f"{k} {v.item():.4f}" for k, v in parts.items())
+            print(f"[{step:6d}] loss {loss.item():.4f} {msg} t {t} {g} |g| {gn.item():.3f} "
+                  f"{(time.time() - t0) / step:.2f}s/it", flush=True)
+            if run is not None:
+                run.log({"train/loss": loss.item(), **{f"train/{k}": v.item() for k, v in parts.items()},
+                         "train/grad_norm": gn.item(), "train/lr": lr}, step=step)
+        if step % args.val_every == 0 or step == args.steps:
+            validate(step)
+
+
+if __name__ == "__main__":
+    main()
