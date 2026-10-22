@@ -62,6 +62,7 @@ class LingbotMapMethod(BaseMethod):
         kv_cache_camera_only: bool = False,
         kv_cache_memory_tokens: str = "camera,register,scale",
         kv_cache_cross_frame_special: bool = True,
+        kv_cache_include_scale_frames: bool = True,
         window_size: int = 64,
         overlap_size: Optional[int] = None,
         keyframe_interval: Any = "auto",
@@ -94,6 +95,7 @@ class LingbotMapMethod(BaseMethod):
         self.kv_cache_camera_only = kv_cache_camera_only
         self.kv_cache_memory_tokens = kv_cache_memory_tokens
         self.kv_cache_cross_frame_special = kv_cache_cross_frame_special
+        self.kv_cache_include_scale_frames = kv_cache_include_scale_frames
         self.window_size = window_size
         self.overlap_size = overlap_size
         self.keyframe_interval = keyframe_interval
@@ -127,7 +129,7 @@ class LingbotMapMethod(BaseMethod):
             kv_cache_sliding_window=self.kv_cache_sliding_window,
             kv_cache_scale_frames=self.kv_cache_scale_frames,
             kv_cache_cross_frame_special=self.kv_cache_cross_frame_special,
-            kv_cache_include_scale_frames=True,
+            kv_cache_include_scale_frames=self.kv_cache_include_scale_frames,
             kv_cache_camera_only=self.kv_cache_camera_only,
             kv_cache_memory_tokens=self.kv_cache_memory_tokens,
             use_sdpa=self.use_sdpa,
@@ -149,6 +151,8 @@ class LingbotMapMethod(BaseMethod):
         # Arms differ only in this number, so log it: an unchanged metric otherwise
         # cannot be told apart from a flag that never reached the model.
         backend = 'SDPA' if self.use_sdpa else 'FlashInfer'
+        if not self.kv_cache_include_scale_frames:
+            print(f"  → Anchor (scale) frames leave the KV cache with the sliding window (backend: {backend})")
         if not self.kv_cache_cross_frame_special:
             print(f"  → Trajectory memory DISABLED: evicted frames retain 0 of 6 context "
                   f"tokens (backend: {backend})")
