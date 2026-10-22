@@ -59,6 +59,9 @@ def main():
     model.to(dev).eval()
     clips = [rh.EvalClip.from_npz(f, dev) for d in ("val24", "nrgbd")
              for f in sorted((rh.INPUTS / d / "specials").glob("*.npz")) if ".tmp" not in f.stem]
+    if dev.type == "cpu":   # predict_c2w's CUDA autocast is off here: fp16 tokens meet fp32 weights
+        for c in clips:
+            c.tok = c.tok.float()
     res = {"model": {}, "lingbot": {}}
     for who in res:
         rows, biases = [], []
