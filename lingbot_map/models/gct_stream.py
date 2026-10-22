@@ -669,5 +669,9 @@ _FLEX = None
 def _compiled_flex(flex_attention):
     global _FLEX
     if _FLEX is None:
+        # one compiled variant per (chunk, key-length) shape; dynamo's default limit of 8 is reached
+        # within a few clips, after which flex runs eagerly and materialises the score matrix
+        import torch._dynamo
+        torch._dynamo.config.cache_size_limit = max(torch._dynamo.config.cache_size_limit, 256)
         _FLEX = torch.compile(flex_attention, dynamic=False)
     return _FLEX
