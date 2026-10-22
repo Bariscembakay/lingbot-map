@@ -84,6 +84,18 @@ def sequences(ds, n, frames):
         return [(f"route{k}", [root / c / f"{i:04d}.png" for c, i in r["frames"][:frames]],
                  np.asarray(r["c2w"][:frames], np.float64), {"raw_opengl": np.eye(3), "opengl_to_opencv": GL_TO_CV},
                  (1000, 1000, 500.0)) for k, r in enumerate(R)]
+    if ds == "waymo":
+        from clip_sources import Waymo
+        src, out = Waymo(), []
+        seqs = src.seqs()
+        for cam in ("FRONT", "SIDE_LEFT", "FRONT_RIGHT"):  # a forward and two oblique / side cameras
+            sc = next(q for q in seqs[::37] if q.endswith("__" + cam))
+            T = src.poses(sc)[:frames]
+            names = src._names(sc)[:len(T)]
+            H, W = cv2.imread(str(src.ROOT / sc / "color" / f"{names[0]}.jpg")).shape[:2]
+            out.append((sc, [src.ROOT / sc / "color" / f"{x}.jpg" for x in names], T,
+                        {"raw": np.eye(3), "opengl_flip": GL_TO_CV}, (W, H, src._cam(sc, names[0])[1][0, 0])))
+        return out[:n]
     raise ValueError(ds)
 
 

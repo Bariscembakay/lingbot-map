@@ -273,7 +273,38 @@ class Kitti360:
         return None
 
 
+class Waymo:
+    """Waymo Open v1.4.3 (training + validation), 5 cameras per segment as separate videos, 10 Hz,
+    ~198 frames, converted by ~/CUT3R rel/prep/prep_waymo_video.py: OpenCV cam-to-world relative to the
+    segment's first camera, long side 512, sparse LiDAR depth (uint16 mm, 0 = none)."""
+    name, metric = "waymo", False
+    ROOT = Path("/data/waymo-cut3r-video/scans_train")
+
+    def seqs(self):
+        return sorted(p.name for p in self.ROOT.iterdir() if (p / "new_scene_metadata.npz").exists())
+
+    def _names(self, seq):
+        return [str(n) for n in np.load(self.ROOT / seq / "new_scene_metadata.npz")["images"]]
+
+    def _cam(self, seq, n):
+        d = np.load(self.ROOT / seq / "cam" / f"{n}.npz")
+        return d["pose"].astype(np.float64), d["intrinsics"].astype(np.float64)
+
+    def poses(self, seq):
+        return np.stack([self._cam(seq, n)[0] for n in self._names(seq)])
+
+    def frames(self, seq, ids):
+        names = self._names(seq)
+        H, W = cv2.imread(str(self.ROOT / seq / "color" / f"{names[ids[0]]}.jpg")).shape[:2]
+        return resize_all([self.ROOT / seq / "color" / f"{names[i]}.jpg" for i in ids], W, H, self._cam(seq, names[ids[0]])[1])
+
+    def depth(self, seq, ids):
+        names = self._names(seq)
+        d = np.stack([cv2.imread(str(self.ROOT / seq / "depth" / f"{names[i]}.png"), cv2.IMREAD_UNCHANGED) for i in ids])
+        return d.astype(np.float32) / 1000.0, np.stack([self._cam(seq, names[i])[1] for i in ids])
+
+
 def source(name):
     if name in Tartan.LAYOUT:
         return Tartan(name)
-    return {"matrixcity": MatrixCity, "scannet-v2": ScanNetV2, "scannetpp": ScanNetPP, "kitti360": Kitti360}[name]()
+    return {"matrixcity": MatrixCity, "scannet-v2": ScanNetV2, "scannetpp": ScanNetPP, "kitti360": Kitti360, "waymo": Waymo}[name]()
