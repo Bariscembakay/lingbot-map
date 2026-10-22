@@ -54,7 +54,8 @@ def main():
     a = argparse.Namespace(**ck["args"])
     rope = a.mode == "rel" and not a.no_rope
     head = rh.tp.build_head(rh.tp.REPO / "ckpt/lingbot-map.pt", rope_on=rope, max_frames=4096 if rope else 1024)
-    model = rh.RelHead(head, a.mode, a.window, a.prev_token, residual=getattr(a, "residual", False))
+    model = rh.RelHead(head, a.mode, a.window, a.prev_token, residual=getattr(a, "residual", False),
+                       ref_every=getattr(a, "ref_every", 1))
     model.load_state_dict(ck["model"])
     model.to(dev).eval()
     clips = [rh.EvalClip.from_npz(f, dev) for d in ("val24", "nrgbd")

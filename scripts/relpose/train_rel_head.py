@@ -99,11 +99,17 @@ class EvalClip:
                    tuple(int(x) for x in z["hw"]), float(z["gt_scale"]), z["pose_enc"], dev)
 
 
-def to_steps(G):
-    """[..., t, 4, 4] camera-to-world -> each frame in the previous camera; frame 0 the identity."""
-    S = torch.eye(4, dtype=G.dtype, device=G.device).expand_as(G).clone()
-    S[..., 1:, :, :] = rigid_inv(G[..., :-1, :, :]) @ G[..., 1:, :, :]
-    return S
+def ref_index(t, K, f0=0, device=None):
+    """Reference frame of frames f0..f0+t-1: the latest keyframe (every K-th frame from 0) before
+    each, frame 0 itself; K=1 is the previous frame."""
+    i = torch.arange(f0, f0 + t, device=device)
+    return torch.where(i > 0, K * ((i - 1) // K), 0)
+
+
+def to_steps(G, K=1):
+    """[..., t, 4, 4] camera-to-world -> each frame in its reference camera; frame 0 the identity."""
+    r = ref_index(G.shape[-3], K, device=G.device)
+    return rigid_inv(G[..., r, :, :]) @ G
 
 
 def rigid_inv(M):
@@ -115,22 +121,31 @@ def rigid_inv(M):
     return out
 
 
-def chain(S):
-    """[B, t, 4, 4] steps -> [B, t, 4, 4] poses in frame 0's camera (S[:, 0] is ignored): an
-    inclusive scan with log2(t) batched products instead of t sequential ones."""
-    C = torch.cat([torch.eye(4, dtype=S.dtype, device=S.device).expand(S.shape[0], 1, 4, 4), S[:, 1:]], 1)
+def scan(S):
+    """[B, n, 4, 4] -> running products S_0 S_1 ... S_i: an inclusive scan with log2(n) batched
+    products instead of n sequential ones."""
     k = 1
-    while k < C.shape[1]:
-        C = torch.cat([C[:, :k], C[:, :-k] @ C[:, k:]], 1)
+    while k < S.shape[1]:
+        S = torch.cat([S[:, :k], S[:, :-k] @ S[:, k:]], 1)
         k *= 2
-    return C
+    return S
+
+
+def chain(S, K=1):
+    """[B, t, 4, 4] steps (each frame in its reference, to_steps) -> poses in frame 0's camera
+    (S[:, 0] is ignored): keyframes chain through each other, every frame hangs off its reference."""
+    S = torch.cat([torch.eye(4, dtype=S.dtype, device=S.device).expand(S.shape[0], 1, 4, 4), S[:, 1:]], 1)
+    if K == 1:
+        return scan(S)
+    Pk = scan(S[:, ::K])
+    return Pk[:, ref_index(S.shape[1], K, device=S.device) // K] @ S
 
 
 # -- model ---------------------------------------------------------------------
 class RelHead(nn.Module):
-    def __init__(self, head, mode, window, prev_token, init_identity=False, residual=False):
+    def __init__(self, head, mode, window, prev_token, init_identity=False, residual=False, ref_every=1):
         super().__init__()
-        self.head, self.mode, self.window, self.residual = head, mode, window, residual
+        self.head, self.mode, self.window, self.residual, self.K = head, mode, window, residual, ref_every
         if init_identity:
             # lingbot's output layer maps to absolute poses; restart translation and the quaternion's
             # vector part at zero and its scalar part at a positive constant (summed over the head
@@ -153,11 +168,14 @@ class RelHead(nn.Module):
             return causal & (i[:, None] - i[None, :] < self.window)
         return causal | tp.anchor_block(t, A, dev)          # lingbot's: causal, 8 anchors both ways
 
-    def forward(self, cam):
-        """cam [B, t, D] -> pose encodings [B, t, 9] per head iteration (steps in rel mode)."""
+    def forward(self, cam, f0=0):
+        """cam [B, t, D] of frames f0.. -> pose encodings [B, t, 9] per head iteration (rel mode:
+        each frame in its reference). --prev-token adds the reference frame's token (a context
+        frame whose reference precedes f0 gets the first frame's; predict_c2w discards those)."""
         x = cam
         if self.prev is not None:
-            x = x + self.prev(torch.cat([x[:, :1], x[:, :-1]], 1))
+            r = (ref_index(x.shape[1], self.K, f0, x.device) - f0).clamp(min=0)
+            x = x + self.prev(x[:, r])
         m = self.mask(x.shape[1], x.device)
         # the dense frame mask in place of the head's own (as train_bidir_refiner's decode does)
         restore = [b._prepare_blockwise_causal_attn_mask for b in self.head.trunk]
@@ -179,15 +197,18 @@ def angle(Ra, Rb):
     return torch.atan2(torch.sqrt((v * v).sum(-1) + 1e-12), E.diagonal(dim1=-2, dim2=-1).sum(-1) - 1)
 
 
-def step_matrices(p, hw, lingbot_steps=None):
+def step_matrices(p, hw, lingbot_steps=None):  # lingbot_steps: to_steps of lingbot's poses
     """Step encodings [..., t, 9] -> step camera-to-world [..., t, 4, 4], after lingbot's step if given."""
     S = tp.pose_enc_to_c2w(p, hw)
     return S if lingbot_steps is None else lingbot_steps @ S
 
 
 def rel_loss(preds, G, fov, hw, args, lingbot_steps=None, gamma=0.6):
-    """preds: per-iteration step encodings [B,t,9]; G [B,t,4,4] GT camera-to-world; fov [B,t,2]."""
-    Sg = to_steps(G)
+    """preds: per-iteration step encodings [B,t,9]; G [B,t,4,4] GT camera-to-world; fov [B,t,2].
+    --long-w: pairs at gaps 64..1024 too, translation error relative to the GT distance (+1 anchor
+    unit): a constant per-step bias grows linearly with the gap, so these terms are where it shows."""
+    K = args.ref_every
+    Sg = to_steps(G, K)
     n, total, parts = len(preds), 0.0, {}
     for k, p in enumerate(preds):
         P = step_matrices(p, hw, lingbot_steps)[:, 1:]
@@ -196,7 +217,7 @@ def rel_loss(preds, G, fov, hw, args, lingbot_steps=None, gamma=0.6):
         lf = (p[:, 1:, 7:] - fov[:, 1:]).abs().sum(-1)
         total = total + gamma ** (n - 1 - k) * (args.trans_w * lt + args.rot_w * lr + 0.5 * lf).mean()
     parts.update(step_t=lt.mean().detach(), step_r_deg=torch.rad2deg(lr).mean().detach())
-    C = chain(step_matrices(preds[-1], hw, lingbot_steps))
+    C = chain(step_matrices(preds[-1], hw, lingbot_steps), K)
     lp = []
     for d in range(1, min(args.pair_window, C.shape[1])):
         rp, rg = rigid_inv(C[:, :-d]) @ C[:, d:], rigid_inv(G[:, :-d]) @ G[:, d:]
@@ -204,7 +225,19 @@ def rel_loss(preds, G, fov, hw, args, lingbot_steps=None, gamma=0.6):
                    + args.rot_w * angle(rp[..., :3, :3], rg[..., :3, :3])).mean())
     lpair = torch.stack(lp).mean()
     parts["pair"] = lpair.detach()
-    return total + args.pair_w * lpair, parts
+    total = total + args.pair_w * lpair
+    ll = []
+    for d in (64, 128, 256, 512, 1024):
+        if not args.long_w or d >= C.shape[1]:
+            break
+        rp, rg = rigid_inv(C[:, :-d]) @ C[:, d:], rigid_inv(G[:, :-d]) @ G[:, d:]
+        et = (rp[..., :3, 3] - rg[..., :3, 3]).norm(dim=-1) / (rg[..., :3, 3].norm(dim=-1) + 1)
+        ll.append((args.trans_w * et + args.rot_w * angle(rp[..., :3, :3], rg[..., :3, :3])).mean())
+    if ll:
+        llong = torch.stack(ll).mean()
+        parts["long"] = llong.detach()
+        total = total + args.long_w * llong
+    return total, parts
 
 
 # -- evaluation ----------------------------------------------------------------
@@ -218,24 +251,20 @@ def predict_c2w(model, c, t=None, chunk=2048):
     if model.mode == "abs" or T <= chunk:
         spans = [(0, 0, T)]
     else:
-        ctx = (model.window - 1) * model.head.num_iterations
+        # + K: frames whose reference precedes the chunk get a stand-in token; keep them outside
+        # every real frame's receptive field
+        ctx = (model.window - 1) * model.head.num_iterations + (model.K if model.prev is not None else 0)
         spans = [(max(0, s - ctx), s, min(T, s + chunk)) for s in range(0, T, chunk)]
     enc = []
     for a, s, e in spans:
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            p = model(cam[None, a:e])[-1][0].float()
+            p = model(cam[None, a:e], f0=a)[-1][0].float()
         enc.append(p[s - a:])
     if model.mode == "abs":
         return tp.pose_enc_to_c2w(torch.cat(enc), c.hw).double()
-    M = step_matrices(torch.cat(enc), c.hw,
-                      to_steps(tp.pose_enc_to_c2w(c.lingbot[:T].float(), c.hw)) if model.residual else None).double()
-    M[0] = torch.eye(4, dtype=M.dtype, device=M.device)
-    M = M.cpu().numpy()
-    out = np.empty_like(M)
-    out[0] = M[0]
-    for i in range(1, len(M)):
-        out[i] = out[i - 1] @ M[i]
-    return torch.from_numpy(out)
+    M = step_matrices(torch.cat(enc), c.hw, to_steps(tp.pose_enc_to_c2w(c.lingbot[:T].float(), c.hw), model.K)
+                      if model.residual else None).double()
+    return chain(M[None], model.K)[0].cpu()
 
 
 def evaluate(model, sets, base):
@@ -268,6 +297,9 @@ def main():
     ap.add_argument("--no-rope", action="store_true", help="rel: lingbot's head as is, without temporal RoPE")
     ap.add_argument("--prev-token", action="store_true")
     ap.add_argument("--residual", action="store_true", help="rel: correct lingbot's own steps (starts at lingbot)")
+    ap.add_argument("--ref-every", type=int, default=1,
+                    help="rel: each frame relative to the latest keyframe (every K-th frame); 1 = previous frame")
+    ap.add_argument("--long-w", type=float, default=0.0, help="rel: weight of the gap 64..1024 pair terms")
     ap.add_argument("--no-init-identity", action="store_true",
                     help="rel: keep lingbot's absolute-pose output layer instead of starting every step at no motion")
     ap.add_argument("--rot-w", type=float, default=10.0)
@@ -303,9 +335,12 @@ def main():
 
     rope = args.mode == "rel" and not args.no_rope
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=rope, max_frames=4096 if rope else 1024)
+    if args.mode == "rel" and args.window <= args.ref_every:
+        print(f"[model] window {args.window} -> {args.ref_every + 1}: the head must see each frame's reference", flush=True)
+        args.window = args.ref_every + 1
     model = RelHead(head, args.mode, args.window, args.prev_token,
                     init_identity=args.mode == "rel" and not args.no_init_identity,
-                    residual=args.mode == "rel" and args.residual).to(dev)
+                    residual=args.mode == "rel" and args.residual, ref_every=args.ref_every).to(dev)
 
     val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in br.VAL24.read_text().split()}
     jumps = json.loads(br.GT_JUMPS.read_text())
@@ -351,6 +386,7 @@ def main():
     params = [p for p in model.parameters() if p.requires_grad]
     print(f"[model] mode={args.mode} rope={rope} window={args.window} prev_token={args.prev_token} "
           f"init_identity={args.mode == 'rel' and not args.no_init_identity} residual={args.residual} "
+          f"ref_every={args.ref_every} long_w={args.long_w} "
           f"trainable {sum(p.numel() for p in params) / 1e6:.1f} M", flush=True)
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.05, betas=(0.9, 0.95))
     tchoices = np.arange(args.t_min, args.t_max + 1, args.t_step)
@@ -424,7 +460,7 @@ def main():
                 ls = None
                 if args.residual:
                     L = torch.from_numpy(np.stack([train[i].lingbot[:t] for i in mb])).to(dev)
-                    ls = to_steps(tp.pose_enc_to_c2w(L, hw))
+                    ls = to_steps(tp.pose_enc_to_c2w(L, hw), args.ref_every)
                 l, pt = rel_loss(preds, G, enc[..., 7:], hw, args, lingbot_steps=ls)
             else:
                 l, la, lrel = br.loss_fn(preds, enc, hw, 0, norm=args.norm == "extent", floor=args.trans_floor)
