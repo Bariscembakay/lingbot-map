@@ -14,7 +14,7 @@ git pull -q --ff-only || true
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 "$P" -c "import OpenEXR" 2>/dev/null || "$P" -m pip install -q OpenEXR
-case $DS in scannetpp) dataset pull ScanNetpp;; matrixcity) dataset pull matrix_city;; scannet-v2) dataset pull scannet-v2-extracted;; *) dataset pull $DS;; esac >/dev/null
+case $DS in scannetpp) dataset pull ScanNetpp;; matrixcity) dataset pull matrix_city;; scannet-v2) dataset pull scannet-v2-extracted;; waymo) dataset pull waymo-cut3r-video;; *) dataset pull $DS;; esac >/dev/null
 PLAN=/group/compact-3dmem/campaigns/spatial_memory/_data_prep/plans/$DS.json
 FINAL=/group/compact-3dmem/datasets/_staging/lingbot-cache1048-$DS
 if findmnt -n -o SOURCE -T /group/compact-3dmem | grep -q msp3; then

@@ -17,7 +17,7 @@ if nvidia-smi -L >/dev/null 2>&1; then "$P" .agents/scratch/insait_cluster_files
 D=/group/compact-3dmem/campaigns/spatial_memory/_data_prep/plans
 mkdir -p $D
 for ds in "$@"; do
-    case $ds in scannetpp) dataset pull ScanNetpp;; matrixcity) dataset pull matrix_city;; scannet-v2) dataset pull scannet-v2-extracted;; *) dataset pull $ds;; esac >/dev/null
+    case $ds in scannetpp) dataset pull ScanNetpp;; matrixcity) dataset pull matrix_city;; scannet-v2) dataset pull scannet-v2-extracted;; waymo) dataset pull waymo-cut3r-video;; *) dataset pull $ds;; esac >/dev/null
     "$P" scripts/memory/pose_refine/plan_clips.py --dataset $ds --out $D/$ds.json --workers 16
     [ "$(findmnt -n -o SOURCE -T /group/compact-3dmem | grep -c msp3)" = 1 ] && rsync -a $D/$ds.json sof1:$D/ || true
 done
