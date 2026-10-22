@@ -46,7 +46,7 @@ import train_pose_refine as tp  # noqa: E402
 
 A, D = br.A, br.D
 INPUTS = br.INPUTS
-TOKENS = Path(f"/scratch/{os.environ.get('USER')}/relhead_cam23")
+TOKENS = Path(os.environ.get("RELHEAD_TOKENS", f"/scratch/{os.environ.get('USER')}/relhead_cam23"))
 PACKS = "tartanair-v1,tartanair-v2,tartanground,matrixcity,scannetpp,scannet-v2"
 
 
@@ -319,6 +319,7 @@ def main():
     ap.add_argument("--val-every", type=int, default=500)
     ap.add_argument("--packs", default=PACKS)
     ap.add_argument("--pack-root", type=Path, default=br.PACK_ROOT)
+    ap.add_argument("--inputs", type=Path, default=INPUTS, help="poserefine-v1 root (val24, nrgbd, kitti, vbr)")
     ap.add_argument("--longval-per-ds", type=int, default=8)
     ap.add_argument("--longval-lengths", default="320,640,1048")
     ap.add_argument("--nrgbd-lengths", default="64,128,256,320,500")
@@ -372,7 +373,7 @@ def main():
               f"({time.time() - t0:.0f}s)", flush=True)
 
     def load(d):
-        return [EvalClip.from_npz(f, dev) for f in sorted((INPUTS / d / "specials").glob("*.npz"))
+        return [EvalClip.from_npz(f, dev) for f in sorted((args.inputs / d / "specials").glob("*.npz"))
                 if ".tmp" not in f.stem]
 
     sets = [("val24", load("val24"), [320]),
@@ -398,7 +399,7 @@ def main():
     if not args.no_wandb:
         # never ./wandb in the repo root: that directory shadows the wandb package
         os.environ.setdefault("WANDB_DIR", "/group/compact-3dmem/wandb" if Path("/group/compact-3dmem/wandb").is_dir()
-                              else f"/scratch/{os.environ.get('USER')}")
+                              else str(args.out))
         try:
             import wandb
             run = wandb.init(project="lingbot-rel", group="relhead", name=args.out.name,
