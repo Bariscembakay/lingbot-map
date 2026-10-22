@@ -10,6 +10,9 @@
 # `dataset pull`, the run dir on /scratch mirrored to sof1's campaign dir every 10 min and at the end.
 # Usage: sbatch -J <name> --time=.. relhead_msp3_job.sh <arm> [train_rel_head.py args]
 set -euo pipefail
+# Since the 2026-10-22 cluster update, batch steps get CUDA_VISIBLE_DEVICES="" (srun steps get the
+# GPU UUIDs): CUDA then sees no GPU. The device cgroup already limits the job to its own GPUs.
+[ -n "${CUDA_VISIBLE_DEVICES+x}" ] && [ -z "$CUDA_VISIBLE_DEVICES" ] && unset CUDA_VISIBLE_DEVICES
 cd "$HOME/lingbot-map-rel"
 git pull -q --ff-only origin relpose/relative-head || true
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh

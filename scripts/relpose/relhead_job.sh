@@ -6,6 +6,9 @@
 # packs' camera tokens are extracted once per node to /scratch; the run dir is the campaign dir.
 # Usage: sbatch -J <name> --gpus=<type>:1 --constraint=<zone> [--partition/--qos] --time=.. relhead_job.sh <arm|smoke> [args]
 set -euo pipefail
+# Since the 2026-10-22 cluster update, batch steps get CUDA_VISIBLE_DEVICES="" (srun steps get the
+# GPU UUIDs): CUDA then sees no GPU. The device cgroup already limits the job to its own GPUs.
+[ -n "${CUDA_VISIBLE_DEVICES+x}" ] && [ -z "$CUDA_VISIBLE_DEVICES" ] && unset CUDA_VISIBLE_DEVICES
 cd "$HOME/lingbot-map-rel"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 dataset pull lingbot-poserefine-v1 >/dev/null
