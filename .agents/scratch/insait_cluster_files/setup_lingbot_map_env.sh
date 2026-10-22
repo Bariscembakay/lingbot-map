@@ -9,6 +9,13 @@ set -euo pipefail
 # needs, but isn't on PATH by default in job shells.
 export PATH="$HOME/bin:$PATH"
 
+# Since 2026-10-22 the cluster task prolog can export CUDA_VISIBLE_DEVICES="" for a job that
+# does hold a GPU (SLURM_JOB_GPUS set), so torch sees none; the cgroup already limits the job
+# to its own GPUs, so dropping the empty variable is safe.
+if [ -n "${SLURM_JOB_GPUS:-}" ] && [ -z "${CUDA_VISIBLE_DEVICES-x}" ]; then
+    unset CUDA_VISIBLE_DEVICES
+fi
+
 ENV_PREFIX="${MAMBA_ROOT_PREFIX:-/scratch/$USER/micromamba}/envs/lingbot_map"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 
