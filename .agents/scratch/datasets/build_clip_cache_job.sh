@@ -10,6 +10,8 @@
 set -euo pipefail
 DS=$1 NSH=$2 SH=${SLURM_ARRAY_TASK_ID:-0}
 cd "$HOME/lingbot-map"
+# array tasks starting together race on the ref lock and silently keep stale code: stagger them
+sleep $(( SH % 8 * 15 ))
 git pull -q --ff-only || true
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
