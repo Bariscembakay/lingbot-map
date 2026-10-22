@@ -408,10 +408,24 @@ def main():
     run = None if args.no_wandb else tp.wandb_run(args, group="bidir_refiner")
 
     def wlog(row):
-        if run is not None:
-            run.log({**{f"val/{k}": v for k, v in row.items() if k != "step"},
-                     **{f"ratio/{k[:-4]}": v / row[k[:-4] + "/lingbot_ate"] for k, v in row.items()
-                        if k.endswith("/ate") and "lingbot" not in k}}, step=row["step"])
+        """val/<set>@<t>/<metric>: the refiner only (comparable across runs); ratio/: refined / lingbot ATE;
+        vs_lingbot/: refined and lingbot in one chart, from the whole validation history (lingbot's own
+        numbers are a constant per set, so they get no chart of their own)"""
+        if run is None:
+            return
+        import wandb
+        log = {f"val/{k}": v for k, v in row.items() if k != "step" and "lingbot" not in k}
+        log.update({f"ratio/{k[:-4]}": v / row[k[:-4] + "/lingbot_ate"] for k, v in row.items()
+                    if k.endswith("/ate") and "lingbot" not in k})
+        steps = [h["step"] for h in hist]
+        for k in row:
+            head, _, metric = k.rpartition("/")
+            lk = f"{head}/lingbot_{metric}"
+            if metric in ("ate", "auc3") and lk in row:
+                log[f"vs_lingbot/{k}"] = wandb.plot.line_series(
+                    xs=steps, ys=[[h.get(k) for h in hist], [h.get(lk) for h in hist]],
+                    keys=["refined", "lingbot"], title=k, xname="step")
+        run.log(log, step=row["step"])
 
     hist, best = [], float("inf")
     r = evaluate(model, sets, dev, args.patches)
