@@ -129,6 +129,23 @@ class MatrixCity:
         return d * self.DEPTH_UNIT, np.repeat(self.K[None], len(ids), 0)
 
 
+def mark_jumps(T, k=20.0, min_step=0.1, max_rot=10.0):
+    """Frames whose pose jumps from the previous one (translation step > k x the median step and >
+    min_step, or rotation step > max_rot degrees) become NaN, so the planner splits the sequence there;
+    clips are relative to their first frame, so each side stays consistent."""
+    ok = np.isfinite(T).all((1, 2))
+    i = np.flatnonzero(ok[1:] & ok[:-1])
+    if len(i) < 2:
+        return T
+    st = np.linalg.norm(T[i + 1, :3, 3] - T[i, :3, 3], axis=1)
+    m = np.einsum("nji,njk->nik", T[i, :3, :3], T[i + 1, :3, :3])
+    rot = np.degrees(np.arccos(np.clip((np.trace(m, axis1=1, axis2=2) - 1) / 2, -1, 1)))
+    jump = ((st > k * np.median(st)) & (st > min_step)) | (rot > max_rot)
+    T = T.copy()
+    T[i[jump] + 1] = np.nan
+    return T
+
+
 class ScanNetV2:
     name, metric = "scannet-v2", False
     ROOT = Path("/data/scannet-v2-extracted")
@@ -143,7 +160,7 @@ class ScanNetV2:
         a = np.loadtxt(self.ROOT / seq / "poses.txt").reshape(-1, 4, 4)
         bad = ~np.isfinite(a).all((1, 2))
         a[bad] = np.nan
-        return a.astype(np.float64)
+        return mark_jumps(a.astype(np.float64))     # BundleFusion relocalisation glitches (0.5-4.8 m in one frame)
 
     def frames(self, seq, ids):
         m = self.meta(seq)
@@ -167,13 +184,34 @@ class ScanNetPP:
     def _meta(self, seq):
         return json.loads((self.ROOT / "data" / seq / "iphone/pose_intrinsic_imu.json").read_text())
 
+    # ARKit's aligned_pose is right where the COLMAP reconstruction of the iPhone frames (every 10th,
+    # registered to the laser scan) confirms it: median 1 cm apart over 1018 scenes, but ARKit tracking
+    # failed in parts of many scenes (metres to km off, scannetpp_pose_audit.py). A frame is kept only if
+    # the registered COLMAP frames around it, at most COLMAP_GAP apart, both match ARKit
+    COLMAP_TOL_M, COLMAP_TOL_DEG, COLMAP_GAP = 0.05, 2.0, 30
+
     def poses(self, seq):
         from scripts.memory.build_cache import probe_video
+        from scannetpp_pose_audit import colmap_c2w
         d = self._meta(seq)
         n = len(d)
         nb = probe_video(self.ROOT / "data" / seq / "iphone/rgb.mkv")[2]
         n = n if nb is None else min(n, nb)
-        return np.stack([np.asarray(d[f"frame_{i:06d}"]["aligned_pose"], np.float64) for i in range(n)])
+        T = np.stack([np.asarray(d[f"frame_{i:06d}"]["aligned_pose"], np.float64) for i in range(n)])
+        c = colmap_c2w(self.ROOT / "data" / seq / "iphone/colmap/images.txt")
+        ks = np.array(sorted(k for k in c if k < n), dtype=int)
+        valid = np.zeros(n, bool)
+        if len(ks) >= 2:
+            C = np.stack([c[k] for k in ks])
+            dt = np.linalg.norm(T[ks, :3, 3] - C[:, :3, 3], axis=1)
+            m = np.einsum("nji,njk->nik", T[ks, :3, :3], C[:, :3, :3])
+            dr = np.degrees(np.arccos(np.clip((np.trace(m, axis1=1, axis2=2) - 1) / 2, -1, 1)))
+            ok = (dt <= self.COLMAP_TOL_M) & (dr <= self.COLMAP_TOL_DEG)
+            for j in range(len(ks) - 1):
+                if ok[j] and ok[j + 1] and ks[j + 1] - ks[j] <= self.COLMAP_GAP:
+                    valid[ks[j]:ks[j + 1] + 1] = True
+        T[~valid] = np.nan
+        return mark_jumps(T)
 
     def frames(self, seq, ids):
         from scripts.memory.build_cache import decode_frames
