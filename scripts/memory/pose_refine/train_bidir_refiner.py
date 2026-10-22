@@ -335,6 +335,7 @@ def main():
     ap.add_argument("--t-step", type=int, default=16)
     ap.add_argument("--val-every", type=int, default=250)
     ap.add_argument("--nrgbd-lengths", default="64,128,256,320,500")
+    ap.add_argument("--indoor-val", action="store_true", help="also validate on ScanNet++ val24 @320 and NRGBD")
     ap.add_argument("--grad-ckpt", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--no-wandb", action="store_true")
@@ -434,7 +435,7 @@ def main():
     else:
         train = load("train", "cpu") + load("train_v5", "cpu")
     lens = [int(x) for x in args.nrgbd_lengths.split(",")]
-    sets = [("val24", load("val24", dev), [320]), ("nrgbd", load("nrgbd", dev), lens)]
+    sets = [("val24", load("val24", dev), [320]), ("nrgbd", load("nrgbd", dev), lens)] if args.indoor_val else []
     lv_lens = [int(x) for x in args.longval_lengths.split(",")]
     sets += [(f"longval_{ds}", cl, lv_lens) for ds, cl in longval.items()]
     if args.overfit:
@@ -442,8 +443,8 @@ def main():
         sets.append(("train1", train, [args.t_max]))
         print(f"[overfit] clip {train[0].name} ({train[0].T} frames)", flush=True)
     print(f"[data] longval: " + ", ".join(f"{ds} {len(cl)}" for ds, cl in longval.items()), flush=True)
-    print(f"[data] train {len(train)} clips; val24 {len(sets[0][1])}; nrgbd {len(sets[1][1])} at t={lens}; "
-          f"patches={args.patches} anchors={args.anchors}", flush=True)
+    print(f"[data] train {len(train)} clips; val " + ", ".join(f"{n} {len(c)}" for n, c, _ in sets) +
+          f"; patches={args.patches} anchors={args.anchors}", flush=True)
     params = [p for p in model.parameters() if p.requires_grad]
     print(f"[model] refiner {sum(p.numel() for p in params)/1e6:.1f} M (head frozen)", flush=True)
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.05, betas=(0.9, 0.95))
