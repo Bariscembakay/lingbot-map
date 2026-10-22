@@ -47,7 +47,8 @@ from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 D, HEADS, A, WINDOW, NPATCH = 2048, 16, 8, 64, 999
 INPUTS = Path("/data/lingbot-poserefine-v1")
 PACK_ROOT = Path("/data/lingbot-tap23pack-1048")
-GT_JUMPS = Path("/group/compact-3dmem/campaigns/spatial_memory/_data_prep/lingbot_error_vs_length/gt_jump_scan.json")
+# scan_gt_jumps.py output, kept in the repo so msp3 (whose /group is a different filesystem) has it
+GT_JUMPS = Path(__file__).resolve().parent / "data/gt_jump_scan.json"
 # held out from --packs training, evaluated at long t: whole environments / scenes
 LONGVAL_ENVS = {"hospital", "seasidetown", "gascola"}            # TartanAir V1, V2, TartanGround
 VAL24 = Path(__file__).resolve().parents[3] / ".agents/scratch/memory_eval/val24.txt"
