@@ -417,7 +417,7 @@ def main():
         if step % 50 == 0:
             msg = " ".join(f"{k} {v.item():.4f}" for k, v in parts.items())
             print(f"[{step:6d}] loss {loss.item():.4f} {msg} t {t} {g} |g| {gn.item():.3f} "
-                  f"{(time.time() - t0) / step:.2f}s/it", flush=True)
+                  f"{(time.time() - t0) / step:.2f}s/it {torch.cuda.max_memory_allocated() / 2**30:.1f}GiB", flush=True)
             if run is not None:
                 run.log({"train/loss": loss.item(), **{f"train/{k}": v.item() for k, v in parts.items()},
                          "train/grad_norm": gn.item(), "train/lr": lr}, step=step)
