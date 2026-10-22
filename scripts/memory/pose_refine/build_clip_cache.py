@@ -70,6 +70,9 @@ def main():
     ap.add_argument("--nshards", type=int, default=1)
     ap.add_argument("--no-megaloc", action="store_true")
     ap.add_argument("--batch", type=int, default=1, help="clips streamed together (B dimension of inference_streaming)")
+    ap.add_argument("--chunk", type=int, default=0,
+                    help="frames per forward pass (GCTStream.inference_chunked: same outputs up to bf16 rounding); 0 = frame by frame")
+    ap.add_argument("--chunk-attn", choices=["flex", "sdpa"], default="flex")
     ap.add_argument("--skip-list", type=Path, help="file of clip npz names already built elsewhere (msp3 shards: sof1 staging)")
     ap.add_argument("--compile", action="store_true", help="CUDA-graph the per-frame blocks (lingbot's compile_model)")
     ap.add_argument("--flashinfer", action="store_true",
@@ -139,7 +142,10 @@ def main():
         hs = [agg.register_forward_hook(on_agg), agg.patch_embed.register_forward_hook(on_dino)]
         try:
             with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=1, output_device=None)
+                if args.chunk:
+                    pred = model.inference_chunked(x, chunk=args.chunk, num_scale_frames=A, attn=args.chunk_attn)
+                else:
+                    pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=1, output_device=None)
         finally:
             for h in hs:
                 h.remove()
@@ -174,7 +180,8 @@ def main():
         res = rel_rot_residual(np.linalg.inv(P[0])[None] @ P, G)
         out.update(gt_c2w=G.astype(np.float32), K=K.astype(np.float32), hw=np.int32(hw), gt_scale=np.float64(scale),
                    dataset=ds, seq=c["seq"], frame_ids=np.int32(ids), stride=np.int32(c["stride"]),
-                   rel_rot_residual_deg=np.float32(res), attn_backend="flashinfer" if args.flashinfer else "sdpa")
+                   rel_rot_residual_deg=np.float32(res),
+                   attn_backend=f"chunk{args.chunk}-{args.chunk_attn}" if args.chunk else ("flashinfer" if args.flashinfer else "sdpa"))
         tmp = f.with_suffix(f".tmp{os.getpid()}.npz")
         np.savez(tmp, **out)
         tmp.rename(f)
