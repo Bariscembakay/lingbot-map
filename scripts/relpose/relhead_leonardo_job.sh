@@ -18,5 +18,10 @@ P=$S/micromamba/envs/lingbot_map/bin/python
 export WANDB_MODE=offline RELHEAD_TOKENS=$S/relhead_cam23
 echo "[relhead_leonardo_job] $(hostname) $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1) git $(git rev-parse --short HEAD)"
 ARM=$1; shift
+# data still arriving from INSAIT: rsync renames a file into place only when it is complete
+for ds in tartanair-v1 tartanair-v2 tartanground matrixcity scannetpp scannet-v2; do
+    until [ -f $S/data/lingbot-tap23pack-1048/$ds/spec23.npy ] && [ -f $S/data/lingbot-tap23pack-1048/$ds/index.npz ]; do
+        echo "[relhead_leonardo_job] waiting for $ds"; sleep 60; done
+done
 "$P" scripts/relpose/train_rel_head.py --out $S/runs/lingbot_rel/relhead/$ARM \
     --pack-root $S/data/lingbot-tap23pack-1048 --inputs $S/data/lingbot-poserefine-v1 "$@"
