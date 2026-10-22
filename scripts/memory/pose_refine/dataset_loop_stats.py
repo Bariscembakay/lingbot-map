@@ -22,7 +22,7 @@ from clip_sources import source  # noqa: E402
 # (R metres, L metres): room-scale vs street-scale revisits
 THRESH = {"scannet-v2": (0.5, 5.0), "scannetpp": (0.5, 5.0), "tartanair-v1": (2.0, 20.0),
           "tartanair-v2": (2.0, 20.0), "tartanground": (2.0, 20.0), "matrixcity": (5.0, 50.0),
-          "kitti360": (5.0, 50.0)}
+          "kitti360": (5.0, 50.0), "waymo": (5.0, 50.0)}
 _src = {}
 
 
@@ -63,6 +63,8 @@ def env_of(ds, seq):
         return seq.split("/")[0]
     if ds == "kitti360":
         return seq.split("/")[0]
+    if ds == "waymo":
+        return seq.split("__")[0]
     return seq
 
 
@@ -91,7 +93,9 @@ def main():
                 "thresh_R_m_L_m": THRESH[ds]}
         print(ds, json.dumps(summ), flush=True)
         res[ds] = {"summary": summ, "per_seq": rows}
-        Path(args.out).write_text(json.dumps(res, indent=1))
+        out = Path(args.out)
+        prev = json.loads(out.read_text()) if out.exists() else {}
+        out.write_text(json.dumps(prev | res, indent=1))
 
 
 if __name__ == "__main__":
