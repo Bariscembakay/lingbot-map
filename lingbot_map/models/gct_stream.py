@@ -610,10 +610,12 @@ class GCTStream(GCTBase):
             assert S <= max_frames, (S, max_frames)
             n_ev_max = max(0, max_frames - kv_scale - window)
             kv_len = n_ev_max * n_special + (kv_scale + window + chunk) * P
-            # flex's default tiles need ~118 KB of shared memory per block: fine on A100/H100/H200
-            # (sm_80/sm_90), over the ~99 KB of consumer/workstation parts such as the RTX PRO 6000
-            kopts = (None if torch.cuda.get_device_capability(dev) in ((8, 0), (9, 0))
-                     else {"BLOCK_M": 64, "BLOCK_N": 64, "num_stages": 2})
+            # Tiles per architecture (flex_kernel_bench.py at P=1302, chunk 64): on H200 the default
+            # ran at 186 TFLOPS and 128x64 / 4 warps / 3 stages at 557; the default needs ~118 KB of
+            # shared memory per block, over the ~99 KB of an RTX PRO 6000 (sm_120)
+            cap = torch.cuda.get_device_capability(dev)
+            kopts = ({"BLOCK_M": 128, "BLOCK_N": 64, "num_warps": 4, "num_stages": 3} if cap == (9, 0) else
+                     None if cap == (8, 0) else {"BLOCK_M": 64, "BLOCK_N": 64, "num_stages": 2})
             # one mask_mod over buffers refilled in place every chunk: a new closure or a changed
             # Python constant per chunk makes dynamo recompile, and past its cache limit flex falls
             # back to eager attention, which materialises the full score matrix
