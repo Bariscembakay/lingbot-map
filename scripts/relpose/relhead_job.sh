@@ -11,6 +11,8 @@ source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 dataset pull lingbot-poserefine-v1 >/dev/null
 dataset pull lingbot-tap23pack-1048 >/dev/null
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
+"$P" -c "import torch, sys; sys.exit(0 if torch.cuda.is_available() else 1)" || {
+    echo "[relhead_job] torch sees no GPU on $(hostname) (CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-unset})"; nvidia-smi; exit 4; }
 "$P" -c "import wandb" 2>/dev/null || "$P" -m pip install -q wandb
 # evaluation is CPU-bound (Umeyama, AUC over long streams); keep the idle-GPU reaper off
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.01 & KA=$!
