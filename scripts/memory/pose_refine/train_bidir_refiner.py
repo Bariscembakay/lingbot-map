@@ -23,6 +23,7 @@ depth), so long outdoor prefixes do not dominate and short/indoor ones keep the 
 sampling the dataset first, then t, then clips at least t long; --longval holds out whole
 environments/scenes per dataset and evaluates them at 320/640/1048 (best.pt by their mean ATE
 ratio to lingbot). --head-mode bidir runs lingbot's camera head without its causal mask.
+--arch posetok trains PoseTokenRefiner instead (pose tokens + special tokens, no camera head).
 Usage: train_bidir_refiner.py --out DIR [--patches] [--anchors fixed|free]
 """
 from __future__ import annotations
@@ -203,6 +204,51 @@ class BidirRefiner(nn.Module):
         return preds
 
 
+class PoseTokenRefiner(nn.Module):
+    """--arch posetok: lingbot's 9-d pose per frame (translation divided by lingbot's own extent, mean
+    distance from frame 0 floored at 1) through an MLP to a pose token, self-attending bidirectionally with
+    that frame's last-layer special tokens (camera, 4 registers, scale; tok_part full = the 2048-d
+    frame+global tap projected to the width, global = its global-attention half as is) and every other
+    frame's. Only the pose tokens are read out, by an MLP to 9 numbers -- lingbot's camera head is not used.
+    pose_out residual: a zero-initialised correction to lingbot's pose (step 0 = lingbot);
+    absolute: the pose itself."""
+
+    def __init__(self, anchors_fixed, depth=4, width=1024, tok_part="full", pose_out="residual", ckpt=False):
+        super().__init__()
+        self.anchors_fixed, self.tok_part, self.pose_out, self.ckpt = anchors_fixed, tok_part, pose_out, ckpt
+        din = D if tok_part == "full" else D // 2
+        self.tok_in = nn.Sequential(nn.LayerNorm(din), nn.Linear(din, width)) if tok_part == "full" else nn.LayerNorm(din)
+        assert tok_part == "full" or din == width, "global-half tokens enter at their own width (1024)"
+        self.pose_in = nn.Sequential(nn.Linear(9, width), nn.GELU(), nn.Linear(width, width))
+        self.type_emb = nn.Parameter(torch.zeros(7, width))      # pose token + 6 special kinds
+        self.blocks = nn.ModuleList(Block(width) for _ in range(depth))
+        self.out = nn.Sequential(nn.LayerNorm(width), nn.Linear(width, width), nn.GELU(), nn.Linear(width, 9))
+        if pose_out == "residual":
+            nn.init.zeros_(self.out[-1].weight)
+            nn.init.zeros_(self.out[-1].bias)
+
+    def forward(self, spec, lingbot_pose, patches=None, pframes=None):
+        assert patches is None, "posetok reads special tokens only"
+        B, t = spec.shape[:2]
+        lp = lingbot_pose.float()
+        unit = (lp[:, :, :3] - lp[:, :1, :3]).norm(dim=-1).mean(1).clamp(min=1.0)[:, None, None]
+        pin = torch.cat([lp[:, :, :3] / unit, lp[:, :, 3:]], -1)
+        tok = spec.float() if self.tok_part == "full" else spec[..., D // 2:].float()
+        x = torch.cat([self.pose_in(pin)[:, :, None], self.tok_in(tok)], 2) + self.type_emb   # [B,t,7,W]
+        x = x.reshape(B, t * 7, -1)
+        pos = torch.arange(t, device=spec.device).repeat_interleave(7)[None].expand(B, -1)
+        for blk in self.blocks:
+            x = checkpoint(blk, x, pos, use_reentrant=False) if self.ckpt and self.training else blk(x, pos)
+        y = self.out(x.reshape(B, t, 7, -1)[:, :, 0])
+        if self.pose_out == "residual":
+            pred = torch.cat([lp[..., :3] + unit * y[..., :3], lp[..., 3:7] + y[..., 3:7], lp[..., 7:] + y[..., 7:]], -1)
+        else:
+            pred = torch.cat([unit * y[..., :3], y[..., 3:7], F.relu(y[..., 7:])], -1)
+        if self.anchors_fixed:
+            pred = torch.cat([lp[:, :A], pred[:, A:]], 1)
+        return [pred]
+
+
 def geodesic(Ra, Rb):
     c = ((Ra.transpose(-1, -2) @ Rb).diagonal(dim1=-2, dim2=-1).sum(-1) - 1) / 2
     return torch.acos(c.clamp(-1 + 1e-6, 1 - 1e-6))
@@ -312,6 +358,10 @@ def main():
     ap.add_argument("--norm", choices=["none", "extent"], default="none")
     ap.add_argument("--trans-floor", type=float, default=1.0)
     ap.add_argument("--head-mode", choices=["causal", "bidir"], default="causal")
+    ap.add_argument("--arch", choices=["tokens", "posetok"], default="tokens",
+                    help="tokens: refined camera tokens through lingbot's head; posetok: PoseTokenRefiner")
+    ap.add_argument("--pose-out", choices=["residual", "absolute"], default="residual")
+    ap.add_argument("--tok-part", choices=["full", "global"], default="full")
     ap.add_argument("--overfit", action="store_true",
                     help="train on one ScanNet++ clip (the first with >= t-max frames), also evaluated as set 'train1'")
     args = ap.parse_args()
@@ -322,8 +372,12 @@ def main():
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
 
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=False)
-    model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt, width=args.width,
-                         head_mode=args.head_mode).to(dev)
+    if args.arch == "posetok":
+        model = PoseTokenRefiner(args.anchors == "fixed", width=args.width, tok_part=args.tok_part,
+                                 pose_out=args.pose_out, ckpt=args.grad_ckpt).to(dev)
+    else:
+        model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt, width=args.width,
+                             head_mode=args.head_mode).to(dev)
 
     def load(d, store):
         fs = sorted(f for f in (args.inputs / d / "specials").glob("*.npz") if ".tmp" not in f.stem)
