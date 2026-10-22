@@ -149,7 +149,8 @@ def main():
         finally:
             for h in hs:
                 h.remove()
-        out = {k: torch.cat(v, 1).cpu().numpy() for k, v in acc.items()}
+        # inference_chunked pads a short last chunk; its extra frames are captured too
+        out = {k: torch.cat(v, 1)[:, :S].cpu().numpy() for k, v in acc.items()}
         pose = pred["pose_enc"].float().cpu()
         assert out["spec"].shape[1] == pose.shape[1] == S, (out["spec"].shape, pose.shape, S)
         return x, [(out["spec"][b, :len(xs[b])], pose[b, :len(xs[b])], out["cls"][b, :len(xs[b])],

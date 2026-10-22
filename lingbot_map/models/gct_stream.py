@@ -568,6 +568,7 @@ class GCTStream(GCTBase):
         num_scale_frames: Optional[int] = None,
         output_device: Optional[torch.device] = None,
         attn: str = "sdpa",
+        max_frames: int = 4096,
     ) -> Dict[str, torch.Tensor]:
         """inference_streaming (every frame a keyframe, SDPA backend) with `chunk` frames per forward
         pass instead of one. Each frame of a chunk gets exactly the context frame-by-frame streaming
@@ -578,7 +579,9 @@ class GCTStream(GCTBase):
         rounding, from large kernels instead of one small launch sequence per frame.
         attn="sdpa" passes the mask as a dense boolean tensor (memory-efficient kernel); "flex" builds
         a FlexAttention block mask over keys padded to a fixed length, so the compiled kernel is
-        reused for every full chunk and fully masked blocks are skipped.
+        reused for every full chunk and fully masked blocks are skipped. The keys are padded for clips
+        up to `max_frames`, and a short last chunk is padded by repeating its final frame (streaming is
+        causal, so the real frames are unaffected), so one compiled kernel serves every clip.
         Returns pose_enc only (the depth head is not chunk-aware)."""
         assert self.aggregator.use_sdpa, "chunked streaming is implemented for the SDPA KV cache"
         assert attn in ("sdpa", "flex"), attn
@@ -604,7 +607,8 @@ class GCTStream(GCTBase):
         if attn == "flex":
             from torch.nn.attention.flex_attention import create_block_mask, flex_attention
             flex = _compiled_flex(flex_attention)
-            n_ev_max = max(0, S - kv_scale - window)
+            assert S <= max_frames, (S, max_frames)
+            n_ev_max = max(0, max_frames - kv_scale - window)
             kv_len = n_ev_max * n_special + (kv_scale + window + chunk) * P
             # flex's default tiles need ~118 KB of shared memory per block: fine on A100/H100/H200
             # (sm_80/sm_90), over the ~99 KB of consumer/workstation parts such as the RTX PRO 6000
@@ -621,11 +625,12 @@ class GCTStream(GCTBase):
             def mask_mod(b, h, qi, ki):
                 qfr = f0_b + qi // P
                 kfr, kd = kf_b[ki], kind_b[ki]
-                return (kd != 3) & ((kd == 0) | (kfr < kv_scale) | ((kfr >= qfr - window + 1) & (kfr <= qfr))
-                                    | ((kd == 1) & kspec_b[ki]))
+                return (kd != 3) & ((kfr < kv_scale) | ((kfr >= qfr - window + 1) & (kfr <= qfr))
+                                    | (kspec_b[ki] & (kfr <= qfr)))
         try:
             for f0 in range(A, S, chunk):
-                c = min(chunk, S - f0)
+                n_real = min(chunk, S - f0)
+                c = chunk if attn == "flex" else n_real    # flex: every chunk the same shape
                 n_win = min(window, f0 - kv_scale)               # cached frames past the scale frames
                 n_ev = f0 - kv_scale - n_win                      # frames already reduced to specials
                 qf = f0 + torch.arange(c * P, device=dev) // P
@@ -650,12 +655,14 @@ class GCTStream(GCTBase):
                     kv["_chunk_mask"] = {"fn": flex, "block_mask": bm, "kv_len": kv_len, "kernel_options": kopts}
                 else:
                     q, k = qf[:, None], kf[None]
-                    mask = ((kind[None] == 0) | (k < kv_scale) | ((k >= q - window + 1) & (k <= q))
-                            | ((kind[None] == 1) & kspec[None]))
+                    mask = (k < kv_scale) | ((k >= q - window + 1) & (k <= q)) | (kspec[None] & (k <= q))
                     kv["_chunk_mask"] = mask[None, None]
                     del mask
-                poses.append(out(self.forward(images[:, f0:f0 + c].to(dev), num_frame_for_scale=A,
-                                              num_frame_per_block=c, causal_inference=True)["pose_enc"]))
+                x = images[:, f0:f0 + n_real]
+                if c > n_real:
+                    x = torch.cat([x, x[:, -1:].expand(-1, c - n_real, -1, -1, -1)], 1)
+                pe = self.forward(x.to(dev), num_frame_for_scale=A, num_frame_per_block=c, causal_inference=True)["pose_enc"]
+                poses.append(out(pe[:, :n_real]))
         finally:
             kv["_chunk_mask"] = None
             for d in head_caches:

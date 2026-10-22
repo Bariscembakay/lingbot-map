@@ -45,7 +45,8 @@ def run(model, x, chunk, attn="sdpa"):
         for h in hs:
             h.remove()
     dt = time.time() - t
-    return {"spec": torch.cat(acc["spec"]), "cls": torch.cat(acc["cls"]), "pose": pred["pose_enc"][0].float()}, dt
+    n = len(x)   # a padded last chunk is captured too
+    return {"spec": torch.cat(acc["spec"])[:n], "cls": torch.cat(acc["cls"])[:n], "pose": pred["pose_enc"][0].float()}, dt
 
 
 def diff(a, b):
