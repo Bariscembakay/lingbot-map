@@ -62,6 +62,7 @@ def main():
     ap.add_argument("--chunks", type=int, nargs="+", default=[4, 16, 32])
     ap.add_argument("--clips", type=int, default=2)
     ap.add_argument("--attn", nargs="+", default=["sdpa", "flex"])
+    ap.add_argument("--profile", action="store_true", help="kernel table of each chunked run (after the timed one)")
     args = ap.parse_args()
     plan = json.loads(args.plan.read_text())
     src = source(plan["summary"]["dataset"])
@@ -90,6 +91,11 @@ def main():
                 torch.cuda.empty_cache()
                 continue
             print(f"[{att} chunk {ch}] {len(x) / dt:.2f} fps ({dt:.1f} s), peak {torch.cuda.max_memory_allocated() / 2**30:.1f} GiB", flush=True)
+            if args.profile:
+                from torch.profiler import ProfilerActivity, profile
+                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:
+                    run(model, x[: 8 + 4 * ch], ch, att)
+                print(prof.key_averages().table(sort_by="cuda_time_total", row_limit=15), flush=True)
             print(f"   specials {diff(out['spec'], ref['spec'])} | pose {diff(out['pose'], ref['pose'])} | "
                   f"cls {diff(out['cls'], ref['cls'])}", flush=True)
             for a, b in ((8, 72), (72, 200), (200, len(x))):   # before / around / after the window fills

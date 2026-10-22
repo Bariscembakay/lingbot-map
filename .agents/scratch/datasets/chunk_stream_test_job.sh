@@ -13,4 +13,4 @@ case $DS in scannetpp) dataset pull ScanNetpp;; scannet-v2) dataset pull scannet
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 & KA=$!
 trap 'kill $KA 2>/dev/null' EXIT
 "$P" scripts/memory/pose_refine/chunk_stream_test.py --plan /group/compact-3dmem/campaigns/spatial_memory/_data_prep/plans/$DS.json \
-    --chunks $CH --frames $FR ${ATTN:+--attn $ATTN} 2>&1 | grep -vE "Streaming inference|it/s\]"
+    --chunks $CH --frames $FR ${ATTN:+--attn $ATTN} ${EXTRA:-} 2>&1 | grep -vE "Streaming inference|it/s\]"
