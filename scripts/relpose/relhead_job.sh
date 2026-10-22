@@ -13,7 +13,7 @@ dataset pull lingbot-tap23pack-1048 >/dev/null
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 "$P" -c "import wandb" 2>/dev/null || "$P" -m pip install -q wandb
 # evaluation is CPU-bound (Umeyama, AUC over long streams); keep the idle-GPU reaper off
-"$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 & KA=$!
+"$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.01 & KA=$!
 trap 'kill $KA 2>/dev/null' EXIT
 echo "[relhead_job] $(hostname) $(nvidia-smi --query-gpu=name --format=csv,noheader | head -1) git $(git rev-parse --short HEAD)"
 ARM=$1; shift

@@ -268,6 +268,7 @@ def main():
     ap.add_argument("--trans-floor", type=float, default=1.0)
     ap.add_argument("--steps", type=int, default=8000)
     ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--accum", type=int, default=1, help="split each batch into this many sequential micro-batches")
     ap.add_argument("--lr", type=float, default=5e-5)
     ap.add_argument("--warmup", type=int, default=500)
     ap.add_argument("--t-min", type=int, default=64)
@@ -398,20 +399,24 @@ def main():
             t = int(lengths[group == g].max())
             pool_idx = np.flatnonzero((group == g) & (lengths == t))
         idx = rng.choice(pool_idx, args.batch, replace=len(pool_idx) < args.batch)
-        cam = torch.from_numpy(np.stack([train[i].tok[:t] for i in idx])).pin_memory().to(dev, non_blocking=True)
-        G = torch.stack([train[i].gt_c2w[:t] for i in idx]).to(dev)
-        enc = torch.stack([train[i].gt_enc[:t] for i in idx]).to(dev)
         hw = train[idx[0]].hw          # unused by pose_enc_to_c2w (no intrinsics built)
-        with torch.autocast("cuda", dtype=torch.bfloat16):
-            preds = model(cam)
-        preds = [p.float() for p in preds]
-        if args.mode == "rel":
-            loss, parts = rel_loss(preds, G, enc[..., 7:], hw, args)
-        else:
-            loss, la, lrel = br.loss_fn(preds, enc, hw, 0, norm=args.norm == "extent", floor=args.trans_floor)
-            parts = {"abs": la, "pair": lrel}
         opt.zero_grad(set_to_none=True)
-        loss.backward()
+        loss, parts = 0.0, {}
+        for mb in np.array_split(idx, args.accum):
+            cam = torch.from_numpy(np.stack([train[i].tok[:t] for i in mb])).pin_memory().to(dev, non_blocking=True)
+            G = torch.stack([train[i].gt_c2w[:t] for i in mb]).to(dev)
+            enc = torch.stack([train[i].gt_enc[:t] for i in mb]).to(dev)
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                preds = model(cam)
+            preds = [p.float() for p in preds]
+            if args.mode == "rel":
+                l, pt = rel_loss(preds, G, enc[..., 7:], hw, args)
+            else:
+                l, la, lrel = br.loss_fn(preds, enc, hw, 0, norm=args.norm == "extent", floor=args.trans_floor)
+                pt = {"abs": la, "pair": lrel}
+            (l / args.accum).backward()
+            loss = loss + l.detach() / args.accum
+            parts = {k: parts.get(k, 0) + v / args.accum for k, v in pt.items()}
         gn = torch.nn.utils.clip_grad_norm_(params, 1.0)
         opt.step()
         if step % 50 == 0:
