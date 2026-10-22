@@ -401,7 +401,8 @@ def main():
         row = {}
         for s, v in r.items():
             for t, m in v["summary"].items():
-                for k in ("ate", "auc3", "auc30", "lingbot_ate", "lingbot_auc3"):
+                for k in ("ate", "rpe_t", "rpe_r", "auc3", "auc30",
+                          "lingbot_ate", "lingbot_rpe_t", "lingbot_rpe_r", "lingbot_auc3", "lingbot_auc30"):
                     row[f"{s}@{t}/{k}"] = m[k]
         return row
 
@@ -421,7 +422,7 @@ def main():
         for k in row:
             head, _, metric = k.rpartition("/")
             lk = f"{head}/lingbot_{metric}"
-            if metric in ("ate", "auc3") and lk in row:
+            if metric in ("ate", "rpe_t", "rpe_r", "auc3", "auc30") and lk in row:
                 log[f"vs_lingbot/{k}"] = wandb.plot.line_series(
                     xs=steps, ys=[[h.get(k) for h in hist], [h.get(lk) for h in hist]],
                     keys=["refined", "lingbot"], title=k, xname="step")

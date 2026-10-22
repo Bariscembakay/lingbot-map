@@ -85,3 +85,58 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def valid_mask(seq, tol_m, tol_deg, gap):
+    """per-frame validity of ARKit aligned_pose under the COLMAP check (as clip_sources.ScanNetPP)"""
+    ip = ROOT / seq / "iphone"
+    a = json.loads((ip / "pose_intrinsic_imu.json").read_text())
+    c = colmap_c2w(ip / "colmap/images.txt")
+    n = len(a)
+    ks = np.array(sorted(k for k in c if k < n), dtype=int)
+    valid = np.zeros(n, bool)
+    if len(ks) < 2:
+        return valid
+    T = np.stack([np.asarray(a[f"frame_{k:06d}"]["aligned_pose"], np.float64) for k in ks])
+    C = np.stack([c[k] for k in ks])
+    dt = np.linalg.norm(T[:, :3, 3] - C[:, :3, 3], axis=1)
+    m = np.einsum("nji,njk->nik", T[:, :3, :3], C[:, :3, :3])
+    dr = np.degrees(np.arccos(np.clip((np.trace(m, axis1=1, axis2=2) - 1) / 2, -1, 1)))
+    ok = (dt <= tol_m) & (dr <= tol_deg)
+    for j in range(len(ks) - 1):
+        if ok[j] and ok[j + 1] and ks[j + 1] - ks[j] <= gap:
+            valid[ks[j]:ks[j + 1] + 1] = True
+    return valid
+
+
+def run_stats(seq, settings=((0.05, 2, 30), (0.05, 2, 60), (0.10, 3, 60), (0.10, 3, 100), (0.20, 5, 100)), min_raw=576):
+    out = {}
+    try:
+        for s in settings:
+            v = valid_mask(seq, *s)
+            runs, a = [], None
+            for i, x in enumerate(list(v) + [False]):
+                if x and a is None:
+                    a = i
+                elif not x and a is not None:
+                    runs.append(i - a)
+                    a = None
+            long = [r for r in runs if r >= min_raw]
+            out[str(s)] = {"frames": len(v), "valid": int(v.sum()), "runs": len(runs), "long_runs": len(long), "long_frames": int(sum(long))}
+    except Exception as e:
+        out["error"] = str(e)[:100]
+    return seq, out
+
+
+def fragmentation_main(out_path):
+    seqs = sorted(p.name for p in ROOT.iterdir() if (p / "iphone/colmap/images.txt").exists()
+                  and (p / "iphone/depth.bin").exists())
+    with ProcessPoolExecutor(16) as ex:
+        res = dict(ex.map(run_stats, seqs, chunksize=4))
+    Path(out_path).write_text(json.dumps(res))
+    keys = [k for k in next(iter(res.values())) if k != "error"]
+    tot = sum(r[keys[0]]["frames"] for r in res.values() if "error" not in r)
+    for k in keys:
+        rs = [r[k] for r in res.values() if "error" not in r]
+        print(f"tol/deg/gap {k}: valid {sum(r['valid'] for r in rs) / tot:.3f} of {tot} frames; runs {sum(r['runs'] for r in rs)}; "
+              f"runs >= 576 raw frames: {sum(r['long_runs'] for r in rs)} holding {sum(r['long_frames'] for r in rs) / tot:.3f}", flush=True)
