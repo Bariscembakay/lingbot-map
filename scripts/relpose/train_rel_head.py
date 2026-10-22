@@ -114,18 +114,30 @@ def rigid_inv(M):
 
 
 def chain(S):
-    """[B, t, 4, 4] steps -> [B, t, 4, 4] poses in frame 0's camera (S[:, 0] is ignored)."""
-    out = [torch.eye(4, dtype=S.dtype, device=S.device).expand(S.shape[0], 4, 4)]
-    for i in range(1, S.shape[1]):
-        out.append(out[-1] @ S[:, i])
-    return torch.stack(out, 1)
+    """[B, t, 4, 4] steps -> [B, t, 4, 4] poses in frame 0's camera (S[:, 0] is ignored): an
+    inclusive scan with log2(t) batched products instead of t sequential ones."""
+    C = torch.cat([torch.eye(4, dtype=S.dtype, device=S.device).expand(S.shape[0], 1, 4, 4), S[:, 1:]], 1)
+    k = 1
+    while k < C.shape[1]:
+        C = torch.cat([C[:, :k], C[:, :-k] @ C[:, k:]], 1)
+        k *= 2
+    return C
 
 
 # -- model ---------------------------------------------------------------------
 class RelHead(nn.Module):
-    def __init__(self, head, mode, window, prev_token):
+    def __init__(self, head, mode, window, prev_token, init_identity=False):
         super().__init__()
         self.head, self.mode, self.window = head, mode, window
+        if init_identity:
+            # lingbot's output layer maps to absolute poses; restart translation and the quaternion's
+            # vector part at zero and its scalar part at a positive constant (summed over the head
+            # iterations, never 0), so every step starts as no motion. FoV rows stay: FoV is per frame.
+            fc2 = head.pose_branch.fc2
+            with torch.no_grad():
+                fc2.weight[:7].zero_()
+                fc2.bias[:6].zero_()
+                fc2.bias[6] = 0.25
         self.prev = None
         if prev_token:
             self.prev = nn.Linear(D, D)
@@ -246,6 +258,8 @@ def main():
     ap.add_argument("--window", type=int, default=64, help="rel: frames the head attends to, itself included")
     ap.add_argument("--no-rope", action="store_true", help="rel: lingbot's head as is, without temporal RoPE")
     ap.add_argument("--prev-token", action="store_true")
+    ap.add_argument("--no-init-identity", action="store_true",
+                    help="rel: keep lingbot's absolute-pose output layer instead of starting every step at no motion")
     ap.add_argument("--rot-w", type=float, default=10.0)
     ap.add_argument("--trans-w", type=float, default=10.0)
     ap.add_argument("--pair-w", type=float, default=1.0)
@@ -278,7 +292,8 @@ def main():
 
     rope = args.mode == "rel" and not args.no_rope
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=rope, max_frames=4096 if rope else 1024)
-    model = RelHead(head, args.mode, args.window, args.prev_token).to(dev)
+    model = RelHead(head, args.mode, args.window, args.prev_token,
+                    init_identity=args.mode == "rel" and not args.no_init_identity).to(dev)
 
     val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in br.VAL24.read_text().split()}
     jumps = json.loads(br.GT_JUMPS.read_text())
@@ -323,6 +338,7 @@ def main():
 
     params = [p for p in model.parameters() if p.requires_grad]
     print(f"[model] mode={args.mode} rope={rope} window={args.window} prev_token={args.prev_token} "
+          f"init_identity={args.mode == 'rel' and not args.no_init_identity} "
           f"trainable {sum(p.numel() for p in params) / 1e6:.1f} M", flush=True)
     opt = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.05, betas=(0.9, 0.95))
     tchoices = np.arange(args.t_min, args.t_max + 1, args.t_step)
