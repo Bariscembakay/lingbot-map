@@ -479,7 +479,12 @@ def main():
         os.environ.setdefault("WANDB_DIR", str(args.out))
         try:
             import wandb
-            run = wandb.init(project="lingbot-rel", group="backbone", name=args.out.name,
+            # one wandb run across --resume jobs: Leonardo trains offline and INSAIT syncs each arm to this id
+            # (wandb_sync_leonardo.sh)
+            idf = args.out / "wandb_id"
+            run_id = idf.read_text().strip() if idf.exists() else wandb.util.generate_id()
+            idf.write_text(run_id)
+            run = wandb.init(project="lingbot-rel", group="backbone", name=args.out.name, id=run_id, resume="allow",
                              config={k: str(v) for k, v in vars(args).items()})
         except Exception as e:
             print(f"[wandb] disabled: {e}", flush=True)
@@ -503,9 +508,11 @@ def main():
         r = evaluate(model, head, args, val_sets, dev)
         row = {"step": step, **{f"{k}/{m}": v for k, d in r.items() for m, v in d.items()}}
         hist.append(row)
-        print(f"[val {step}] " + " ".join(f"{k} ate {d['ate']:.3f} absrel {d['abs_rel']:.3f}" for k, d in r.items()), flush=True)
-        if run is not None:
-            run.log({f"val/{k}": v for k, v in row.items() if k != "step"}, step=step)
+        print(f"[val {step}] " + " ".join(f"{k} ate {d['ate']:.3f} rpe_t {d['rpe_t']:.3f}" for k, d in r.items()), flush=True)
+        if run is not None:                      # wandb gets ATE and RPE-t only; history.json keeps every metric
+            log = {f"val_{m}/{k}": d[m] for k, d in r.items() for m in ("ate", "rpe_t")}
+            log.update({f"val_{m}/mean": float(np.mean([d[m] for d in r.values()])) for m in ("ate", "rpe_t")})
+            run.log(log, step=step)
         tmp = args.out / "last.pt.tmp"
         torch.save({"model": model.state_dict(), "head": head.state_dict(), "opt": opt.state_dict(),
                     "forecast": fcst.state_dict() if fcst is not None else None,
@@ -517,6 +524,7 @@ def main():
         validate(0)
     step, epoch, t0 = step0, step0 // len(sampler), time.time()
     params = bb + hp
+    acc = None
     while step < args.steps:
         sampler.set_epoch(epoch)
         if hasattr(train_ds, "set_epoch"):
@@ -531,13 +539,24 @@ def main():
             gn = torch.nn.utils.clip_grad_norm_(params, 1.0)
             if torch.isfinite(gn):
                 opt.step()
-            if main_proc and step % 10 == 0:
-                msg = " ".join(f"{k} {float(v):.4f}" for k, v in parts.items())
-                print(f"[{step:6d}] pose {float(loss):.4f} {msg} |g| {float(gn):.2f} {(time.time() - t0) / (step - step0):.1f}s/it "
-                      f"{torch.cuda.max_memory_allocated() / 2**30:.1f}GiB", flush=True)
-                if run is not None:
-                    run.log({"train/pose": float(loss), **{f"train/{k}": float(v) for k, v in parts.items()},
-                             "train/grad_norm": float(gn)}, step=step)
+            # logged losses are means over the last 10 steps and all ranks: one rank's clip alone is too noisy
+            v = torch.stack([torch.as_tensor(x, device=dev).detach().float() for x in (loss, *parts.values(), gn)]
+                            + [torch.ones((), device=dev)])
+            acc = torch.zeros_like(v) if acc is None else acc
+            if torch.isfinite(v).all():
+                acc += v
+            if step % 10 == 0:
+                if world > 1:
+                    dist.all_reduce(acc)
+                m = dict(zip(["pose", *parts, "grad_norm"], (acc[:-1] / acc[-1].clamp(min=1)).tolist()))
+                acc.zero_()
+                if main_proc:
+                    msg = " ".join(f"{k} {v:.4f}" for k, v in m.items() if k not in ("pose", "grad_norm"))
+                    print(f"[{step:6d}] pose {m['pose']:.4f} {msg} |g| {m['grad_norm']:.2f} "
+                          f"{(time.time() - t0) / (step - step0):.1f}s/it {torch.cuda.max_memory_allocated() / 2**30:.1f}GiB",
+                          flush=True)
+                    if run is not None:
+                        run.log({f"train/{k}": v for k, v in m.items()} | {"train/lr": opt.param_groups[0]["lr"]}, step=step)
             if step % args.val_every == 0 or step == args.steps or step == args.max_steps_smoke:
                 validate(step)
             if step >= args.steps or step == args.max_steps_smoke:
