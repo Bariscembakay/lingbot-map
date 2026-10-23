@@ -28,6 +28,7 @@ Usage: torchrun --nproc_per_node N train_lingbot_rel.py --out DIR [--mode rel|ab
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import math
 import os
@@ -133,7 +134,7 @@ def chunk_mask(model, mode, f0, c, P, window, dev):
     if mode == "rel":
         kf = torch.arange(f0 - n_cached, f0 + c, device=dev).repeat_interleave(P)
         q, k = qf[:, None], kf[None]
-        return ((k >= q - window + 1) & (k <= q))[None, None]
+        return additive_bias((k >= q - window + 1) & (k <= q))
     blk = model.aggregator.global_blocks[0].attn
     w, kv_scale = blk.kv_cache_sliding_window, blk.kv_cache_scale_frames
     n_special = model.aggregator.patch_start_idx
@@ -147,7 +148,16 @@ def chunk_mask(model, mode, f0, c, P, window, dev):
     kspec = torch.cat([torch.ones(n_ev * n_special, dtype=torch.bool, device=dev),
                        (tok < n_special).repeat(n_cached + c)])
     q, k = qf[:, None], kf[None]
-    return ((k < kv_scale) | ((k >= q - w + 1) & (k <= q)) | (kspec[None] & (k <= q)))[None, None]
+    return additive_bias((k < kv_scale) | ((k >= q - w + 1) & (k <= q)) | (kspec[None] & (k <= q)))
+
+
+def additive_bias(m):
+    """[L,S] bool -> [1,1,L,S] additive bf16 bias whose row stride is a multiple of 8. SDPA's
+    memory-efficient kernel otherwise converts a bool mask (and pads an unaligned one) into a new
+    tensor on every call, and autograd keeps one per global layer: 24 x ~1 GB at chunk 16."""
+    L, S = m.shape
+    b = torch.zeros(L, -(-S // 8) * 8, dtype=torch.bfloat16, device=m.device)[:, :S]
+    return b.masked_fill_(~m, float("-inf"))[None, None]
 
 
 def run_block(model, x, nfpb):
@@ -264,7 +274,7 @@ def eval_clip(model, head, args, batch):
     starts = chunk_starts(imgs.shape[1], args.chunk)
     model.clean_kv_cache()
     cams, deps = [], []
-    with torch.autocast("cuda", dtype=torch.bfloat16):
+    with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
         for i in range(len(starts)):
             c_i, d_i, _ = stream_block(model, args.mode, imgs, i, starts, args.window)
             cams.append(c_i.float())
@@ -338,7 +348,8 @@ def main():
 
     dist_on = "WORLD_SIZE" in os.environ
     if dist_on:
-        dist.init_process_group("nccl")
+        # validation runs on rank 0 alone while the others wait in the next all-reduce
+        dist.init_process_group("nccl", timeout=datetime.timedelta(hours=2))
     rank, world = (dist.get_rank(), dist.get_world_size()) if dist_on else (0, 1)
     dev = torch.device("cuda", int(os.environ.get("LOCAL_RANK", 0)))
     torch.cuda.set_device(dev)
