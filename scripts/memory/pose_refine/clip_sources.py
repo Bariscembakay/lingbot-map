@@ -187,8 +187,9 @@ class ScanNetPP:
     # ARKit's aligned_pose is right where the COLMAP reconstruction of the iPhone frames (every 10th,
     # registered to the laser scan) confirms it: median 1 cm apart over 1018 scenes, but ARKit tracking
     # failed in parts of many scenes (metres to km off, scannetpp_pose_audit.py). A frame is kept only if
-    # the registered COLMAP frames around it, at most COLMAP_GAP apart, both match ARKit
-    COLMAP_TOL_M, COLMAP_TOL_DEG, COLMAP_GAP = 0.05, 2.0, 30
+    # the registered COLMAP frames around it, at most COLMAP_GAP apart, both match ARKit. 10 cm / 3 deg /
+    # 100 frames (user, 2026-10-23): 74% of frames stay in >= 576-frame runs vs 53% at 5 cm / 2 deg / 30
+    COLMAP_TOL_M, COLMAP_TOL_DEG, COLMAP_GAP = 0.10, 3.0, 100
 
     def poses(self, seq):
         from scripts.memory.build_cache import probe_video

@@ -9,7 +9,8 @@ of --depth-samples frames; --metric-depth metres without depth; larger strides a
 while every smaller one passes). When the overlap cap is below ceil(N / length), the sequence is
 cut into consecutive --length-frame clips at the capped stride; a remainder shorter than
 --min-tail frames is dropped.
-Runs of invalid poses split a sequence (ScanNet v2). Sequences shorter than --min-len are skipped.
+Runs of invalid poses split a sequence (ScanNet v2 jumps, ScanNet++ frames COLMAP does not confirm); the
+stride still comes from the sequence's total valid length. Sequences shorter than --min-len are skipped.
 Usage: plan_clips.py --dataset tartanair-v2 --out plan.json
 """
 from __future__ import annotations
@@ -61,7 +62,11 @@ def plan_seq(seq):
     except Exception as e:  # a broken sequence is reported, not fatal
         return seq, [], {"error": f"{type(e).__name__}: {e}"}
     clips, info = [], {"frames": len(T), "runs": []}
-    for a, b in runs_of_valid(T, A.min_len):
+    runs = runs_of_valid(T, A.min_len)
+    # stride from the whole sequence's valid frames: a sequence split into short valid runs (ScanNet++
+    # COLMAP check, ScanNet v2 jumps) must not get stride 1 in each run, which multiplied its frames ~4x
+    s_seq = max(1, -(-sum(b - a for a, b in runs) // A.length))
+    for a, b in runs:
         if src.metric:
             dmed = A.metric_depth
         else:
@@ -74,7 +79,7 @@ def plan_seq(seq):
                 info.setdefault("depth_errors", []).append(str(e)[:120])
                 dmed = A.metric_depth
         s_max = choose_stride(T[a:b], dmed)
-        s = min(s_max, max(1, -(-(b - a) // A.length)))     # densest stride that fits the run in one clip, if overlap allows
+        s = min(s_max, max(s_seq, -(-(b - a) // A.length)))  # densest stride that fits the sequence in one clip, if overlap allows
         ids = list(range(a, b, s))
         chunks = [ids[k:k + A.length] for k in range(0, len(ids), A.length)]
         if len(chunks) > 1 and len(chunks[-1]) < A.min_tail:
