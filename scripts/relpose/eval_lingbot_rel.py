@@ -53,8 +53,9 @@ def load_run(run: Path, ckpt: str, dev, max_frames: int):
         ck = torch.load(run / ckpt, map_location="cpu", weights_only=False)
     a = argparse.Namespace(**ck["args"])
     rel = a.mode == "rel"
+    a.anchors = getattr(a, "anchors", False)
     model = tl.GCTStream(enable_3d_rope=True, max_frame_num=max_frames, kv_cache_sliding_window=a.window if rel else 64,
-                         kv_cache_scale_frames=tl.A, kv_cache_include_scale_frames=not rel,
+                         kv_cache_scale_frames=tl.A, kv_cache_include_scale_frames=not rel or a.anchors,
                          kv_cache_cross_frame_special=not rel, use_sdpa=True, use_gradient_checkpoint=False)
     model.load_state_dict(ck["model"], strict=run is not None)
     head = rh.RelHead(tp.build_head(tl.REPO / "ckpt/lingbot-map.pt", rope_on=rel, max_frames=4096 if rel else 1024),
@@ -65,7 +66,7 @@ def load_run(run: Path, ckpt: str, dev, max_frames: int):
 
 
 @torch.no_grad()
-def stream_cams(model, mode, images, chunk, window, dev):
+def stream_cams(model, mode, images, chunk, window, dev, anchors=False):
     """[T,3,H,W] uint8 on the CPU -> [T, C] layer-23 camera tokens, as train_lingbot_rel streams."""
     T = len(images)
     starts = tl.chunk_starts(T, chunk)
@@ -76,9 +77,12 @@ def stream_cams(model, mode, images, chunk, window, dev):
         for i, f0 in enumerate(starts):
             f1 = starts[i + 1] if i + 1 < len(starts) else T
             x = images[f0:f1].to(dev, non_blocking=True).float().div_(255)[None]
-            kv["_chunk_mask"] = None if i == 0 else tl.chunk_mask(model, mode, f0, f1 - f0, kv["k_0"].shape[3], window, dev)
+            if i == 0:
+                tl.clear_chunk_context(model)
+            else:
+                tl.chunk_context(model, mode, anchors, f0, f1 - f0, kv["k_0"].shape[3], window, x.shape[-2:], dev)
             agg, _ = model._aggregate_features(x, num_frame_for_scale=tl.A, num_frame_per_block=f1 - f0)
-            kv["_chunk_mask"] = None
+            tl.clear_chunk_context(model)
             out.append(agg[-1][0, :, 0].float().clone())   # .float() of the fp32 residual stream is a view: it would pin the chunk
             if f1 // 2048 > f0 // 2048:
                 nk = sum(t.shape[2] * t.shape[3] for t in (kv["k_0"], kv.get("k_0_special")) if t is not None)
@@ -129,7 +133,7 @@ def main():
         hw = tuple(images.shape[-2:])
         G = load_bss_traj(scene / "gt/traj.txt")
         assert len(G) == len(images), (len(G), len(images))
-        cam = stream_cams(model, a.mode, images, args.chunk, a.window, dev)
+        cam = stream_cams(model, a.mode, images, args.chunk, a.window, dev, a.anchors)
         clip = rh.EvalClip(name, cam.cpu().numpy(), G.astype(np.float32), np.zeros((len(G), 3, 3), np.float32), hw, 1.0,
                            np.zeros((len(G), 9), np.float32), dev)
         P = rh.predict_c2w(head, clip).cpu()

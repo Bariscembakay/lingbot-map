@@ -49,6 +49,7 @@ import train_pose_refine as tp  # noqa: E402
 import train_rel_head as rh  # noqa: E402
 from lingbot_map.memory.losses import depth_loss  # noqa: E402
 from lingbot_map.models.gct_stream import GCTStream  # noqa: E402
+from lingbot_map.utils.rotation import quat_to_mat  # noqa: E402
 
 A = 8          # lingbot's scale (anchor) frames, processed jointly at the start of every stream
 TAPS = [4, 11, 17, 23]
@@ -124,13 +125,18 @@ def to_lingbot(views, dev):
 
 
 # -- streaming -----------------------------------------------------------------
-def chunk_mask(model, mode, f0, c, P, window, dev):
+def chunk_mask(model, mode, f0, c, P, window, dev, anchors=False):
     """Dense key mask for chunk frames f0..f0+c-1 over [evicted specials | cached frames | chunk].
-    rel: the last `window` frames up to the query; abs: lingbot's own context, as in
-    GCTStream.inference_chunked."""
+    rel: the last `window` frames up to the query (+ the A scale frames with anchors); abs: lingbot's
+    own context, as in GCTStream.inference_chunked."""
     kv = model.aggregator.kv_cache
     n_cached = kv["k_0"].shape[2]
     q = f0 + torch.arange(c, device=dev)[:, None]      # one mask row per query frame, shared by its P tokens
+    if mode == "rel" and anchors:
+        n_a = min(A, n_cached)
+        k = torch.cat([torch.arange(n_a, device=dev), torch.arange(f0 - (n_cached - n_a), f0 + c, device=dev)])
+        k = k.repeat_interleave(P)[None]
+        return additive_bias((k < A) | ((k >= q - window + 1) & (k <= q)), P)
     if mode == "rel":
         k = torch.arange(f0 - n_cached, f0 + c, device=dev).repeat_interleave(P)[None]
         return additive_bias((k >= q - window + 1) & (k <= q), P)
@@ -160,6 +166,26 @@ def additive_bias(m, P):
     return b.masked_fill_(~m[:, None], float("-inf")).flatten(0, 1)[None, None]
 
 
+def chunk_context(model, mode, anchors, f0, c, P, window, hw, dev):
+    """The kv-cache entries one chunk needs: its dense mask and, with relocated anchors, the time shift
+    that moves the cached scale frames to just before the window. Keys are cached after RoPE, so plain
+    anchors would sit at positions 0..A-1 forever and their distance to the query would grow with the
+    stream, past lingbot's 320-frame RoPE range; shifted, it stays as in training at any length."""
+    kv = model.aggregator.kv_cache
+    kv["_chunk_mask"] = chunk_mask(model, mode, f0, c, P, window, dev, anchors)
+    kv["_anchor_shift"] = None
+    s = f0 - (kv["k_0"].shape[2] - A) - A               # first window frame - A
+    if anchors and s > 0:
+        agg = model.aggregator
+        rot = lambda t: agg._get_3d_positions_streaming(1, hw[0], hw[1], dev, t, t + 1)
+        kv["_anchor_shift"] = (rot(s) * rot(0).conj()).repeat(1, 1, A, 1)
+
+
+def clear_chunk_context(model):
+    model.aggregator.kv_cache["_chunk_mask"] = None
+    model.aggregator.kv_cache["_anchor_shift"] = None
+
+
 def run_block(model, x, nfpb):
     agg, psi = model._aggregate_features(x, num_frame_for_scale=A, num_frame_per_block=nfpb)
     pred = model._predict_depth(agg, x, psi)
@@ -185,25 +211,65 @@ def chunk_starts(T, c):
     return [0] + list(range(A, T, c))
 
 
-def stream_block(model, mode, imgs, i, starts, window):
+def stream_block(model, mode, imgs, i, starts, window, anchors=False):
     """Run block i (0 = the scale frames) of the stream on the current cache."""
     T = imgs.shape[1]
     kv = model.aggregator.kv_cache
     f0 = starts[i]
     f1 = starts[i + 1] if i + 1 < len(starts) else T
     if i == 0:
-        kv["_chunk_mask"] = None
+        clear_chunk_context(model)
         return run_block(model, imgs[:, :A], A)
-    P = kv["k_0"].shape[3]
-    kv["_chunk_mask"] = chunk_mask(model, mode, f0, f1 - f0, P, window, imgs.device)
+    chunk_context(model, mode, anchors, f0, f1 - f0, kv["k_0"].shape[3], window, imgs.shape[-2:], imgs.device)
     try:
         return run_block(model, imgs[:, f0:f1], f1 - f0)
     finally:
-        kv["_chunk_mask"] = None
+        clear_chunk_context(model)
+
+
+# -- next-step forecast ----------------------------------------------------------
+class ForecastHead(torch.nn.Module):
+    """Frame t+1 in frame t's camera from the camera tokens of frames t-kernel+1..t only: a learned motion
+    prior (the refiner fuses it with the observed step). Gated causal depthwise conv over time, then an
+    MLP; translation in the normalised GT units, quaternion scalar-last. Starts at no motion."""
+
+    def __init__(self, dim, width=512, kernel=16):
+        super().__init__()
+        self.kernel = kernel
+        self.inp = torch.nn.Sequential(torch.nn.LayerNorm(dim), torch.nn.Linear(dim, width))
+        self.conv = torch.nn.Conv1d(width, width, kernel, groups=width)
+        self.gate = torch.nn.Conv1d(width, width, kernel, groups=width)
+        self.mix = torch.nn.Sequential(torch.nn.LayerNorm(width), torch.nn.Linear(width, width), torch.nn.GELU(),
+                                       torch.nn.Linear(width, width))
+        self.out = torch.nn.Linear(width, 7)
+        torch.nn.init.zeros_(self.out.weight)
+        with torch.no_grad():
+            self.out.bias.zero_()
+            self.out.bias[6] = 1.0
+
+    def forward(self, cam):
+        """[B, T, dim] -> step matrices [B, T, 4, 4]: row t is the forecast of frame t+1 in frame t."""
+        h = torch.nn.functional.pad(self.inp(cam).transpose(1, 2), (self.kernel - 1, 0))
+        h = (self.conv(h) * torch.sigmoid(self.gate(h))).transpose(1, 2)
+        o = self.out(h + self.mix(h)).float()
+        M = torch.zeros(*o.shape[:2], 4, 4, device=o.device)
+        M[..., :3, :3] = quat_to_mat(torch.nn.functional.normalize(o[..., 3:], dim=-1))
+        M[..., :3, 3] = o[..., :3]
+        M[..., 3, 3] = 1
+        return M
+
+
+def forecast_loss(F_, G, args):
+    S = rh.rigid_inv(G[:, :-1]) @ G[:, 1:]
+    P = F_[:, :-1]
+    lt = (P[..., :3, 3] - S[..., :3, 3]).abs().sum(-1)
+    lr = rh.angle(P[..., :3, :3], S[..., :3, :3])
+    return (args.trans_w * lt + args.rot_w * lr).mean(), {"fcst_t": lt.mean().detach(),
+                                                          "fcst_r_deg": torch.rad2deg(lr).mean().detach()}
 
 
 # -- training step -------------------------------------------------------------
-def train_step(model, head, args, batch, dev, rng):
+def train_step(model, head, args, batch, dev, rng, fcst=None):
     imgs, depth_gt, valid, G, K, hw, _ = batch
     T = imgs.shape[1]
     starts = chunk_starts(T, args.chunk)
@@ -216,7 +282,7 @@ def train_step(model, head, args, batch, dev, rng):
         for i in range(n):
             if i in trained:
                 snaps[i] = snapshot(model)
-            cams[i] = stream_block(model, args.mode, imgs, i, starts, args.window)[0].float()
+            cams[i] = stream_block(model, args.mode, imgs, i, starts, args.window, args.anchors)[0].float()
     bounds = starts + [T]
     cam = torch.cat(cams, 1)
     cam_leaf = cam.detach().requires_grad_(True)
@@ -229,14 +295,19 @@ def train_step(model, head, args, batch, dev, rng):
     else:
         lpose, la, lpair = br.loss_fn(preds, enc, hw, 0, norm=True, floor=1.0)
         parts = {"abs": la, "pair": lpair}
-    (args.pose_w * lpose).backward()
+    total = args.pose_w * lpose
+    if fcst is not None:
+        lf, pf = forecast_loss(fcst(cam_leaf), G, args)
+        total = total + args.forecast_w * lf
+        parts.update(pf)
+    total.backward()
     g_cam = cam_leaf.grad
     ldep = []
     for i in sorted(trained):
         restore(model, snaps[i], dev)
         f0, f1 = bounds[i], bounds[i + 1]
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            c_i, d_i, conf_i = stream_block(model, args.mode, imgs, i, starts, args.window)
+            c_i, d_i, conf_i = stream_block(model, args.mode, imgs, i, starts, args.window, args.anchors)
         ld = depth_loss(d_i.float(), conf_i.float(), depth_gt[:, f0:f1], valid=valid[:, f0:f1])["depth"]
         (args.depth_w * ld / len(trained) + (c_i.float() * g_cam[:, f0:f1]).sum()).backward()
         ldep.append(ld.detach())
@@ -277,7 +348,7 @@ def eval_clip(model, head, args, batch):
     cams, deps = [], []
     with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
         for i in range(len(starts)):
-            c_i, d_i, _ = stream_block(model, args.mode, imgs, i, starts, args.window)
+            c_i, d_i, _ = stream_block(model, args.mode, imgs, i, starts, args.window, args.anchors)
             cams.append(c_i.float())
             deps.append(d_i.float())
         p = head(torch.cat(cams, 1))[-1].float()
@@ -343,6 +414,10 @@ def main():
     ap.add_argument("--max-steps-smoke", type=int, default=0)
     ap.add_argument("--no-wandb", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--anchors", action="store_true", help="rel: keep the A scale frames in the backbone "
+                    "context (relocated to just before the window), for scale")
+    ap.add_argument("--forecast-w", type=float, default=0.0, help="weight of the causal next-step forecast head")
+    ap.add_argument("--forecast-kernel", type=int, default=16, help="frames the forecast sees (t-k+1..t)")
     ap.add_argument("--init-head", type=Path, help="rel: start the head from a train_rel_head.py checkpoint "
                     "(same head config) instead of the identity")
     ap.add_argument("--resume", action="store_true", help="continue from --out/last.pt (Leonardo's 24 h walltime)")
@@ -366,7 +441,7 @@ def main():
 
     rel = args.mode == "rel"
     model = GCTStream(enable_3d_rope=True, max_frame_num=4096, kv_cache_sliding_window=args.window if rel else 64,
-                      kv_cache_scale_frames=A, kv_cache_include_scale_frames=not rel,
+                      kv_cache_scale_frames=A, kv_cache_include_scale_frames=not rel or args.anchors,
                       kv_cache_cross_frame_special=not rel, use_sdpa=True, use_gradient_checkpoint=False)
     sd = torch.load(args.ckpt, map_location="cpu", weights_only=False)
     missing, unexpected = model.load_state_dict(sd.get("model", sd), strict=False)
@@ -378,8 +453,9 @@ def main():
                       args.head_window, prev_token=rel, init_identity=rel, ref_every=args.ref_every).to(dev)
     if args.init_head:
         head.load_state_dict(torch.load(args.init_head, map_location="cpu", weights_only=False)["model"])
+    fcst = ForecastHead(rh.D, kernel=args.forecast_kernel).to(dev) if args.forecast_w > 0 else None
     bb = [p for p in model.parameters() if p.requires_grad]
-    hp = [p for p in head.parameters() if p.requires_grad]
+    hp = [p for p in head.parameters() if p.requires_grad] + (list(fcst.parameters()) if fcst is not None else [])
     if main_proc:
         print(f"[model] mode={args.mode} backbone trainable {sum(p.numel() for p in bb) / 1e6:.0f} M, head "
               f"{sum(p.numel() for p in hp) / 1e6:.0f} M; missing {len(missing)} unexpected {len(unexpected)}", flush=True)
@@ -413,6 +489,8 @@ def main():
         ck = torch.load(args.out / "last.pt", map_location="cpu", weights_only=False)
         model.load_state_dict(ck["model"])
         head.load_state_dict(ck["head"])
+        if fcst is not None:
+            fcst.load_state_dict(ck["forecast"])
         opt.load_state_dict(ck["opt"])
         step0, hist = ck["step"], ck["hist"]
         del ck
@@ -430,6 +508,7 @@ def main():
             run.log({f"val/{k}": v for k, v in row.items() if k != "step"}, step=step)
         tmp = args.out / "last.pt.tmp"
         torch.save({"model": model.state_dict(), "head": head.state_dict(), "opt": opt.state_dict(),
+                    "forecast": fcst.state_dict() if fcst is not None else None,
                     "args": vars(args), "step": step, "hist": hist}, tmp)
         tmp.replace(args.out / "last.pt")
         (args.out / "history.json").write_text(json.dumps(hist, indent=1))
@@ -447,7 +526,7 @@ def main():
             f = min(1.0, step / args.warmup) * 0.5 * (1 + math.cos(math.pi * step / args.steps))
             opt.param_groups[0]["lr"], opt.param_groups[1]["lr"] = args.lr * f, args.head_lr * f
             opt.zero_grad(set_to_none=True)
-            loss, parts = train_step(model, head, args, to_lingbot(views, dev), dev, rng)
+            loss, parts = train_step(model, head, args, to_lingbot(views, dev), dev, rng, fcst)
             all_reduce_grads(params, world)
             gn = torch.nn.utils.clip_grad_norm_(params, 1.0)
             if torch.isfinite(gn):

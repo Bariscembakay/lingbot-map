@@ -760,6 +760,10 @@ class SDPAAttention(Attention):
         if kv_cache.get(f"k_{global_idx}_special") is not None:
             ks.insert(0, flat(kv_cache[f"k_{global_idx}_special"]))
             vs.insert(0, flat(kv_cache[f"v_{global_idx}_special"]))
+        shift = kv_cache.get("_anchor_shift")
+        if shift is not None:   # relocated anchors (train_lingbot_rel.chunk_context): the cached scale frames
+            n_a = shift.shape[2] // P   # re-rotated in time at use; the cache itself keeps them unshifted
+            ks[-2] = torch.cat([apply_rotary_emb(flat(kc[:, :, :n_a]), shift), flat(kc[:, :, n_a:])], 2)
         mask = kv_cache["_chunk_mask"]
         if isinstance(mask, dict):   # FlexAttention: keys padded to a fixed length so it compiles once
             K, V = torch.cat(ks, 2), torch.cat(vs, 2)
