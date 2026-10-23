@@ -32,13 +32,14 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(REPO / "benchmark"))
 import train_pose_refine as tp  # noqa: E402
 
-LB = Path("/group/compact-3dmem/campaigns/lingbot_map")
+# roots overridable so the same script runs on Leonardo against a mirror of the INSAIT trees
+LB = Path(os.environ.get("BENCH_ROOT", "/group/compact-3dmem/campaigns/lingbot_map"))
 BENCH = {"kitti": LB / "default/kitti", "oxford_dense": LB / "dense_s1/oxford_spires", "vbr": LB / "default/vbr",
          "eth3d": LB / "default/eth3d", "seven_scenes": LB / "default/seven_scenes", "tat": LB / "default/tat",
          "nrgbd": LB / "default/neural_rgbd", "tum_fr1": LB / "tum_fr1/tum"}
 AUC_BENCH = {"eth3d", "seven_scenes", "tat"}      # lingbot Table 4
-CACHE = Path("/group/compact-3dmem/datasets/_staging/lingbot-benchcache")
-OUT = Path("/group/compact-3dmem/campaigns/spatial_memory/refiner_bench")
+CACHE = Path(os.environ.get("BENCH_CACHE", "/group/compact-3dmem/datasets/_staging/lingbot-benchcache"))
+OUT = Path(os.environ.get("BENCH_OUT", "/group/compact-3dmem/campaigns/spatial_memory/refiner_bench"))
 
 
 def scenes(bench, only=None):
@@ -54,6 +55,7 @@ def cache(args):
     # frame and ran at <1 fps on long scenes
     cfg = yaml.safe_load((REPO / f"benchmark/configs/methods/{'lingbot_map' if args.backend == 'flashinfer' else 'lingbot_map_sdpa'}.yaml").read_text())
     kw = {k[1:]: v for k, v in cfg.items() if k.startswith("_")}
+    kw["checkpoint"] = str(REPO / "ckpt/lingbot-map.pt")   # the yaml hardcodes an INSAIT home path
     method = LingbotMapMethod(**kw)
     model, psi = method.model, method.model.aggregator.patch_start_idx
     for bench in args.benches.split(","):
