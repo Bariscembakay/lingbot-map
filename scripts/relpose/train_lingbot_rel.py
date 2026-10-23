@@ -342,6 +342,8 @@ def main():
     ap.add_argument("--max-steps-smoke", type=int, default=0)
     ap.add_argument("--no-wandb", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--init-head", type=Path, help="rel: start the head from a train_rel_head.py checkpoint "
+                    "(same head config) instead of the identity")
     ap.add_argument("--resume", action="store_true", help="continue from --out/last.pt (Leonardo's 24 h walltime)")
     args = ap.parse_args()
     args.ref_every = args.ref_every if args.mode == "rel" else 1
@@ -373,6 +375,8 @@ def main():
         model.camera_head.requires_grad_(False)                 # replaced by `head`
     head = rh.RelHead(tp.build_head(args.ckpt, rope_on=rel, max_frames=4096 if rel else 1024), args.mode,
                       args.head_window, prev_token=rel, init_identity=rel, ref_every=args.ref_every).to(dev)
+    if args.init_head:
+        head.load_state_dict(torch.load(args.init_head, map_location="cpu", weights_only=False)["model"])
     bb = [p for p in model.parameters() if p.requires_grad]
     hp = [p for p in head.parameters() if p.requires_grad]
     if main_proc:
