@@ -427,7 +427,7 @@ def main():
                     step=step)
         ck = {"model": model.state_dict(), "args": vars(args), "step": step, "val": row}
         torch.save(ck, args.out / "last.pt")
-        if score < best:
+        if step > 0 and score < best:   # step 0 of a residual arm is lingbot itself (score 1)
             best = score
             torch.save(ck, args.out / "best.pt")
         (args.out / "history.json").write_text(json.dumps({"lingbot": base, "hist": hist}, indent=1))
