@@ -479,8 +479,7 @@ def main():
         os.environ.setdefault("WANDB_DIR", str(args.out))
         try:
             import wandb
-            # one wandb run across --resume jobs: Leonardo trains offline and INSAIT syncs each arm to this id
-            # (wandb_sync_leonardo.sh)
+            # one wandb run across --resume jobs
             idf = args.out / "wandb_id"
             run_id = idf.read_text().strip() if idf.exists() else wandb.util.generate_id()
             idf.write_text(run_id)
