@@ -42,6 +42,11 @@ CACHE = Path(os.environ.get("BENCH_CACHE", "/group/compact-3dmem/datasets/_stagi
 OUT = Path(os.environ.get("BENCH_OUT", "/group/compact-3dmem/campaigns/spatial_memory/refiner_bench"))
 
 
+def tag(args):
+    """cache / output suffix of a non-default protocol, e.g. kitti@f1024_kf1"""
+    return (f"@f{args.max_frames}" if args.max_frames else "") + (f"_kf{args.kf}" if args.kf else "")
+
+
 def scenes(bench, only=None):
     out = sorted(d for d in BENCH[bench].iterdir() if (d / "gt/traj.txt").exists() and not d.name.startswith(("_", ".")))
     return [d for d in out if only is None or d.name in only]
@@ -57,15 +62,18 @@ def cache(args):
     kw = {k[1:]: v for k, v in cfg.items() if k.startswith("_")}
     kw["checkpoint"] = str(REPO / "ckpt/lingbot-map.pt")   # the yaml hardcodes an INSAIT home path
     method = LingbotMapMethod(**kw)
+    if args.kf:
+        method.keyframe_interval = args.kf      # e.g. 1 = every frame cached, as the training clips were
     model, psi = method.model, method.model.aggregator.patch_start_idx
     for bench in args.benches.split(","):
         for sc in scenes(bench, args.scenes and set(args.scenes.split(","))):
-            f = CACHE / bench / f"{sc.name}.npz"
+            f = CACHE / (bench + tag(args)) / f"{sc.name}.npz"
             if f.exists():
                 continue
             f.parent.mkdir(parents=True, exist_ok=True)
             gt = BSSLoader(BSSArtifact(sc / "gt"), resize_context=method.resize_context)
-            images = method._prepare_images(gt.load_rgb_list())
+            rgb = gt.load_rgb_list()
+            images = method._prepare_images(rgb[: args.max_frames] if args.max_frames else rgb)
             chunks = []
             h = model.aggregator.register_forward_hook(
                 lambda _m, _i, o: chunks.append(torch.stack(o[0], 2)[0][:, :, :psi].half().cpu()))
@@ -78,7 +86,7 @@ def cache(args):
             assert len(spec) == len(pose) == len(images), (spec.shape, pose.shape, images.shape)
             tmp = f.with_suffix(f".tmp{os.getpid()}.npz")
             np.savez(tmp, backend=args.backend, specials=spec, pose_enc=pose, hw=np.int32(images.shape[-2:]), bench=bench, scene=sc.name,
-                     gt_dir=str(sc / "gt"), keyframe_interval=np.int32(-(-len(images) // 320) if len(images) > 320 else 1))
+                     gt_dir=str(sc / "gt"), keyframe_interval=np.int32(args.kf or (-(-len(images) // 320) if len(images) > 320 else 1)))
             tmp.rename(f)
             print(f"[cache] {bench}/{sc.name}: {len(spec)} frames {tuple(images.shape[-2:])}", flush=True)
             del images, chunks, spec
@@ -132,7 +140,7 @@ def plot_scenes(files):
         for f in fs:
             z = np.load(f)
             sc = str(z["scene"])
-            G = read_trajectory(Path(str(z["gt_dir"])) / "traj.txt")[:, :3, 3]
+            G = read_trajectory(Path(str(z["gt_dir"])) / "traj.txt")[: len(z["pose_enc"]), :3, 3]
             ok = np.isfinite(G).all(1)
             c = G[ok].mean(0)
             axes = np.linalg.svd(G[ok] - c, full_matrices=False)[2][:2]
@@ -160,8 +168,9 @@ def plot_scenes(files):
 @torch.no_grad()
 def evaluate(args):
     dev = torch.device("cuda")
-    files = {b: sorted((CACHE / b).glob("*.npz")) for b in args.benches.split(",")}
-    arms = [("lingbot_official", "official"), ("lingbot", None)] + [(Path(r).name, r) for r in args.runs.split(",") if r]
+    files = {b + tag(args): sorted((CACHE / (b + tag(args))).glob("*.npz")) for b in args.benches.split(",")}
+    # the published run covers whole sequences, so it is only comparable under the default protocol
+    arms = ([("lingbot_official", "official")] if not tag(args) else []) + [("lingbot", None)] + [(Path(r).name, r) for r in args.runs.split(",") if r]
     table = {}
     for arm, run in arms:
         model, step = load_refiner(run, dev) if run and run != "official" else (None, None)
@@ -185,7 +194,8 @@ def evaluate(args):
                         p = model(spec[None], lp[None])[-1][0].float()
                 if run != "official":
                     c2w = tp.pose_enc_to_c2w(p, hw).double().cpu().numpy()
-                rows[str(z["scene"])] = score(c2w, str(z["gt_dir"]), OUT / arm / b / str(z["scene"]) / "pred", b in AUC_BENCH)
+                rows[str(z["scene"])] = score(c2w, str(z["gt_dir"]), OUT / arm / b / str(z["scene"]) / "pred",
+                                              b.split("@")[0] in AUC_BENCH or args.auc_all)
                 print(f"[eval] {arm} {b}/{z['scene']}: " + ", ".join(f"{k} {v:.4g}" for k, v in rows[str(z['scene'])].items()), flush=True)
             mean = {k: float(np.mean([r[k] for r in rows.values()])) for k in next(iter(rows.values()))} if rows else {}
             table.setdefault(arm, {"step": step})[b] = {"mean": mean, "scenes": rows}
@@ -206,6 +216,9 @@ def main():
     ap.add_argument("--scenes")
     ap.add_argument("--runs", default="")
     ap.add_argument("--backend", choices=["flashinfer", "sdpa"], default="flashinfer")
+    ap.add_argument("--max-frames", type=int, default=0, help="only the first N frames of each scene (0 = all)")
+    ap.add_argument("--kf", type=int, default=0, help="force lingbot's keyframe interval (0 = benchmark's auto)")
+    ap.add_argument("--auc-all", action="store_true", help="AUC on every benchmark, not only lingbot's Table-4 ones")
     args = ap.parse_args()
     if args.task in ("cache", "both"):
         cache(args)

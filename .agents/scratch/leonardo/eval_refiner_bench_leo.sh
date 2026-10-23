@@ -15,4 +15,4 @@ cd $S/lingbot-map
 export BENCH_ROOT=$S/insait/campaigns/lingbot_map BENCH_CACHE=$S/benchcache BENCH_OUT=$S/insait/campaigns/spatial_memory/refiner_bench
 export PYTHONUNBUFFERED=1
 $S/envs/lingbot_map/bin/python scripts/memory/pose_refine/eval_refiner_bench.py "$1" --benches "$2" ${3:+--scenes $3} \
-    --runs "$(ls -d $S/insait/campaigns/spatial_memory/${REFINER_GLOB:-bidirlong_6ds_*} | paste -sd,)" --backend sdpa
+    --runs "$(ls -d $S/insait/campaigns/spatial_memory/${REFINER_GLOB:-bidirlong_6ds_*} | paste -sd,)" --backend sdpa ${EXTRA:-}

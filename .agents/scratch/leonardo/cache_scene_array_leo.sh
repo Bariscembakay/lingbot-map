@@ -12,4 +12,4 @@ cd $S/lingbot-map
 export BENCH_ROOT=$S/insait/campaigns/lingbot_map BENCH_CACHE=$S/benchcache PYTHONUNBUFFERED=1
 scenes=($(for d in $BENCH_ROOT/$2/*/gt; do basename $(dirname $d); done))
 $S/envs/lingbot_map/bin/python scripts/memory/pose_refine/eval_refiner_bench.py cache --benches "$1" \
-    --scenes "${scenes[$SLURM_ARRAY_TASK_ID]}" --backend sdpa
+    --scenes "${scenes[$SLURM_ARRAY_TASK_ID]}" --backend sdpa ${EXTRA:-}
