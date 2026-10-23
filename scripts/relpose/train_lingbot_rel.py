@@ -163,7 +163,8 @@ def additive_bias(m, P):
 def run_block(model, x, nfpb):
     agg, psi = model._aggregate_features(x, num_frame_for_scale=A, num_frame_per_block=nfpb)
     pred = model._predict_depth(agg, x, psi)
-    return agg[-1][:, :, 0], pred["depth"][..., 0], pred["depth_conf"]
+    # clone: a view of the camera token would keep the whole chunk's token tensor alive in the callers' lists
+    return agg[-1][:, :, 0].clone(), pred["depth"][..., 0], pred["depth_conf"]
 
 
 def snapshot(model):
