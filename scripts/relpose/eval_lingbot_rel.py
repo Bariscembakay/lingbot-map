@@ -8,7 +8,10 @@ The fine-tuned backbone streams every frame in chunks with its training context 
 consecutive-frame RPE, AUC. Images are loaded and resized as the benchmark loads them for lingbot
 (BSSLoader, the method yaml's area budget and alignment). Writes <out>/<bench>_<scene>.json with the
 metrics and .npz with the predicted camera-to-world poses and the layer-23 camera tokens (refiner input).
+--lingbot scores the untouched lingbot checkpoint the same way (abs context, its own camera head): the
+reference for both arms.
 Usage: eval_lingbot_rel.py --run DIR --scenes <BSS scene dir>... [--ckpt last.pt] [--out DIR]
+       eval_lingbot_rel.py --lingbot --scenes <BSS scene dir>... --out DIR
        eval_lingbot_rel.py --summary DIR
 """
 from __future__ import annotations
@@ -42,16 +45,22 @@ def load_bss_traj(p):
 
 
 def load_run(run: Path, ckpt: str, dev, max_frames: int):
-    ck = torch.load(run / ckpt, map_location="cpu", weights_only=False)
+    if run is None:     # --lingbot: what the abs arm is at step 0
+        lb = torch.load(tl.REPO / "ckpt/lingbot-map.pt", map_location="cpu", weights_only=False)
+        ck = {"args": {"mode": "abs", "window": 64, "head_window": 128, "ref_every": 1}, "step": 0,
+              "model": lb.get("model", lb), "head": None}
+    else:
+        ck = torch.load(run / ckpt, map_location="cpu", weights_only=False)
     a = argparse.Namespace(**ck["args"])
     rel = a.mode == "rel"
     model = tl.GCTStream(enable_3d_rope=True, max_frame_num=max_frames, kv_cache_sliding_window=a.window if rel else 64,
                          kv_cache_scale_frames=tl.A, kv_cache_include_scale_frames=not rel,
                          kv_cache_cross_frame_special=not rel, use_sdpa=True, use_gradient_checkpoint=False)
-    model.load_state_dict(ck["model"])
+    model.load_state_dict(ck["model"], strict=run is not None)
     head = rh.RelHead(tp.build_head(tl.REPO / "ckpt/lingbot-map.pt", rope_on=rel, max_frames=4096 if rel else 1024),
                       a.mode, a.head_window, prev_token=rel, init_identity=rel, ref_every=a.ref_every)
-    head.load_state_dict(ck["head"])
+    if ck["head"] is not None:
+        head.load_state_dict(ck["head"])
     return model.to(dev).eval(), head.to(dev).eval(), a, ck["step"]
 
 
@@ -97,6 +106,7 @@ def main():
     ap.add_argument("--chunk", type=int, default=16, help="frames per streamed chunk (outputs do not depend on it)")
     ap.add_argument("--method-config", type=Path, default=tl.REPO / "benchmark/configs/methods/lingbot_map.yaml")
     ap.add_argument("--max-frames", type=int, default=20480)
+    ap.add_argument("--lingbot", action="store_true", help="evaluate the untouched lingbot checkpoint")
     ap.add_argument("--summary", type=Path)
     args = ap.parse_args()
     if args.summary:
@@ -104,6 +114,7 @@ def main():
     dev = torch.device("cuda")
     cfg = yaml.safe_load(args.method_config.read_text())
     resize = ResizeContext(mode="area_budget", align=cfg["_align"], area_budget=cfg["_area_budget"])
+    assert args.lingbot != (args.run is not None), "--run or --lingbot"
     model, head, a, step = load_run(args.run, args.ckpt, dev, args.max_frames)
     out = args.out or args.run / f"eval_{Path(args.ckpt).stem}"
     out.mkdir(parents=True, exist_ok=True)
@@ -119,7 +130,7 @@ def main():
                            np.zeros((len(G), 9), np.float32), dev)
         P = rh.predict_c2w(head, clip).cpu()
         m = tp.traj_metrics(P, clip.gt_c2w, 1.0)
-        rec = {"bench": bench, "scene": name, "frames": len(G), "hw": hw, "run": str(args.run), "ckpt": args.ckpt,
+        rec = {"bench": bench, "scene": name, "frames": len(G), "hw": hw, "run": str(args.run) if args.run else "lingbot", "ckpt": args.ckpt,
                "step": step, "mode": a.mode, "chunk": args.chunk, "metrics": {k: float(v) for k, v in m.items()}}
         tmp = out / f".{bench}_{name}.{os.getpid()}"
         np.savez(f"{tmp}.npz", c2w=P.float().numpy(), cam_tokens=cam.half().cpu().numpy(), hw=np.int32(hw))
