@@ -130,11 +130,10 @@ def chunk_mask(model, mode, f0, c, P, window, dev):
     GCTStream.inference_chunked."""
     kv = model.aggregator.kv_cache
     n_cached = kv["k_0"].shape[2]
-    qf = f0 + torch.arange(c * P, device=dev) // P
+    q = f0 + torch.arange(c, device=dev)[:, None]      # one mask row per query frame, shared by its P tokens
     if mode == "rel":
-        kf = torch.arange(f0 - n_cached, f0 + c, device=dev).repeat_interleave(P)
-        q, k = qf[:, None], kf[None]
-        return additive_bias((k >= q - window + 1) & (k <= q))
+        k = torch.arange(f0 - n_cached, f0 + c, device=dev).repeat_interleave(P)[None]
+        return additive_bias((k >= q - window + 1) & (k <= q), P)
     blk = model.aggregator.global_blocks[0].attn
     w, kv_scale = blk.kv_cache_sliding_window, blk.kv_cache_scale_frames
     n_special = model.aggregator.patch_start_idx
@@ -147,17 +146,18 @@ def chunk_mask(model, mode, f0, c, P, window, dev):
                     torch.arange(f0, f0 + c, device=dev).repeat_interleave(P)])
     kspec = torch.cat([torch.ones(n_ev * n_special, dtype=torch.bool, device=dev),
                        (tok < n_special).repeat(n_cached + c)])
-    q, k = qf[:, None], kf[None]
-    return additive_bias((k < kv_scale) | ((k >= q - w + 1) & (k <= q)) | (kspec[None] & (k <= q)))
+    k = kf[None]
+    return additive_bias((k < kv_scale) | ((k >= q - w + 1) & (k <= q)) | (kspec[None] & (k <= q)), P)
 
 
-def additive_bias(m):
-    """[L,S] bool -> [1,1,L,S] additive bf16 bias whose row stride is a multiple of 8. SDPA's
-    memory-efficient kernel otherwise converts a bool mask (and pads an unaligned one) into a new
-    tensor on every call, and autograd keeps one per global layer: 24 x ~1 GB at chunk 16."""
-    L, S = m.shape
-    b = torch.zeros(L, -(-S // 8) * 8, dtype=torch.bfloat16, device=m.device)[:, :S]
-    return b.masked_fill_(~m, float("-inf"))[None, None]
+def additive_bias(m, P):
+    """[c,S] bool per query frame -> [1,1,c*P,S] additive bf16 bias (each frame's row repeated for its
+    P tokens) whose row stride is a multiple of 8. SDPA's memory-efficient kernel otherwise converts a
+    bool mask (and pads an unaligned one) into a new tensor on every call, and autograd keeps one per
+    global layer: 24 x ~1 GB at chunk 16."""
+    c, S = m.shape
+    b = torch.zeros(c, P, -(-S // 8) * 8, dtype=torch.bfloat16, device=m.device)[..., :S]
+    return b.masked_fill_(~m[:, None], float("-inf")).flatten(0, 1)[None, None]
 
 
 def run_block(model, x, nfpb):

@@ -17,6 +17,7 @@ SCENES=(kitti/00 kitti/01 kitti/02 kitti/03 kitti/04 kitti/05 kitti/06 kitti/07 
         vbr/campus_train0 vbr/campus_train1 vbr/ciampino_train1 vbr/colosseo_train0 vbr/diag_train0 vbr/pincio_train0
         vbr/spagna_train0)
 OUT=$1; shift
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 SC=${SCENES[$SLURM_ARRAY_TASK_ID]}
 echo "[eval_lingbot_rel] $(hostname) $SC git $(git -C $S/lingbot-map-rel rev-parse --short HEAD)"
 "$P" $S/lingbot-map-rel/scripts/relpose/eval_lingbot_rel.py --scenes $B/$SC --out "$OUT" "$@"
