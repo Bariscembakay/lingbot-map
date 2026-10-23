@@ -18,6 +18,8 @@ SCENES=(kitti/00 kitti/01 kitti/02 kitti/03 kitti/04 kitti/05 kitti/06 kitti/07 
 OUT=$1
 SC=${SCENES[$SLURM_ARRAY_TASK_ID]}
 R=$S/lingbot-map-rel/scripts/relpose/abot_bench.py
+# compute nodes have no internet: the loop closure torch.hub-loads DINOv2, pre-fetched here on a login node
+export TORCH_HOME=$S/torch_hub HF_HOME=$S/hf_cache HF_HUB_OFFLINE=1
 echo "[abot_bench] $(hostname) $SC abot $(git -C $S/ABot-Recon rev-parse --short HEAD) ours $(git -C $S/lingbot-map-rel rev-parse --short HEAD)"
 $S/micromamba/envs/abot_recon/bin/python $R run --scenes $B/$SC --out "$OUT" --abot-root $S/ABot-Recon
 $S/micromamba/envs/lingbot_map/bin/python $R score --scenes $B/$SC --out "$OUT"
