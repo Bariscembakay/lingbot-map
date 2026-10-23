@@ -80,6 +80,10 @@ def stream_cams(model, mode, images, chunk, window, dev):
             agg, _ = model._aggregate_features(x, num_frame_for_scale=tl.A, num_frame_per_block=f1 - f0)
             kv["_chunk_mask"] = None
             out.append(agg[-1][0, :, 0].float())
+            if f1 // 2048 > f0 // 2048:
+                nk = sum(t.shape[2] * t.shape[3] for t in (kv["k_0"], kv.get("k_0_special")) if t is not None)
+                print(f"  [stream] {f1}/{T} frames, {nk} keys/layer, {torch.cuda.memory_allocated() / 2**30:.1f} GiB "
+                      f"allocated, {torch.cuda.memory_reserved() / 2**30:.1f} reserved", flush=True)
     return torch.cat(out)
 
 
