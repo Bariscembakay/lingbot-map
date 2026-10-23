@@ -2,7 +2,7 @@
 """Periodic refinement while lingbot streams, on benchmark scenes cached by eval_refiner_bench.py.
 
 Lingbot's backbone never reads its camera head's output, so its per-frame tokens (the cache) do not
-depend on what the head does; only the head is replayed here. Every K frames the token refiner
+depend on what the head does; only the head (lingbot's weights, the refiner's frozen copy) is replayed. Every K frames the token refiner
 re-predicts the camera tokens of either all frames so far ("all") or the last W frames ("last"):
   feedback  (A): the refined camera tokens replace the originals in lingbot's camera-head memory (its
                  KV cache is rebuilt by replaying the head over them), so every later frame's pose is
@@ -50,52 +50,48 @@ def refined_cam(model, spec):
     return cam[0].float()
 
 
-class StreamHead:
-    """lingbot's causal camera head fed one frame's camera token at a time, as GCTStream does."""
-
-    def __init__(self, head, sliding_window):
-        self.head, self.sw = head, sliding_window
-
-    def reset(self):
-        self.head.clean_kv_cache()
-
-    def step(self, cam):          # cam [n, D]: the 8 scale frames together, then one frame per call
-        n = cam.shape[0]
-        tok = cam[None, :, None, :]                    # head reads aggregated_tokens_list[-1][:, :, 0]
+def head_batch(model, cams):
+    """lingbot's causal camera head over frames 0..len(cams)-1 in one pass (dense causal mask, the 8
+    scale frames attending each other), equal to streaming it frame by frame because every output
+    depends only on its own and earlier frames: [t, D] -> [t, 9]."""
+    head, t = model.head, cams.shape[0]
+    restore = [b._prepare_blockwise_causal_attn_mask for b in head.trunk]
+    for b in head.trunk:
+        b._prepare_blockwise_causal_attn_mask = (
+            lambda device, num_frames, frame_seqlen, num_frame_per_block:
+            torch.ones(num_frames, num_frames, dtype=torch.bool, device=device).tril()
+            | tp.anchor_block(num_frames, A, device))
+    try:
         with torch.amp.autocast("cuda", enabled=False):
-            out = self.head([tok.float()], causal_inference=True, num_frame_for_scale=A,
-                            num_frame_per_block=n, sliding_window_size=self.sw)
-        return out[-1][0]                              # [n, 9]
-
-    def replay(self, cams):       # rebuild the memory over frames 0..len(cams)-1
-        self.reset()
-        self.step(cams[:A])
-        for i in range(A, len(cams)):
-            self.step(cams[i:i + 1])
+            out = head.trunk_fn(head.token_norm(cams[None].float()), None, head.num_iterations, num_frame_per_block=1,
+                                num_frame_for_scale=-1, sliding_window_size=-1)
+    finally:
+        for b, f in zip(head.trunk, restore):
+            b._prepare_blockwise_causal_attn_mask = f
+    return out[-1][0]
 
 
 @torch.no_grad()
-def run_scene(f, model, sh, every, mode, window, feedback, dev):
+def run_scene(f, model, every, mode, window, feedback, dev):
     z = np.load(f)
     spec = torch.from_numpy(np.ascontiguousarray(z["specials"][:, tp.TAP23])).to(dev)
     T = len(spec)
     cams = spec[:, 0].float().clone()                 # what the head's memory holds for each past frame
     online = torch.zeros(T, 9, device=dev)
     final = torch.full((T, 9), float("nan"), device=dev)
-    sh.reset()
-    online[:A] = sh.step(cams[:A])
-    for t in range(A + 1, T + 1):
-        online[t - 1] = sh.step(cams[t - 1:t])[0]
-        if every and t % every == 0 and t < T:
-            a = 0 if mode == "all" else max(0, t - window)
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                pose = model(spec[None, a:t], online[None, a:t])[-1][0].float()
-                if feedback:
-                    cr = refined_cam(model, spec[a:t])
-            final[a:t] = pose
+    # frames streamed between two refinements see the memory as it was after the earlier one
+    stops = (list(range(every, T, every)) if every else []) + [T]
+    prev = 0
+    for t in stops:
+        online[prev:t] = head_batch(model, cams[:t])[prev:t]
+        prev = t
+        if t == T:
+            break
+        a = 0 if mode == "all" else max(0, t - window)
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            final[a:t] = model(spec[None, a:t], online[None, a:t])[-1][0].float()
             if feedback:
-                cams[a:t] = cr
-                sh.replay(cams[:t])
+                cams[a:t] = refined_cam(model, spec[a:t])
     final = torch.where(torch.isnan(final), online, final)
     return z, online, final
 
@@ -111,14 +107,6 @@ def main():
     dev = torch.device("cuda")
     model, step = eb.load_refiner(args.run, dev)
     assert isinstance(model, br.BidirRefiner), "feedback needs the token refiner (camera tokens through the head)"
-    # lingbot's own streaming camera head (its kv-cache settings), not the refiner's dense-mask copy
-    from methods.lingbot_map import LingbotMapMethod
-    import yaml
-    cfg = yaml.safe_load((eb.REPO / "benchmark/configs/methods/lingbot_map_sdpa.yaml").read_text())
-    kw = {k[1:]: v for k, v in cfg.items() if k.startswith("_")}
-    kw["checkpoint"] = str(eb.REPO / "ckpt/lingbot-map.pt")
-    lb = LingbotMapMethod(**kw).model
-    sh = StreamHead(lb.camera_head, lb.sliding_window_size if getattr(lb, "enable_camera_sliding_window", False) else -1)
     files = sorted((eb.CACHE / args.bench).glob("*.npz"))
     if args.scenes:
         files = [f for f in files if f.stem in set(args.scenes.split(","))]
@@ -129,7 +117,7 @@ def main():
     for f in files:
         for name, k, mode, fb in configs:
             t0 = time.time()
-            z, online, final = run_scene(f, model, sh, k, mode, args.window, fb, dev)
+            z, online, final = run_scene(f, model, k, mode, args.window, fb, dev)
             hw = tuple(int(x) for x in z["hw"])
             gt_dir = str(z["gt_dir"])
             res = {}
