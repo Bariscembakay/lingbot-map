@@ -513,7 +513,7 @@ def main():
         tmp.replace(args.out / "last.pt")
         (args.out / "history.json").write_text(json.dumps(hist, indent=1))
 
-    if step0 == 0:
+    if not hist:                                         # a resumed run already has its step-0 row
         validate(0)
     step, epoch, t0 = step0, step0 // len(sampler), time.time()
     params = bb + hp
