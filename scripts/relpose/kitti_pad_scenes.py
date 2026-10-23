@@ -7,6 +7,7 @@ scene's gt/traj.txt, the same poses.
 Usage: kitti_pad_scenes.py --kitti DIR --bench-kitti DIR --out DIR [--seqs 00 01 ...]
 """
 import argparse
+import json
 import os
 import shutil
 from concurrent.futures import ProcessPoolExecutor
@@ -41,6 +42,10 @@ def main():
         todo = [(s, gt / "rgb" / f"{i:06d}.png") for i, s in enumerate(src) if not (gt / "rgb" / f"{i:06d}.png").exists()]
         with ProcessPoolExecutor(args.workers) as ex:
             list(ex.map(pad_one, todo, chunksize=64))
+        # the benchmark's loader reads the frame count from the scene's completion marker
+        (gt / ".complete.json").write_text(json.dumps({"metadata": {
+            "num_frames": len(src), "original_num_frames": len(src), "image_width": 504, "image_height": 280,
+            "frame_keys": ["pose", "rgb"], "global_keys": []}}, indent=2))
         print(f"[pad] {seq}: {len(src)} frames", flush=True)
 
 
