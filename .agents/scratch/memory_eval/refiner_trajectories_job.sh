@@ -3,7 +3,7 @@
 #SBATCH --mem=64G
 #SBATCH --time=03:00:00
 #SBATCH --output=/group/compact-3dmem/campaigns/spatial_memory/_poserefine_logs/%j_%x.log
-# refiner_trajectories.py on CPU (sof1 holds the tap-23 packs): example train / val trajectories of every refiner
+# refiner_trajectories.py on sof1 (holds the tap-23 packs); GPU if the job has one: example train / val trajectories of every refiner
 set -euo pipefail
 cd "$HOME/lingbot-map"
 source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh

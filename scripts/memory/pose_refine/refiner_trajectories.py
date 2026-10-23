@@ -14,6 +14,7 @@ import argparse
 import csv
 import json
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -69,12 +70,20 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", required=True)
     ap.add_argument("--n", type=int, default=2)
-    ap.add_argument("--device", default="cpu")
+    ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
     dev = torch.device(args.device)
-    clips = {ds: pick(ds, args.n) for ds in PACKS}
+    clips = {}
+    for ds in PACKS:
+        t0 = time.time()
+        clips[ds] = pick(ds, args.n)
+        print(f"[pick] {ds}: " + ", ".join(f"{k} {[c.name for c in v]}" for k, v in clips[ds].items())
+              + f" ({time.time() - t0:.0f} s)", flush=True)
     runs = [r for r in args.runs.split(",") if r]
-    models = {Path(r).name: eb.load_refiner(r, dev)[0] for r in runs}
+    models = {}
+    for r in runs:
+        models[Path(r).name] = eb.load_refiner(r, dev)[0]
+        print(f"[load] {Path(r).name}", flush=True)
     rows = []
     for ds, splits in clips.items():
         for split, cs in splits.items():
