@@ -61,6 +61,9 @@ def cache(args):
     cfg = yaml.safe_load((REPO / f"benchmark/configs/methods/{'lingbot_map' if args.backend == 'flashinfer' else 'lingbot_map_sdpa'}.yaml").read_text())
     kw = {k[1:]: v for k, v in cfg.items() if k.startswith("_")}
     kw["checkpoint"] = str(REPO / "ckpt/lingbot-map.pt")   # the yaml hardcodes an INSAIT home path
+    if args.max_frame_num:
+        # frame-position table: every-frame keyframing on long scenes needs more than the yaml's 1024 rows
+        kw["max_frame_num"] = args.max_frame_num
     method = LingbotMapMethod(**kw)
     if args.kf:
         method.keyframe_interval = args.kf      # e.g. 1 = every frame cached, as the training clips were
@@ -219,6 +222,7 @@ def main():
     ap.add_argument("--backend", choices=["flashinfer", "sdpa"], default="flashinfer")
     ap.add_argument("--max-frames", type=int, default=0, help="only the first N frames of each scene (0 = all)")
     ap.add_argument("--kf", type=int, default=0, help="force lingbot's keyframe interval (0 = benchmark's auto)")
+    ap.add_argument("--max-frame-num", type=int, default=0, help="lingbot's frame-position table size (0 = the yaml's)")
     ap.add_argument("--auc-all", action="store_true", help="AUC on every benchmark, not only lingbot's Table-4 ones")
     args = ap.parse_args()
     if args.task in ("cache", "both"):
