@@ -47,6 +47,14 @@ def tag(args):
     return (f"@f{args.max_frames}" if args.max_frames else "") + (f"_kf{args.kf}" if args.kf else "")
 
 
+def gt_path(z):
+    """the cached scene's GT dir; caches built on Leonardo name its scratch mirror of the INSAIT trees"""
+    g = Path(str(z["gt_dir"]))
+    if not g.exists():
+        g = Path(str(g).replace("/leonardo_scratch/large/userexternal/bbakay00/insait", "/group/compact-3dmem"))
+    return g
+
+
 def scenes(bench, only=None):
     out = sorted(d for d in BENCH[bench].iterdir() if (d / "gt/traj.txt").exists() and not d.name.startswith(("_", ".")))
     return [d for d in out if only is None or d.name in only]
@@ -117,7 +125,7 @@ def add_desc(args):
             z = dict(np.load(f))
             if "megaloc" in z:
                 continue
-            gt = BSSLoader(BSSArtifact(Path(str(z["gt_dir"]))), resize_context=method.resize_context)
+            gt = BSSLoader(BSSArtifact(gt_path(z)), resize_context=method.resize_context)
             rgb = gt.load_rgb_list()
             n = len(z["pose_enc"])
             x = method._prepare_images(rgb[:n])
@@ -182,7 +190,7 @@ def plot_scenes(files):
             z = np.load(f)
             sc = str(z["scene"])
             n = len(z["pose_enc"])      # a scene whose last GT poses are missing reads shorter without n
-            G = read_trajectory(Path(str(z["gt_dir"])) / "traj.txt", n)[:n, :3, 3]
+            G = read_trajectory(gt_path(z) / "traj.txt", n)[:n, :3, 3]
             ok = np.isfinite(G).all(1)
             c = G[ok].mean(0)
             axes = np.linalg.svd(G[ok] - c, full_matrices=False)[2][:2]
@@ -224,7 +232,7 @@ def evaluate(args):
                 lp = torch.from_numpy(z["pose_enc"]).to(dev)
                 if run == "official":    # the benchmark's own lingbot run of this scene, as published
                     from benchmark.io.trajectory import read_trajectory
-                    of = Path(str(z["gt_dir"])).parent / "lingbot_map/traj.txt"
+                    of = gt_path(z).parent / "lingbot_map/traj.txt"
                     if not of.exists():
                         continue
                     c2w = read_trajectory(of, len(lp))
@@ -239,7 +247,7 @@ def evaluate(args):
                         p = model(spec[None], lp[None], desc=desc)[-1][0].float()
                 if run != "official":
                     c2w = tp.pose_enc_to_c2w(p, hw).double().cpu().numpy()
-                rows[str(z["scene"])] = score(c2w, str(z["gt_dir"]), OUT / arm / b / str(z["scene"]) / "pred",
+                rows[str(z["scene"])] = score(c2w, str(gt_path(z)), OUT / arm / b / str(z["scene"]) / "pred",
                                               b.split("@")[0] in AUC_BENCH or args.auc_all)
                 print(f"[eval] {arm} {b}/{z['scene']}: " + ", ".join(f"{k} {v:.4g}" for k, v in rows[str(z['scene'])].items()), flush=True)
             mean = {k: float(np.mean([r[k] for r in rows.values()])) for k in next(iter(rows.values()))} if rows else {}
