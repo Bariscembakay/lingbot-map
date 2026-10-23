@@ -342,6 +342,7 @@ def main():
     ap.add_argument("--max-steps-smoke", type=int, default=0)
     ap.add_argument("--no-wandb", action="store_true")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--resume", action="store_true", help="continue from --out/last.pt (Leonardo's 24 h walltime)")
     args = ap.parse_args()
     args.ref_every = args.ref_every if args.mode == "rel" else 1
     args.residual = False
@@ -402,7 +403,16 @@ def main():
         except Exception as e:
             print(f"[wandb] disabled: {e}", flush=True)
 
-    hist = []
+    hist, step0 = [], 0
+    if args.resume and (args.out / "last.pt").exists():
+        ck = torch.load(args.out / "last.pt", map_location="cpu", weights_only=False)
+        model.load_state_dict(ck["model"])
+        head.load_state_dict(ck["head"])
+        opt.load_state_dict(ck["opt"])
+        step0, hist = ck["step"], ck["hist"]
+        del ck
+        if main_proc:
+            print(f"[resume] step {step0}", flush=True)
 
     def validate(step):
         if not main_proc:
@@ -413,12 +423,15 @@ def main():
         print(f"[val {step}] " + " ".join(f"{k} ate {d['ate']:.3f} absrel {d['abs_rel']:.3f}" for k, d in r.items()), flush=True)
         if run is not None:
             run.log({f"val/{k}": v for k, v in row.items() if k != "step"}, step=step)
-        torch.save({"model": {k: v for k, v in model.state_dict().items()}, "head": head.state_dict(),
-                    "args": vars(args), "step": step}, args.out / "last.pt")
+        tmp = args.out / "last.pt.tmp"
+        torch.save({"model": model.state_dict(), "head": head.state_dict(), "opt": opt.state_dict(),
+                    "args": vars(args), "step": step, "hist": hist}, tmp)
+        tmp.replace(args.out / "last.pt")
         (args.out / "history.json").write_text(json.dumps(hist, indent=1))
 
-    validate(0)
-    step, epoch, t0 = 0, 0, time.time()
+    if step0 == 0:
+        validate(0)
+    step, epoch, t0 = step0, step0 // len(sampler), time.time()
     params = bb + hp
     while step < args.steps:
         sampler.set_epoch(epoch)
@@ -436,7 +449,7 @@ def main():
                 opt.step()
             if main_proc and step % 10 == 0:
                 msg = " ".join(f"{k} {float(v):.4f}" for k, v in parts.items())
-                print(f"[{step:6d}] pose {float(loss):.4f} {msg} |g| {float(gn):.2f} {(time.time() - t0) / step:.1f}s/it "
+                print(f"[{step:6d}] pose {float(loss):.4f} {msg} |g| {float(gn):.2f} {(time.time() - t0) / (step - step0):.1f}s/it "
                       f"{torch.cuda.max_memory_allocated() / 2**30:.1f}GiB", flush=True)
                 if run is not None:
                     run.log({"train/pose": float(loss), **{f"train/{k}": float(v) for k, v in parts.items()},
