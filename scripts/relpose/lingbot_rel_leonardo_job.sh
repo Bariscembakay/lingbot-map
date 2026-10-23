@@ -18,16 +18,16 @@ OUT=$S/runs/lingbot_rel/backbone/$ARM
 mkdir -p "$OUT"
 until [ -f $S/data/cut3r/READY ]; do echo "[lingbot_rel_leonardo_job] $(date -u +%H:%M) waiting for data/cut3r/READY"; sleep 300; done
 export WANDB_MODE=offline OMP_NUM_THREADS=2 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-# ranks sharing a node must see each other's GPUs (srun --gpu-bind=none below): with one GPU visible per task,
-# NCCL's intra-node proxy failed in the first all-reduce ("invalid device ordinal" in ncclProxyClientGetFd)
-export NCCL_CUMEM_ENABLE=0
+# each task sees only its own GPU, so NCCL cannot reach a same-node peer directly: its cuMem/P2P path failed in
+# the first all-reduce ("invalid device ordinal" in ncclProxyClientGetFd); same-node ranks go through shared
+# memory instead. (--gpu-bind=none is no way out: on nodes holding GPUs 0 and 3 both ranks took GPU 0.)
+export NCCL_CUMEM_ENABLE=0 NCCL_P2P_DISABLE=1
 export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -1) MASTER_PORT=29517 WORLD_SIZE=$SLURM_NTASKS
 echo "[lingbot_rel_leonardo_job] $SLURM_NTASKS ranks on $SLURM_JOB_NODELIST, git $(git -C $S/lingbot-map-rel rev-parse --short HEAD)"
 # CUT3R's hold-out lists are relative paths (rel/splits/...), so the trainer runs from the CUT3R repo
 cd $S/CUT3R
-srun --kill-on-bad-exit=1 --gpu-bind=none bash -c '
+srun --kill-on-bad-exit=1 bash -c '
     export RANK=$SLURM_PROCID
-    # with --gpu-bind=none a task sees all of its node'"'"'s allocated GPUs: take its own by node-local index
-    case "${CUDA_VISIBLE_DEVICES:-}" in *,*) export LOCAL_RANK=$SLURM_LOCALID ;; *) export LOCAL_RANK=0 ;; esac
+    export LOCAL_RANK=0                     # Slurm binds one GPU per task
     exec "$0" "$@"' "$P" $S/lingbot-map-rel/scripts/relpose/train_lingbot_rel.py --out "$OUT" --cut3r $S/CUT3R \
     --data-root $S/data/cut3r "$@"
