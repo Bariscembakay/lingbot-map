@@ -69,6 +69,11 @@ def log_rot(R):
     return v * k[..., None]
 
 
+def angle_deg(R):
+    """Rotation magnitude; log_rot's axis scaling is ill-conditioned near 180 deg, the angle is not."""
+    return np.degrees(np.arccos(np.clip((np.trace(R, axis1=-2, axis2=-1) - 1) / 2, -1, 1)))
+
+
 def rel(M, d):
     return np.linalg.inv(M[:-d]) @ M[d:]
 
@@ -79,7 +84,7 @@ def gap_curve(A, G):
         if d >= len(G):
             break
         rp, rg = rel(A, d), rel(G, d)
-        rot = np.degrees(np.linalg.norm(log_rot(np.swapaxes(rp[:, :3, :3], -1, -2) @ rg[:, :3, :3]), axis=-1))
+        rot = angle_deg(np.swapaxes(rp[:, :3, :3], -1, -2) @ rg[:, :3, :3])
         et = np.linalg.norm(rp[:, :3, 3] - rg[:, :3, 3], axis=-1)
         dist = np.linalg.norm(rg[:, :3, 3], axis=-1)
         ok = dist > 0.5
@@ -98,7 +103,7 @@ def kitti_odometry(A, G, lengths=(100, 200, 300, 400, 500, 600, 700, 800), step=
                 continue
             E = np.linalg.inv(np.linalg.inv(A[i]) @ A[j]) @ (np.linalg.inv(G[i]) @ G[j])
             te.append(np.linalg.norm(E[:3, 3]) / L)
-            re.append(np.degrees(np.linalg.norm(log_rot(E[:3, :3]))) / L)
+            re.append(angle_deg(E[:3, :3]) / L)
     if not te:
         return None
     return {"t_rel_pct": float(100 * np.mean(te)), "r_rel_deg_per_100m": float(100 * np.mean(re)), "segments": len(te)}
@@ -125,7 +130,7 @@ def diagnostics(P, G):
     n = len(G)
     if n > 200:
         rp, rg = rel(A, 10), rel(G, 10)
-        rot = np.degrees(np.linalg.norm(log_rot(np.swapaxes(rp[:, :3, :3], -1, -2) @ rg[:, :3, :3]), axis=-1))
+        rot = angle_deg(np.swapaxes(rp[:, :3, :3], -1, -2) @ rg[:, :3, :3])
         et = np.linalg.norm(rp[:, :3, 3] - rg[:, :3, 3], axis=-1)
         q = len(rot) // 5
         r["stream"] = {"gap10_rot_deg_first_last": [float(rot[:q].mean()), float(rot[-q:].mean())],
