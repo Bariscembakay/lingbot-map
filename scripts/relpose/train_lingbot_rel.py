@@ -54,6 +54,11 @@ TAPS = [4, 11, 17, 23]
 
 
 # -- data ----------------------------------------------------------------------
+# CUT3R scale2's resolutions without 512x144: centre-cropped to 504x140 its aspect (0.28) is below
+# lingbot's training range (0.33-1)
+LINGBOT_RES = "[(512, 384), (512, 336), (512, 288), (512, 256), (512, 208), (384, 512), (336, 512), (288, 512), (256, 512)]"
+
+
 def cut3r_datasets(cut3r: Path, data_root: str, num_views: int, which: str):
     """CUT3R scale2's train (2000 clips per dataset per epoch) or validation datasets, built from its
     own hydra config so splits, hold-outs and loaders are exactly CUT3R's."""
@@ -61,12 +66,14 @@ def cut3r_datasets(cut3r: Path, data_root: str, num_views: int, which: str):
     os.environ["DATA_ROOT"] = data_root             # scale2's data_root is ${oc.env:DATA_ROOT,/data}
     from hydra import compose, initialize_config_dir
     with initialize_config_dir(config_dir=str(cut3r / "config"), version_base=None):
-        cfg = compose(config_name="scale2_frame0", overrides=[f"num_views={num_views}", f"num_test_views={num_views}"])
-    from dust3r.datasets import (  # noqa: F401
-        VideoRGBD_Multi, TartanAirRaw_Multi, TartanAirV2Raw_Multi, TartanGroundRaw_Multi, ScanNetExtracted_Multi)
-    from dust3r.datasets.utils.transforms import ImgNorm, SeqColorJitter  # noqa: F401
-    spec = cfg.train_dataset if which == "train" else cfg.test_dataset
-    return eval(spec) if which == "train" else [eval(s) for s in spec.split("+")]
+        cfg = compose(config_name="scale2_frame0", overrides=[f"num_views={num_views}", f"num_test_views={num_views}",
+                                                              f"pilot_res={LINGBOT_RES}"])
+    import dust3r.datasets as dd
+    from dust3r.datasets.utils import transforms
+    ns = {**vars(dd), **vars(transforms)}
+    if which == "train":
+        return eval(cfg.train_dataset, ns)
+    return [eval(s, ns) for s in cfg.test_dataset.split("+")]
 
 
 class Shard(torch.utils.data.Sampler):
