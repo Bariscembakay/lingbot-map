@@ -67,7 +67,7 @@ def cut3r_datasets(cut3r: Path, data_root: str, num_views: int, which: str):
     from hydra import compose, initialize_config_dir
     with initialize_config_dir(config_dir=str(cut3r / "config"), version_base=None):
         cfg = compose(config_name="scale2_frame0", overrides=[f"num_views={num_views}", f"num_test_views={num_views}",
-                                                              f"pilot_res={LINGBOT_RES}"])
+                                                              f"pilot_res='{LINGBOT_RES}'"])
     import dust3r.datasets as dd
     from dust3r.datasets.utils import transforms
     ns = {**vars(dd), **vars(transforms)}
