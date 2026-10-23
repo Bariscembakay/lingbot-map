@@ -95,15 +95,53 @@ def cache(args):
             del images, chunks, spec
 
 
+def add_desc(args):
+    """MegaLoc per frame, on the images lingbot was fed (benchmark loading and resizing), added to each
+    cached scene as "megaloc" [T, 8448] fp16 (the refiners' --desc input)."""
+    from benchmark.core.loader import BSSLoader
+    from benchmark.core.storage import BSSArtifact
+    from methods.lingbot_map import LingbotMapMethod
+    from build_clip_cache import load_megaloc
+    cfg = yaml.safe_load((REPO / "benchmark/configs/methods/lingbot_map_sdpa.yaml").read_text())
+    kw = {k[1:]: v for k, v in cfg.items() if k.startswith("_")}
+    kw["checkpoint"] = str(REPO / "ckpt/lingbot-map.pt")
+    method = LingbotMapMethod(**kw)          # only for its image preparation
+    del method.model
+    torch.cuda.empty_cache()
+    dev = torch.device("cuda")
+    mega = load_megaloc().to(dev).eval()
+    mean = torch.tensor([0.485, 0.456, 0.406], device=dev)[:, None, None]
+    std = torch.tensor([0.229, 0.224, 0.225], device=dev)[:, None, None]
+    for bench in args.benches.split(","):
+        for f in sorted((CACHE / (bench + tag(args))).glob("*.npz")):
+            z = dict(np.load(f))
+            if "megaloc" in z:
+                continue
+            gt = BSSLoader(BSSArtifact(Path(str(z["gt_dir"]))), resize_context=method.resize_context)
+            rgb = gt.load_rgb_list()
+            n = len(z["pose_enc"])
+            x = method._prepare_images(rgb[:n])
+            out = []
+            with torch.no_grad(), torch.autocast("cuda", dtype=torch.float16):
+                for a in range(0, n, 64):
+                    out.append(mega((x[a:a + 64].to(dev) - mean) / std).float().cpu())
+            z["megaloc"] = torch.cat(out).half().numpy()
+            tmp = f.with_suffix(f".tmp{os.getpid()}.npz")
+            np.savez(tmp, **z)
+            tmp.rename(f)
+            print(f"[desc] {bench}{tag(args)}/{f.stem}: {n} frames", flush=True)
+
+
 def load_refiner(run, dev):
     import train_bidir_refiner as br
     ck = torch.load(Path(run) / "best.pt", map_location="cpu", weights_only=False)
     a = SimpleNamespace(**ck["args"])
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=False)
+    dd = br.DESC_DIM if getattr(a, "desc", False) else 0
     if getattr(a, "arch", "tokens") == "posetok":
-        m = br.PoseTokenRefiner(a.anchors == "fixed", width=a.width, tok_part=a.tok_part, pose_out=a.pose_out)
+        m = br.PoseTokenRefiner(a.anchors == "fixed", width=a.width, tok_part=a.tok_part, pose_out=a.pose_out, desc_dim=dd)
     else:
-        m = br.BidirRefiner(head, a.anchors == "fixed", width=a.width, head_mode=getattr(a, "head_mode", "causal"))
+        m = br.BidirRefiner(head, a.anchors == "fixed", width=a.width, head_mode=getattr(a, "head_mode", "causal"), desc_dim=dd)
     missing, unexpected = m.load_state_dict(ck["model"], strict=False)
     assert not unexpected and all(k.startswith("head.") for k in missing), (unexpected[:5], missing[:5])
     return m.to(dev).eval(), int(ck["step"])
@@ -193,9 +231,12 @@ def evaluate(args):
                 elif model is None:
                     p = lp
                 else:
-                    spec = torch.from_numpy(np.ascontiguousarray(z["specials"][:, tp.TAP23])).to(dev)
+                    sp = z["spec23"] if "spec23" in z.files else z["specials"][:, tp.TAP23]
+                    spec = torch.from_numpy(np.ascontiguousarray(sp)).to(dev)
+                    desc = (torch.from_numpy(z["megaloc"]).to(dev)[None]
+                            if getattr(model, "desc_in", None) is not None else None)
                     with torch.autocast("cuda", dtype=torch.bfloat16):
-                        p = model(spec[None], lp[None])[-1][0].float()
+                        p = model(spec[None], lp[None], desc=desc)[-1][0].float()
                 if run != "official":
                     c2w = tp.pose_enc_to_c2w(p, hw).double().cpu().numpy()
                 rows[str(z["scene"])] = score(c2w, str(z["gt_dir"]), OUT / arm / b / str(z["scene"]) / "pred",
@@ -215,7 +256,7 @@ def evaluate(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("task", choices=["cache", "eval", "both"])
+    ap.add_argument("task", choices=["cache", "eval", "both", "desc"])
     ap.add_argument("--benches", required=True)
     ap.add_argument("--scenes")
     ap.add_argument("--runs", default="")
@@ -227,6 +268,8 @@ def main():
     args = ap.parse_args()
     if args.task in ("cache", "both"):
         cache(args)
+    if args.task == "desc":
+        add_desc(args)
     if args.task in ("eval", "both"):
         evaluate(args)
 
