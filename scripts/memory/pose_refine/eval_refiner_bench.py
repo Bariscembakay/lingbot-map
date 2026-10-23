@@ -140,7 +140,8 @@ def plot_scenes(files):
         for f in fs:
             z = np.load(f)
             sc = str(z["scene"])
-            G = read_trajectory(Path(str(z["gt_dir"])) / "traj.txt")[: len(z["pose_enc"]), :3, 3]
+            n = len(z["pose_enc"])      # a scene whose last GT poses are missing reads shorter without n
+            G = read_trajectory(Path(str(z["gt_dir"])) / "traj.txt", n)[:n, :3, 3]
             ok = np.isfinite(G).all(1)
             c = G[ok].mean(0)
             axes = np.linalg.svd(G[ok] - c, full_matrices=False)[2][:2]
@@ -150,7 +151,7 @@ def plot_scenes(files):
                 pf = OUT / arm / b / sc / "pred/traj.txt"
                 if not pf.exists():
                     continue
-                P = read_trajectory(pf)[:, :3, 3]
+                P = read_trajectory(pf, n)[:, :3, 3]
                 m = ok & np.isfinite(P).all(1)
                 s, R, t = tp.umeyama(P[m], G[m])
                 Pa = s * P[m] @ R.T + t
