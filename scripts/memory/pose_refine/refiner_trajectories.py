@@ -31,7 +31,7 @@ PACKS = ("tartanair-v1", "tartanair-v2", "tartanground", "matrixcity", "scannetp
 
 
 def pick(ds, n):
-    idx = np.load(br.PACK_ROOT / ds / "index.npz")
+    idx = dict(np.load(br.PACK_ROOT / ds / "index.npz"))   # an NpzFile re-reads its zip member on every access
     mm = np.load(br.PACK_ROOT / ds / "spec23.npy", mmap_mode="r")
     bad = {b[0].rsplit("__f", 1)[0] for b in json.loads(br.GT_JUMPS.read_text()).get(ds, [])}
     val_scenes = {l.strip().split("/")[-1].split("_c")[0] for l in br.VAL24.read_text().split()}
