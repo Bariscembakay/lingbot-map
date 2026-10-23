@@ -13,6 +13,10 @@ sliding window 64 + 8 scale frames, every frame a keyframe, bf16 aggregator). Pe
   megaloc [T, 8448]               MegaLoc place descriptor per frame
   rel_rot_residual_deg            lingbot-vs-GT consecutive relative rotation (convention check)
 Patch tokens are not stored: tap 23 alone is 4.1 MB per frame.
+--keyframes auto runs lingbot in its default mode instead (keyframe interval ceil(T/320) beyond 320
+frames, the benchmark's protocol); clips in a batch then share one interval. --spec23 stores only the
+tap-23 specials (spec23 [T, 6, 2048]). Datasets with metric GT and no depth get gt_scale fitted to
+lingbot's own trajectory (one least-squares scale per clip) instead of 1.
 Usage: build_clip_cache.py --plan plan.json --out DIR [--shard i --nshards n] [--batch B]
 """
 from __future__ import annotations
@@ -73,6 +77,10 @@ def main():
     ap.add_argument("--chunk", type=int, default=0,
                     help="frames per forward pass (GCTStream.inference_chunked: same outputs up to bf16 rounding); 0 = frame by frame")
     ap.add_argument("--chunk-attn", choices=["flex", "sdpa"], default="flex")
+    ap.add_argument("--keyframes", default="1", help="1 = every frame a keyframe; auto = ceil(T/320) beyond 320")
+    ap.add_argument("--spec23", action="store_true", help="store only the tap-23 specials")
+    ap.add_argument("--batch-frames", type=int, default=0, help="cap on the summed clip frames of a batch (0 = none)")
+    ap.add_argument("--cache-name", default="lingbot-cache1048", help="staging dir name prefix on sof1")
     ap.add_argument("--skip-list", type=Path, help="file of clip npz names already built elsewhere (msp3 shards: sof1 staging)")
     ap.add_argument("--compile", action="store_true", help="CUDA-graph the per-frame blocks (lingbot's compile_model)")
     ap.add_argument("--flashinfer", action="store_true",
@@ -104,7 +112,7 @@ def main():
         return f"{c['seq'].replace('/', '__')}__f{c['frames'][0]:06d}_s{c['stride']}_n{len(c['frames'])}"
 
     done = set(args.skip_list.read_text().split()) if args.skip_list and args.skip_list.exists() else set()
-    final = Path(f"/group/compact-3dmem/datasets/_staging/lingbot-cache1048-{ds}")
+    final = Path(f"/group/compact-3dmem/datasets/_staging/{args.cache_name}-{ds}")
     if args.out.resolve() != final:   # msp3 shard on local scratch: clips already staged on sof1 are done
         import subprocess
         r = subprocess.run(["ssh", "sof1", f"ls {final}"], capture_output=True, text=True, timeout=120)
@@ -114,15 +122,25 @@ def main():
             and not (args.out / f"{clip_name(c)}.failed").exists() and f"{clip_name(c)}.npz" not in done]
     # longest first so lengths inside a batch are close: a shorter clip is padded by repeating its last
     # frame, which cannot change its real frames (streaming is causal)
-    todo.sort(key=lambda c: -len(c["frames"]))
-    batches = [todo[k:k + args.batch] for k in range(0, len(todo), args.batch)]
+    def kfi(c):
+        n = len(c["frames"])
+        return 1 if args.keyframes == "1" or n <= 320 else -(-n // 320)
+    todo.sort(key=lambda c: (kfi(c), -len(c["frames"])))
+    batches = []
+    for c in todo:   # same keyframe interval within a batch; at most --batch clips / --batch-frames frames
+        b = batches[-1] if batches else None
+        if (b is None or kfi(b[0]) != kfi(c) or len(b) >= args.batch
+                or (args.batch_frames and sum(len(x["frames"]) for x in b) + len(c["frames"]) > args.batch_frames)):
+            batches.append([c])
+        else:
+            b.append(c)
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor(1)      # decode the next batch's images while lingbot runs on this one
 
     def load(batch):
         return [src.frames(c["seq"], c["frames"]) for c in batch]
 
-    def stream(xs):
+    def stream(xs, kf=1):
         """xs: list of [T_i, 3, H, W] float CPU tensors of one size -> per clip (specials, pose, cls, mean, gem)"""
         B, S = len(xs), max(len(x) for x in xs)
         x = torch.stack([torch.cat([x, x[-1:].expand(S - len(x), -1, -1, -1)]) for x in xs])
@@ -142,10 +160,10 @@ def main():
         hs = [agg.register_forward_hook(on_agg), agg.patch_embed.register_forward_hook(on_dino)]
         try:
             with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                if args.chunk:
+                if args.chunk and kf == 1:
                     pred = model.inference_chunked(x, chunk=args.chunk, num_scale_frames=A, attn=args.chunk_attn)
-                else:
-                    pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=1, output_device=None)
+                else:   # keyframe mode needs the frame-by-frame path (non-keyframes skip the caches)
+                    pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=kf, output_device=None)
         finally:
             for h in hs:
                 h.remove()
@@ -162,7 +180,9 @@ def main():
         ids = c["frames"]
         spec, pose, cls, mn, gem = cap
         assert len(spec) == len(ids) == len(pose), (len(spec), len(ids), len(pose))
-        out = {"specials": spec, "pose_enc": pose.numpy(), "lbdino_cls": cls, "lbdino_mean": mn, "lbdino_gem": gem}
+        out = {("spec23" if args.spec23 else "specials"): (spec[:, tp.TAP23] if args.spec23 else spec),
+               "pose_enc": pose.numpy(), "lbdino_cls": cls, "lbdino_mean": mn, "lbdino_gem": gem,
+               "keyframe_interval": np.int32(kfi(c))}
         if mega is not None:
             m = []
             for a in range(0, len(x), 64):
@@ -174,6 +194,13 @@ def main():
         if not src.metric:
             d, Kd = src.depth(c["seq"], ids[:A])
             scale = canonical_scale(d.astype(np.float64), Kd.astype(np.float64), Trel[:A], A)
+        elif args.keyframes != "1":
+            # no GT depth for the canonical scale: put GT in lingbot's units with the least-squares scale
+            # of lingbot's own trajectory (both relative to frame 0), one number per clip
+            L = tp.pose_enc_to_c2w(pose.float(), imgs.shape[1:3]).double().numpy()
+            L = np.linalg.inv(L[0])[None] @ L
+            g, l = Trel[:, :3, 3], L[:, :3, 3]
+            scale = float((g * g).sum() / max((g * l).sum(), 1e-9))
         G = Trel.copy()
         G[:, :3, 3] /= scale
         hw = imgs.shape[1:3]
@@ -216,7 +243,7 @@ def main():
         caps = [None] * len(ok)
         try:
             for idx in groups.values():
-                xb, cb = stream([xs[i] for i in idx])
+                xb, cb = stream([xs[i] for i in idx], kfi(ok[idx[0]][0]))
                 for j, i in enumerate(idx):   # views into the padded batch, so the clip frames are not held twice
                     caps[i], xs[i] = cb[j], xb[j, :len(xs[i])]
         except Exception as e:

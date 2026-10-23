@@ -17,11 +17,12 @@ source .agents/scratch/insait_cluster_files/setup_lingbot_map_env.sh
 P="$MAMBA_ROOT_PREFIX/envs/lingbot_map/bin/python"
 "$P" -c "import OpenEXR" 2>/dev/null || "$P" -m pip install -q OpenEXR
 case $DS in scannetpp) dataset pull ScanNetpp;; matrixcity) dataset pull matrix_city;; scannet-v2) dataset pull scannet-v2-extracted;; waymo) dataset pull waymo-cut3r-video;; *) dataset pull $DS;; esac >/dev/null
-PLAN=/group/compact-3dmem/campaigns/spatial_memory/_data_prep/plans/$DS.json
-FINAL=/group/compact-3dmem/datasets/_staging/lingbot-cache1048-$DS
+PLAN=${PLAN_DIR:-/group/compact-3dmem/campaigns/spatial_memory/_data_prep/plans}/$DS.json
+CACHE_NAME=${CACHE_NAME:-lingbot-cache1048}
+FINAL=/group/compact-3dmem/datasets/_staging/$CACHE_NAME-$DS
 if findmnt -n -o SOURCE -T /group/compact-3dmem | grep -q msp3; then
     [ -f $PLAN ] || { mkdir -p $(dirname $PLAN); rsync -a sof1:$PLAN $PLAN; }
-    OUT=/scratch/$USER/cache1048_$DS
+    OUT=/scratch/$USER/${CACHE_NAME}_$DS
     mkdir -p $OUT; ssh sof1 mkdir -p $FINAL
     # clips already on sof1 (earlier rounds) are skipped, not rebuilt from an empty local scratch
     ssh sof1 "ls $FINAL" > $OUT/.done_on_sof1 || true
@@ -36,4 +37,4 @@ else
     trap 'kill $KA 2>/dev/null' EXIT
 fi
 "$P" .agents/scratch/insait_cluster_files/gpu_keep_alive.py 0.05 & KA=$!
-"$P" scripts/memory/pose_refine/build_clip_cache.py --plan $PLAN --out ${OUT_OVERRIDE:-$OUT} --shard $SH --nshards $NSH ${CACHE_ARGS:-}
+"$P" scripts/memory/pose_refine/build_clip_cache.py --plan $PLAN --out ${OUT_OVERRIDE:-$OUT} --shard $SH --nshards $NSH --cache-name $CACHE_NAME ${CACHE_ARGS:-}
