@@ -29,7 +29,20 @@ def step_scale(L, A, gap=100):
     return float(np.median(dl[ok] / da[ok])) if ok.any() else 1.0
 
 
-def fuse(L, A, alpha, beta, alpha_tilt=0.0, up=None):
+def window_disagreement(L, A, w):
+    """Per frame: angle (deg) between the absolute and the relative method's rotation change over the last w
+    frames. The relative one is accurate at that range, so a large value means the absolute pose is off now."""
+    d = np.zeros(len(L))
+    if len(L) > w:
+        rl = np.swapaxes(L[:-w, :3, :3], -1, -2) @ L[w:, :3, :3]
+        ra = np.swapaxes(A[:-w, :3, :3], -1, -2) @ A[w:, :3, :3]
+        d[w:] = td.angle_deg(np.swapaxes(rl, -1, -2) @ ra)
+    return d
+
+
+def fuse(L, A, alpha, beta, alpha_tilt=0.0, up=None, gate=None, phi0=None):
+    """gate: per-frame multiplier on alpha (e.g. from window_disagreement); phi0 (deg): Cauchy down-weighting
+    of the pull by the angle between the fused and the absolute rotation."""
     """L: absolute poses [N,4,4]; A: relative method's poses (only its steps are used). alpha_tilt pulls only
     the camera's gravity direction (world vertical `up`, in L's world frame) toward the absolute pose's,
     leaving heading to the steps."""
@@ -41,7 +54,11 @@ def fuse(L, A, alpha, beta, alpha_tilt=0.0, up=None):
     for t in range(1, len(L)):
         P = X[t - 1] @ S[t - 1]
         Rp = Rot.from_matrix(P[:3, :3])
-        R = Rp * Rot.from_rotvec(alpha * (Rp.inv() * Rl[t]).as_rotvec())
+        corr = (Rp.inv() * Rl[t]).as_rotvec()
+        a = alpha * (1.0 if gate is None else gate[t])
+        if phi0:
+            a /= 1.0 + (np.degrees(np.linalg.norm(corr)) / phi0) ** 2
+        R = Rp * Rot.from_rotvec(a * corr)
         if alpha_tilt:
             gp, gl = R.inv().apply(up), Rl[t].inv().apply(up)     # vertical in the two camera frames
             ax = np.cross(gp, gl)
