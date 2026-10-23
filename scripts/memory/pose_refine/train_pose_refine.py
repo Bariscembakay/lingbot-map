@@ -505,7 +505,9 @@ def traj_metrics(pred_c2w, gt_c2w, scale):
     rpe_t = np.linalg.norm(s * rp[:, :3, 3] - rg[:, :3, 3], axis=1).mean()
     m = np.einsum("nji,njk->nik", rp[:, :3, :3], rg[:, :3, :3])
     rpe_r = np.degrees(np.arccos(np.clip((np.trace(m, axis1=1, axis2=2) - 1) / 2, -1, 1))).mean()
-    return dict(ate=ate * scale, rpe_t=rpe_t * scale, rpe_r=rpe_r, **pose_auc(P, G))
+    # AUC compares all frame pairs: on whole trajectories (up to ~9k frames) use 1500 evenly spaced frames
+    sub = np.linspace(0, len(P) - 1, min(len(P), 1500)).round().astype(int)
+    return dict(ate=ate * scale, rpe_t=rpe_t * scale, rpe_r=rpe_r, **pose_auc(P[sub], G[sub]))
 
 
 @torch.no_grad()

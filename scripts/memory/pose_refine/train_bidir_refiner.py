@@ -48,6 +48,7 @@ from lingbot_map.memory.cache_format import ClipCache  # noqa: E402
 D, HEADS, A, WINDOW, NPATCH = 2048, 16, 8, 64, 999
 INPUTS = Path("/data/lingbot-poserefine-v1")
 PACK_ROOT = Path("/data/lingbot-tap23pack-1048")
+DESC_DIM = 8448                                                    # MegaLoc (SALAD aggregation) per frame
 # scan_gt_jumps.py output, kept in the repo so msp3 (whose /group is a different filesystem) has it
 GT_JUMPS = Path(__file__).resolve().parent / "data/gt_jump_scan.json"
 # held out from --packs training, evaluated at long t: whole environments / scenes
@@ -87,7 +88,7 @@ class Clip:
 class PackClip:
     """One clip of a build_tap23_pack.py pack: small arrays in RAM, specials read from the memmap per batch."""
 
-    def __init__(self, ds, mm, idx, i, device="cpu"):
+    def __init__(self, ds, mm, idx, i, device="cpu", desc_mm=None):
         o, n = int(idx["offset"][i]), int(idx["length"][i])
         self.ds, self.name, self.seq = ds, str(idx["name"][i]), str(idx["seq"][i])
         self.src, self.T, self.hw = f"{ds}/{self.seq}", n, tuple(int(x) for x in idx["hw"][i])
@@ -99,6 +100,14 @@ class PackClip:
         self.gt_enc = tp.extri_intri_to_pose_encoding(self.gt_c2w[None, :, :3], K[None], self.hw)[0]
         self.spec = None
         self.patches = False
+        self._dmm, self.desc = desc_mm, None
+
+    def get_desc(self, t):
+        if self._dmm is None:
+            return None
+        if self.desc is not None:
+            return self.desc[:t]
+        return torch.from_numpy(np.ascontiguousarray(self._dmm[self._o:self._o + t]))
 
     def get_spec(self, t):
         if self.spec is not None:
@@ -107,6 +116,8 @@ class PackClip:
 
     def to(self, device):
         self.spec = self.get_spec(self.T).to(device)
+        if self._dmm is not None:
+            self.desc = self.get_desc(self.T).to(device)
         self.lingbot, self.gt_c2w, self.gt_enc = self.lingbot.to(device), self.gt_c2w.to(device), self.gt_enc.to(device)
         return self
 
@@ -119,6 +130,8 @@ def longval_split(ds, seq):
         return int(seq.replace("route", "")) % 10 == 0
     if ds == "scannet-v2":
         return int(seq[5:9]) % 20 == 0
+    if ds == "kitti360":
+        return "drive_0009" in seq
     return False
 
 
@@ -151,9 +164,12 @@ class Block(nn.Module):
 
 
 class BidirRefiner(nn.Module):
-    def __init__(self, head, anchors_fixed, depth=4, ckpt=False, width=D, head_mode="causal"):
+    def __init__(self, head, anchors_fixed, depth=4, ckpt=False, width=D, head_mode="causal", desc_dim=0):
         super().__init__()
         self.type_emb = nn.Parameter(torch.zeros(7, width))      # 6 special kinds + patch
+        # --desc: the frame's place descriptor (MegaLoc) as a 7th token of the frame, at the frame's position
+        self.desc_in = nn.Sequential(nn.LayerNorm(desc_dim), nn.Linear(desc_dim, width)) if desc_dim else None
+        self.desc_emb = nn.Parameter(torch.zeros(width)) if desc_dim else None
         self.patch_pos = nn.Parameter(torch.zeros(NPATCH, width))
         self.blocks = nn.ModuleList(Block(width) for _ in range(depth))
         self.inp = self.out = None
@@ -163,13 +179,17 @@ class BidirRefiner(nn.Module):
         self.head, self.anchors_fixed, self.ckpt = head.requires_grad_(False), anchors_fixed, ckpt
         self.head_mode = head_mode
 
-    def forward(self, spec, lingbot_pose, patches=None, pframes=None):
-        """spec [B,t,6,D]; patches [B,F,999,D] of frames pframes [F] -> list of pose encodings [B,t,9]."""
+    def forward(self, spec, lingbot_pose, patches=None, pframes=None, desc=None):
+        """spec [B,t,6,D]; desc [B,t,Dd] or None; patches [B,F,999,D] of frames pframes [F] -> list of [B,t,9]."""
         B, t = spec.shape[:2]
         dev = spec.device
         proj = self.inp if self.inp is not None else (lambda z: z)
-        x = (proj(spec.float()) + self.type_emb[:6]).reshape(B, t * 6, -1)
-        pos = torch.arange(t, device=dev).repeat_interleave(6)
+        x = proj(spec.float()) + self.type_emb[:6]
+        if self.desc_in is not None:
+            x = torch.cat([x, (self.desc_in(desc.float()) + self.desc_emb)[:, :, None]], 2)
+        nf = x.shape[2]                                          # tokens per frame
+        x = x.reshape(B, t * nf, -1)
+        pos = torch.arange(t, device=dev).repeat_interleave(nf)
         if patches is not None:
             p = (proj(patches.float()) + self.type_emb[6] + self.patch_pos).reshape(B, -1, x.shape[-1])
             x = torch.cat([x, p], 1)
@@ -177,7 +197,7 @@ class BidirRefiner(nn.Module):
         pos = pos[None].expand(B, -1)
         for blk in self.blocks:
             x = checkpoint(blk, x, pos, use_reentrant=False) if self.ckpt and self.training else blk(x, pos)
-        cam = x[:, : t * 6].reshape(B, t, 6, -1)[:, :, 0]
+        cam = x[:, : t * nf].reshape(B, t, nf, -1)[:, :, 0]
         if self.out is not None:
             cam = self.out(cam)
         if self.anchors_fixed:
@@ -213,8 +233,10 @@ class PoseTokenRefiner(nn.Module):
     pose_out residual: a zero-initialised correction to lingbot's pose (step 0 = lingbot);
     absolute: the pose itself."""
 
-    def __init__(self, anchors_fixed, depth=4, width=1024, tok_part="full", pose_out="residual", ckpt=False):
+    def __init__(self, anchors_fixed, depth=4, width=1024, tok_part="full", pose_out="residual", ckpt=False, desc_dim=0):
         super().__init__()
+        self.desc_in = nn.Sequential(nn.LayerNorm(desc_dim), nn.Linear(desc_dim, width)) if desc_dim else None
+        self.desc_emb = nn.Parameter(torch.zeros(width)) if desc_dim else None
         self.anchors_fixed, self.tok_part, self.pose_out, self.ckpt = anchors_fixed, tok_part, pose_out, ckpt
         din = D if tok_part == "full" else D // 2
         self.tok_in = nn.Sequential(nn.LayerNorm(din), nn.Linear(din, width)) if tok_part == "full" else nn.LayerNorm(din)
@@ -227,7 +249,7 @@ class PoseTokenRefiner(nn.Module):
             nn.init.zeros_(self.out[-1].weight)
             nn.init.zeros_(self.out[-1].bias)
 
-    def forward(self, spec, lingbot_pose, patches=None, pframes=None):
+    def forward(self, spec, lingbot_pose, patches=None, pframes=None, desc=None):
         assert patches is None, "posetok reads special tokens only"
         B, t = spec.shape[:2]
         lp = lingbot_pose.float()
@@ -235,11 +257,14 @@ class PoseTokenRefiner(nn.Module):
         pin = torch.cat([lp[:, :, :3] / unit, lp[:, :, 3:]], -1)
         tok = spec.float() if self.tok_part == "full" else spec[..., D // 2:].float()
         x = torch.cat([self.pose_in(pin)[:, :, None], self.tok_in(tok)], 2) + self.type_emb   # [B,t,7,W]
-        x = x.reshape(B, t * 7, -1)
-        pos = torch.arange(t, device=spec.device).repeat_interleave(7)[None].expand(B, -1)
+        if self.desc_in is not None:
+            x = torch.cat([x, (self.desc_in(desc.float()) + self.desc_emb)[:, :, None]], 2)
+        nf = x.shape[2]
+        x = x.reshape(B, t * nf, -1)
+        pos = torch.arange(t, device=spec.device).repeat_interleave(nf)[None].expand(B, -1)
         for blk in self.blocks:
             x = checkpoint(blk, x, pos, use_reentrant=False) if self.ckpt and self.training else blk(x, pos)
-        y = self.out(x.reshape(B, t, 7, -1)[:, :, 0])
+        y = self.out(x.reshape(B, t, nf, -1)[:, :, 0])
         if self.pose_out == "residual":
             pred = torch.cat([lp[..., :3] + unit * y[..., :3], lp[..., 3:7] + y[..., 3:7], lp[..., 7:] + y[..., 7:]], -1)
         else:
@@ -277,17 +302,20 @@ def loss_fn(preds, gt, hw, skip, norm=False, floor=1.0):
 
 def batch_cpu(clips, idx, t, patches):
     spec = torch.stack([clips[i].get_spec(t) for i in idx])
+    d0 = clips[idx[0]].get_desc(t) if hasattr(clips[idx[0]], "get_desc") else None
+    desc = torch.stack([clips[i].get_desc(t) for i in idx]) if d0 is not None else None
     gt = torch.stack([clips[i].gt_enc[:t] for i in idx])
     lp = torch.stack([clips[i].lingbot[:t] for i in idx])
     pf = patch_frames(t) if patches else None
     pt = torch.stack([clips[i].patch_tokens(pf) for i in idx]).pin_memory() if patches else None
-    return spec, gt, lp, pt, pf
+    return spec, gt, lp, pt, pf, desc
 
 
 def to_dev(b, dev):
-    spec, gt, lp, pt, pf = b
+    spec, gt, lp, pt, pf, desc = b
     return (spec.to(dev, non_blocking=True), gt.to(dev), lp.to(dev),
-            pt.to(dev, non_blocking=True) if pt is not None else None, pf)
+            pt.to(dev, non_blocking=True) if pt is not None else None, pf,
+            desc.to(dev, non_blocking=True) if desc is not None else None)
 
 
 def batch(clips, idx, t, dev, patches):
@@ -302,18 +330,18 @@ def evaluate(model, sets, dev, patches):
         res = {}
         for c in clips:
             for t_req in ts:
-                t = min(t_req, c.T)
-                spec, gt, lp, pt, pf = batch([c], [0], t, dev, patches)
+                t = c.T if t_req == 0 else min(t_req, c.T)       # 0 = the whole clip
+                spec, gt, lp, pt, pf, desc = batch([c], [0], t, dev, patches)
                 with torch.autocast("cuda", dtype=torch.bfloat16):
-                    p = model(spec, lp, pt, pf)[-1][0].float()
+                    p = model(spec, lp, pt, pf, desc=desc)[-1][0].float()
                 r = tp.traj_metrics(tp.pose_enc_to_c2w(p, c.hw), c.gt_c2w[:t], c.scale)
                 r["lingbot"] = tp.traj_metrics(tp.pose_enc_to_c2w(c.lingbot[:t].float(), c.hw), c.gt_c2w[:t], c.scale)
-                res[f"{c.name}@{t_req}"] = r
+                res[f"{c.name}@{t_req or 'full'}"] = r
         summ = {}
         for t in ts:
-            rows = [r for k, r in res.items() if k.endswith(f"@{t}")]
-            summ[str(t)] = {m: float(np.mean([r[m] for r in rows])) for m in tp.METRICS}
-            summ[str(t)].update({f"lingbot_{m}": float(np.mean([r["lingbot"][m] for r in rows])) for m in tp.METRICS})
+            rows = [r for k, r in res.items() if k.endswith(f"@{t or 'full'}")]
+            summ[str(t or "full")] = {m: float(np.mean([r[m] for r in rows])) for m in tp.METRICS}
+            summ[str(t or "full")].update({f"lingbot_{m}": float(np.mean([r["lingbot"][m] for r in rows])) for m in tp.METRICS})
         out[name] = {"summary": summ, "per_clip": res}
     model.train()
     return out
@@ -363,6 +391,9 @@ def main():
                     help="tokens: refined camera tokens through lingbot's head; posetok: PoseTokenRefiner")
     ap.add_argument("--pose-out", choices=["residual", "absolute"], default="residual")
     ap.add_argument("--tok-part", choices=["full", "global"], default="full")
+    ap.add_argument("--desc", action="store_true", help="the frame's MegaLoc descriptor as an extra token (packs need desc.npy)")
+    ap.add_argument("--frames-per-batch", type=int, default=0,
+                    help="batch = min(--batch, this // t): long prefixes get fewer clips (0 = always --batch)")
     ap.add_argument("--overfit", action="store_true",
                     help="train on one ScanNet++ clip (the first with >= t-max frames), also evaluated as set 'train1'")
     args = ap.parse_args()
@@ -375,10 +406,10 @@ def main():
     head = tp.build_head(tp.REPO / "ckpt/lingbot-map.pt", rope_on=False)
     if args.arch == "posetok":
         model = PoseTokenRefiner(args.anchors == "fixed", width=args.width, tok_part=args.tok_part,
-                                 pose_out=args.pose_out, ckpt=args.grad_ckpt).to(dev)
+                                 pose_out=args.pose_out, ckpt=args.grad_ckpt, desc_dim=DESC_DIM if args.desc else 0).to(dev)
     else:
         model = BidirRefiner(head, args.anchors == "fixed", ckpt=args.grad_ckpt, width=args.width,
-                             head_mode=args.head_mode).to(dev)
+                             head_mode=args.head_mode, desc_dim=DESC_DIM if args.desc else 0).to(dev)
 
     def load(d, store):
         fs = sorted(f for f in (args.inputs / d / "specials").glob("*.npz") if ".tmp" not in f.stem)
@@ -391,11 +422,13 @@ def main():
         jumps = {} if args.keep_bad_gt else json.loads(GT_JUMPS.read_text())
         train = []
         for ds in args.packs.split(","):
-            if ds == "kitti360":
+            if ds == "kitti360" and args.pack_root == PACK_ROOT:
+                # the 1048 pack keeps KITTI-360's metric GT; the whole-trajectory caches scale it to lingbot's units
                 print("[data] kitti360 skipped: metric GT, not in lingbot's anchor scale", flush=True)
                 continue
             idx = dict(np.load(args.pack_root / ds / "index.npz"))
             mm = np.load(args.pack_root / ds / "spec23.npy", mmap_mode="r")
+            dmm = np.load(args.pack_root / ds / "desc.npy", mmap_mode="r") if args.desc else None
             bad = {b[0].rsplit("__f", 1)[0] for b in jumps.get(ds, [])}
             n_bad = n_val = 0
             lv = []
@@ -405,7 +438,7 @@ def main():
                 if seq_key in bad:
                     n_bad += 1
                     continue
-                c = PackClip(ds, mm, idx, i)
+                c = PackClip(ds, mm, idx, i, desc_mm=dmm)
                 held = (ds == "scannetpp" and name.split("__")[0] in val_scenes) or \
                        (args.longval and longval_split(ds, c.seq))
                 if held:
@@ -436,7 +469,7 @@ def main():
         train = load("train", "cpu") + load("train_v5", "cpu")
     lens = [int(x) for x in args.nrgbd_lengths.split(",")]
     sets = [("val24", load("val24", dev), [320]), ("nrgbd", load("nrgbd", dev), lens)] if args.indoor_val else []
-    lv_lens = [int(x) for x in args.longval_lengths.split(",")]
+    lv_lens = [0 if x == "full" else int(x) for x in args.longval_lengths.split(",")]   # full = whole clip
     sets += [(f"longval_{ds}", cl, lv_lens) for ds, cl in longval.items()]
     if args.overfit:
         train = [next(c for c in train if c.T >= args.t_max)]
@@ -508,7 +541,8 @@ def main():
         if len(pool_idx) == 0:
             t = int(lengths[ing].max())
             pool_idx = np.flatnonzero(ing & (lengths == t))
-        idx = rng.choice(pool_idx, args.batch, replace=len(pool_idx) < args.batch)
+        bs = max(1, min(args.batch, args.frames_per_batch // t)) if args.frames_per_batch else args.batch
+        idx = rng.choice(pool_idx, bs, replace=len(pool_idx) < bs)
         return t, train[idx[0]].hw, pool.submit(batch_cpu, train, idx, t, args.patches)
 
     queue = [submit(force_t=int(tchoices.max())), submit()]   # the longest prefix first: an OOM shows at step 1
@@ -519,9 +553,9 @@ def main():
             g["lr"] = lr
         t, hw, fut = queue.pop(0)
         queue.append(submit())
-        spec, gt, lp, pt, pf = to_dev(fut.result(), dev)
+        spec, gt, lp, pt, pf, desc = to_dev(fut.result(), dev)
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            preds = model(spec, lp, pt, pf)
+            preds = model(spec, lp, pt, pf, desc=desc)
         loss, la, lr_ = loss_fn([p.float() for p in preds], gt, hw, skip, norm=args.norm == "extent",
                                 floor=args.trans_floor)
         opt.zero_grad(set_to_none=True)
@@ -543,7 +577,7 @@ def main():
             ck = {"model": {k: v for k, v in model.state_dict().items() if not k.startswith("head.")},
                   "args": vars(args), "step": step, "val": row}
             torch.save(ck, args.out / "last.pt")
-            lv_t = max(lv_lens)
+            lv_t = "full" if 0 in lv_lens else max(lv_lens)
             score = (float(np.mean([row[f"longval_{ds}@{lv_t}/ate"] / row[f"longval_{ds}@{lv_t}/lingbot_ate"]
                                     for ds in longval])) if longval else row["val24@320/ate"])
             row["select"] = score

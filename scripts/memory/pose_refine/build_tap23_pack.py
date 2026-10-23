@@ -8,7 +8,10 @@ tokens of every frame in one fp16 memmap, and the small per-frame/per-clip array
 
 The cache npz members are stored uncompressed, so specials are memory-mapped inside the zip and only
 the tap-23 slice of each frame is read (a quarter of the bytes).
+  <out>/<dataset>/desc.npy     [N, 8448] fp16 MegaLoc descriptors (with --desc)
+Caches written with --spec23 (tap 23 only) are read the same way.
 Usage: build_tap23_pack.py --dataset tartanair-v2 --out /group/.../_staging/lingbot-tap23pack-1048
+       [--cache-name lingbot-cachefull --cache-root /group/compact-3dmem/datasets/_staging --desc]
 """
 from __future__ import annotations
 
@@ -48,20 +51,31 @@ def main():
     ap.add_argument("--dataset", required=True)
     ap.add_argument("--cache-root", type=Path, default=Path("/data"))
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--cache-name", default="lingbot-cache1048")
+    ap.add_argument("--desc", action="store_true", help="also pack the per-frame MegaLoc descriptors")
     args = ap.parse_args()
-    files = sorted((args.cache_root / f"lingbot-cache1048-{args.dataset}").glob("*.npz"))
+    files = sorted(f for f in (args.cache_root / f"{args.cache_name}-{args.dataset}").glob("*.npz") if ".tmp" not in f.name)
     lengths = [int(f.stem.rsplit("_n", 1)[1]) for f in files]
     N = sum(lengths)
     out = args.out / args.dataset
     out.mkdir(parents=True, exist_ok=True)
     spec = np.lib.format.open_memmap(out / "spec23.tmp.npy", mode="w+", dtype=np.float16, shape=(N, 6, 2048))
+    desc = np.lib.format.open_memmap(out / "desc.tmp.npy", mode="w+", dtype=np.float16, shape=(N, 8448)) if args.desc else None
     pose, gt, K = np.zeros((N, 9), np.float32), np.zeros((N, 4, 4), np.float32), np.zeros((N, 3, 3), np.float32)
     meta = {k: [] for k in ("name", "seq", "offset", "length", "hw", "gt_scale", "stride")}
     o, t0 = 0, time.time()
     for i, (f, n) in enumerate(zip(files, lengths)):
-        sp = npz_member_memmap(f, "specials")
-        assert sp.shape[0] == n, (f, sp.shape, n)
-        spec[o:o + n] = sp[:, TAP23]
+        names = zipfile.ZipFile(f).namelist()
+        if "spec23.npy" in names:
+            sp = npz_member_memmap(f, "spec23")
+            assert sp.shape[0] == n, (f, sp.shape, n)
+            spec[o:o + n] = sp
+        else:
+            sp = npz_member_memmap(f, "specials")
+            assert sp.shape[0] == n, (f, sp.shape, n)
+            spec[o:o + n] = sp[:, TAP23]
+        if desc is not None:
+            desc[o:o + n] = npz_member_memmap(f, "megaloc")
         z = np.load(f)
         pose[o:o + n], gt[o:o + n], K[o:o + n] = z["pose_enc"], z["gt_c2w"], z["K"]
         for k, v in (("name", f.stem), ("seq", str(z["seq"])), ("offset", o), ("length", n), ("hw", z["hw"]),
@@ -72,6 +86,10 @@ def main():
             print(f"[pack] {args.dataset} {i + 1}/{len(files)} clips, {o} frames, {time.time() - t0:.0f} s", flush=True)
     spec.flush()
     del spec
+    if desc is not None:
+        desc.flush()
+        del desc
+        (out / "desc.tmp.npy").rename(out / "desc.npy")
     np.savez(out / "index.npz", pose_enc=pose, gt_c2w=gt, K=K, dataset=args.dataset,
              **{k: np.array(v) for k, v in meta.items()})
     (out / "spec23.tmp.npy").rename(out / "spec23.npy")
