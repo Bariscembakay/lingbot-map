@@ -2,8 +2,9 @@
 """Mirror Leonardo runs of train_lingbot_rel.py into wandb from INSAIT, where the wandb key stays (Leonardo's
 compute nodes are offline). Each arm's curves are rebuilt from its job logs (training losses, every 10 steps) and
 its history.json (validation: only ATE and RPE-t go to wandb), and only the steps the wandb run does not have yet
-are appended, so it is safe to rerun at any time. A step that ends in a validation is held back until that
-validation is in history.json (or training has gone past it), because wandb steps can only increase.
+are appended, so it is safe to rerun at any time; the job logs themselves become the run's Logs. A step that ends
+in a validation is held back until that validation is in history.json (or training has gone past it), because
+wandb steps can only increase.
 The trainer's own offline wandb dirs on Leonardo are not synced: the old runs there log every validation metric.
 Usage: wandb_mirror_leonardo.py [--every SECONDS]   (pulls with rsync over `ssh leonardo`; 0 = one round)
 """
@@ -34,10 +35,13 @@ def pull():
                     f"leonardo:{REMOTE}/logs/", f"{LOCAL}/logs/"], check=True, capture_output=True)
 
 
+def job_logs(arm):
+    return sorted((int(m[2]), p) for p in (LOCAL / "logs").iterdir() if (m := LOG.match(p.name)) and m[1] == arm)
+
+
 def rows(arm, val_every):
     train = {}
-    logs = sorted((int(m[2]), p) for p in (LOCAL / "logs").iterdir() if (m := LOG.match(p.name)) and m[1] == arm)
-    for _, p in logs:
+    for _, p in job_logs(arm):
         for line in p.read_text(errors="replace").splitlines():
             if m := TRAIN.match(line):
                 kv = m[3].split()
@@ -70,12 +74,18 @@ def mirror(api, arm):
     except wandb.errors.CommError:
         start = 0
     new = [(s, d) for s, d in rs if s >= start]
-    if not new:
+    # the jobs' console output, all jobs of the arm in order, as the run's Logs (output.log)
+    out = LOCAL / "console" / arm / "output.log"
+    log = "".join(f"===== Leonardo job {j} =====\n{p.read_text(errors='replace')}" for j, p in job_logs(arm))
+    if not new and out.exists() and out.read_text() == log:
         return 0
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(log)
     run = wandb.init(project="lingbot-rel", group="backbone", name=arm, id=rid, resume="allow", config=cfg,
-                     dir=LOCAL, settings=wandb.Settings(silent=True))
+                     dir=LOCAL, settings=wandb.Settings(silent=True, console="off"))
     for s, d in new:
         run.log(d, step=s)
+    run.save(str(out), base_path=str(out.parent), policy="now")
     run.finish()
     return len(new)
 
