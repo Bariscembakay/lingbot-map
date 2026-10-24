@@ -162,9 +162,11 @@ def main():
         hs = [agg.register_forward_hook(on_agg), agg.patch_embed.register_forward_hook(on_dino)]
         try:
             with torch.amp.autocast("cuda", dtype=torch.bfloat16):
-                if args.chunk and kf == 1:
-                    pred = model.inference_chunked(x, chunk=args.chunk, num_scale_frames=A, attn=args.chunk_attn)
-                else:   # keyframe mode needs the frame-by-frame path (non-keyframes skip the caches)
+                if args.chunk:
+                    # keys are padded for up to 512 stored frames past the scale frames: one kernel per interval
+                    pred = model.inference_chunked(x, chunk=args.chunk, num_scale_frames=A, attn=args.chunk_attn,
+                                                   keyframe_interval=kf, max_frames=max(4096, kf * 512))
+                else:
                     pred = model.inference_streaming(x, num_scale_frames=A, keyframe_interval=kf, output_device=None)
         finally:
             for h in hs:

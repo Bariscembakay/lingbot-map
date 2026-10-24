@@ -273,7 +273,17 @@ class CausalAttention(nn.Module):
             k_reshaped = k.view(B, self.num_heads, num_frame_per_block, N // num_frame_per_block, self.head_dim)
             v_reshaped = v.view(B, self.num_heads, num_frame_per_block, N // num_frame_per_block, self.head_dim)
 
-            if not skip_append:
+            chunk_kf = kv_cache.get("_chunk_kf")
+            if chunk_kf is not None and not skip_append:
+                # default-mode chunk: only its keyframes enter the cache; every chunk frame attends to
+                # the cache and the chunk (the mask below keeps non-keyframes out of later frames' view)
+                kc, vc = kv_cache[f"k_{global_idx}"], kv_cache[f"v_{global_idx}"]
+                k = k_reshaped if kc is None else torch.cat((kc, k_reshaped), dim=2)
+                v = v_reshaped if vc is None else torch.cat((vc, v_reshaped), dim=2)
+                kf_k, kf_v = k_reshaped[:, :, chunk_kf], v_reshaped[:, :, chunk_kf]
+                kv_cache[f"k_{global_idx}"] = kf_k if kc is None else torch.cat((kc, kf_k), dim=2)
+                kv_cache[f"v_{global_idx}"] = kf_v if vc is None else torch.cat((vc, kf_v), dim=2)
+            elif not skip_append:
                 # KEYFRAME: store in cache (original behavior)
                 if kv_cache[f"k_{global_idx}"] is None:
                     kv_cache[f"k_{global_idx}"] = k_reshaped
@@ -327,6 +337,10 @@ class CausalAttention(nn.Module):
                     # chunked streaming: the chunk's frames are the cache's last q_len entries
                     # (one token per frame), each sees the cache and the chunk frames up to itself
                     mask = mask.tril(diagonal=k.shape[2] - q.shape[2])
+                    if chunk_kf is not None:   # ... of which only keyframes, and itself
+                        c = q.shape[2]
+                        eye = torch.eye(c, dtype=torch.bool, device=q.device)
+                        mask[:, :, :, -c:] &= eye | chunk_kf[None, :]
                 x = F.scaled_dot_product_attention(
                     q,
                     k,
@@ -770,6 +784,9 @@ class SDPAAttention(Attention):
         else:
             x = F.scaled_dot_product_attention(q, torch.cat(ks, 2), torch.cat(vs, 2), attn_mask=mask)
         x = x.transpose(1, 2).reshape(B, N, self.num_heads * self.head_dim)
+        app = kv_cache.get("_chunk_append")   # default mode: only the chunk's keyframes are kept
+        if app is not None:
+            k_new, v_new = k_new[:, :, app], v_new[:, :, app]
         kv_cache[f"k_{global_idx}"] = torch.cat((kc, k_new), dim=2)
         kv_cache[f"v_{global_idx}"] = torch.cat((vc, v_new), dim=2)
         self._apply_kv_cache_eviction(kv_cache, global_idx, camera_token_idx, scale_token_idx, num_register_tokens)

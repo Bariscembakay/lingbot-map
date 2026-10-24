@@ -569,8 +569,9 @@ class GCTStream(GCTBase):
         output_device: Optional[torch.device] = None,
         attn: str = "sdpa",
         max_frames: int = 4096,
+        keyframe_interval: int = 1,
     ) -> Dict[str, torch.Tensor]:
-        """inference_streaming (every frame a keyframe, SDPA backend) with `chunk` frames per forward
+        """inference_streaming (SDPA backend, any keyframe_interval) with `chunk` frames per forward
         pass instead of one. Each frame of a chunk gets exactly the context frame-by-frame streaming
         gives it -- the scale frames, the last `window` frames up to itself, and the special tokens of
         every earlier evicted frame -- through an attention mask over [evicted specials | cached
@@ -582,6 +583,10 @@ class GCTStream(GCTBase):
         reused for every full chunk and fully masked blocks are skipped. The keys are padded for clips
         up to `max_frames`, and a short last chunk is padded by repeating its final frame (streaming is
         causal, so the real frames are unaffected), so one compiled kernel serves every clip.
+        With keyframe_interval > 1, "frame" above means stored frame (scale frames and keyframes): a
+        non-keyframe sees the cache as its preceding keyframe left it plus itself, at the RoPE position
+        the next keyframe takes, no later frame sees it, and only keyframes are appended, in the
+        backbone and the camera head alike, as frame-by-frame streaming does.
         Returns pose_enc only (the depth head is not chunk-aware)."""
         assert self.aggregator.use_sdpa, "chunked streaming is implemented for the SDPA KV cache"
         assert attn in ("sdpa", "flex"), attn
@@ -604,11 +609,13 @@ class GCTStream(GCTBase):
             d["_chunk_causal"] = True
         kv = self.aggregator.kv_cache
         tok = torch.arange(P, device=dev)
+        kfi = max(int(keyframe_interval), 1)
+        agg = self.aggregator
         if attn == "flex":
             from torch.nn.attention.flex_attention import create_block_mask, flex_attention
             flex = _compiled_flex(flex_attention)
             assert S <= max_frames, (S, max_frames)
-            n_ev_max = max(0, max_frames - kv_scale - window)
+            n_ev_max = max(0, A + -(-(max_frames - A) // kfi) - kv_scale - window)
             kv_len = n_ev_max * n_special + (kv_scale + window + chunk) * P
             # Tiles per architecture (flex_kernel_bench.py at P=1302, chunk 64): on H200 the default
             # ran at 186 TFLOPS and 128x64 / 4 warps / 3 stages at 557; the default needs ~118 KB of
@@ -622,25 +629,33 @@ class GCTStream(GCTBase):
             kf_b = torch.full((kv_len,), -10**9, dtype=torch.long, device=dev)
             kind_b = torch.full((kv_len,), 3, dtype=torch.long, device=dev)
             kspec_b = torch.zeros(kv_len, dtype=torch.bool, device=dev)
-            f0_b = torch.zeros((), dtype=torch.long, device=dev)
+            kid_b = torch.full((kv_len,), -2, dtype=torch.long, device=dev)
+            qst_b = torch.zeros(chunk, dtype=torch.long, device=dev)
+            qid_b = torch.zeros(chunk, dtype=torch.long, device=dev)
 
             def mask_mod(b, h, qi, ki):
-                qfr = f0_b + qi // P
+                qs, qid = qst_b[qi // P], qid_b[qi // P]
                 kfr, kd = kf_b[ki], kind_b[ki]
-                return (kd != 3) & ((kfr < kv_scale) | ((kfr >= qfr - window + 1) & (kfr <= qfr))
-                                    | (kspec_b[ki] & (kfr <= qfr)))
+                return (kd != 3) & ((kid_b[ki] == qid) | ((kfr >= 0) & (
+                    (kfr < kv_scale) | ((kfr >= qs - window + 1) & (kfr <= qs)) | (kspec_b[ki] & (kfr <= qs)))))
         try:
             for f0 in range(A, S, chunk):
                 n_real = min(chunk, S - f0)
                 c = chunk if attn == "flex" else n_real    # flex: every chunk the same shape
-                n_win = min(window, f0 - kv_scale)               # cached frames past the scale frames
-                n_ev = f0 - kv_scale - n_win                      # frames already reduced to specials
-                qf = f0 + torch.arange(c * P, device=dev) // P
+                ns = A + -(-(f0 - A) // kfi)                      # stored frames before the chunk
+                n_win = min(window, ns - kv_scale)               # cached frames past the scale frames
+                n_ev = ns - kv_scale - n_win                      # frames already reduced to specials
+                fr = torch.arange(f0, f0 + c, device=dev)
+                # stored index of a keyframe, or of the keyframe preceding a non-keyframe
+                qst = A + (fr - A) // kfi
+                qkf = ((fr - A) % kfi == 0) & (fr < S)
                 # keys: evicted specials | cached scale + window frames | chunk frames
                 kf = torch.cat([kv_scale + torch.arange(n_ev, device=dev).repeat_interleave(n_special),
                                 torch.cat([torch.arange(kv_scale, device=dev),
-                                           torch.arange(f0 - n_win, f0, device=dev)]).repeat_interleave(P),
-                                torch.arange(f0, f0 + c, device=dev).repeat_interleave(P)])
+                                           torch.arange(ns - n_win, ns, device=dev)]).repeat_interleave(P),
+                                torch.where(qkf, qst, -1).repeat_interleave(P)])
+                kid = torch.cat([torch.full(((n_ev * n_special) + (kv_scale + n_win) * P,), -2, device=dev),
+                                 fr.repeat_interleave(P)])
                 kind = torch.cat([torch.zeros(n_ev * n_special, dtype=torch.long, device=dev),
                                   torch.ones((kv_scale + n_win) * P, dtype=torch.long, device=dev),
                                   torch.full((c * P,), 2, dtype=torch.long, device=dev)])
@@ -651,15 +666,24 @@ class GCTStream(GCTBase):
                     kf_b.fill_(-10**9)
                     kind_b.fill_(3)
                     kspec_b.zero_()
-                    kf_b[:n_k], kind_b[:n_k], kspec_b[:n_k] = kf, kind, kspec
-                    f0_b.fill_(f0)
+                    kid_b.fill_(-2)
+                    kf_b[:n_k], kind_b[:n_k], kspec_b[:n_k], kid_b[:n_k] = kf, kind, kspec, kid
+                    qst_b.copy_(qst)
+                    qid_b.copy_(fr)
                     bm = create_block_mask(mask_mod, None, None, c * P, kv_len, device=dev, _compile=True)
                     kv["_chunk_mask"] = {"fn": flex, "block_mask": bm, "kv_len": kv_len, "kernel_options": kopts}
                 else:
-                    q, k = qf[:, None], kf[None]
-                    mask = (k < kv_scale) | ((k >= q - window + 1) & (k <= q)) | (kspec[None] & (k <= q))
+                    q, k = qst.repeat_interleave(P)[:, None], kf[None]
+                    mask = (kid[None] == fr.repeat_interleave(P)[:, None]) | ((k >= 0) & (
+                        (k < kv_scale) | ((k >= q - window + 1) & (k <= q)) | (kspec[None] & (k <= q))))
                     kv["_chunk_mask"] = mask[None, None]
                     del mask
+                if kfi > 1:
+                    kv["_chunk_append"] = qkf.nonzero()[:, 0]
+                    agg._chunk_pos = torch.where(qkf, qst, qst + 1).tolist()
+                    agg._chunk_n_append = int(qkf.sum())
+                    for d in head_caches:
+                        d["_chunk_kf"] = qkf
                 x = images[:, f0:f0 + n_real]
                 if c > n_real:
                     x = torch.cat([x, x[:, -1:].expand(-1, c - n_real, -1, -1, -1)], 1)
@@ -667,8 +691,11 @@ class GCTStream(GCTBase):
                 poses.append(out(pe[:, :n_real]))
         finally:
             kv["_chunk_mask"] = None
+            kv["_chunk_append"] = None
+            agg._chunk_pos = agg._chunk_n_append = None
             for d in head_caches:
                 d["_chunk_causal"] = False
+                d["_chunk_kf"] = None
         return {"pose_enc": torch.cat(poses, 1)}
 
 

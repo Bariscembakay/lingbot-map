@@ -498,9 +498,14 @@ class AggregatorStream(AggregatorBase):
 
                 H = image_height if image_height is not None else self.img_size
                 W = image_width if image_width is not None else self.img_size
-                pos3d = self._get_3d_positions_streaming(
-                    S_global, H, W, tokens.device, f_start, f_end
-                )
+                if getattr(self, "_chunk_pos", None) is not None:
+                    # default-mode chunk: a non-keyframe sits at the position the next keyframe takes
+                    pos3d = torch.cat([self._get_3d_positions_streaming(1, H, W, tokens.device, p, p + 1)
+                                       for p in self._chunk_pos], dim=2)
+                else:
+                    pos3d = self._get_3d_positions_streaming(
+                        S_global, H, W, tokens.device, f_start, f_end
+                    )
                 self._cached_pos3d = pos3d
             else:
                 pos3d = self._cached_pos3d
@@ -552,6 +557,7 @@ class AggregatorStream(AggregatorBase):
 
         # Update total frames processed counter only on the first block group
         if is_first_block_group and not (isinstance(self.kv_cache, dict) and self.kv_cache.get("_skip_append", False)):
-            self.total_frames_processed += S_global
+            n_app = getattr(self, "_chunk_n_append", None)
+            self.total_frames_processed += S_global if n_app is None else n_app
 
         return tokens, global_idx, intermediates
