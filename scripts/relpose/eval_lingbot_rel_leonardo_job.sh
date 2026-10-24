@@ -6,16 +6,27 @@
 #SBATCH --mem=120G
 #SBATCH --array=0-17
 #SBATCH --output=/leonardo_scratch/large/userexternal/bbakay00/logs/%x_%A_%a.out
-# eval_lingbot_rel.py on one benchmark scene per array task: KITTI 00-10, then the 7 VBR scenes, from the
-# BSS copies in $CINECA_SCRATCH/insait. Summarise with eval_lingbot_rel.py --summary <out>.
-# Usage: sbatch -J <name> --time=.. eval_lingbot_rel_leonardo_job.sh <out dir> (--run DIR [--ckpt last.pt] | --lingbot)
+# eval_lingbot_rel.py on one benchmark scene per array task, from the BSS copies in $CINECA_SCRATCH/insait.
+# SET=kitti_vbr (default, --array=0-17): KITTI 00-10, then the 7 VBR scenes. SET=oxford (--array=0-9): the 10
+# dense Oxford Spires scenes (~3840 frames each). Summarise with eval_lingbot_rel.py --summary <out>.
+# Usage: [SET=oxford] sbatch -J <name> --time=.. [--array=0-9] eval_lingbot_rel_leonardo_job.sh <out dir>
+#        (--run DIR [--ckpt last.pt] | --lingbot)
 set -euo pipefail
 S=$CINECA_SCRATCH
 P=$S/micromamba/envs/lingbot_map/bin/python
-B=$S/insait/campaigns/lingbot_map/default
-SCENES=(kitti/00 kitti/01 kitti/02 kitti/03 kitti/04 kitti/05 kitti/06 kitti/07 kitti/08 kitti/09 kitti/10
-        vbr/campus_train0 vbr/campus_train1 vbr/ciampino_train1 vbr/colosseo_train0 vbr/diag_train0 vbr/pincio_train0
-        vbr/spagna_train0)
+case ${SET:-kitti_vbr} in
+    kitti_vbr)
+        B=$S/insait/campaigns/lingbot_map/default
+        SCENES=(kitti/00 kitti/01 kitti/02 kitti/03 kitti/04 kitti/05 kitti/06 kitti/07 kitti/08 kitti/09 kitti/10
+                vbr/campus_train0 vbr/campus_train1 vbr/ciampino_train1 vbr/colosseo_train0 vbr/diag_train0
+                vbr/pincio_train0 vbr/spagna_train0) ;;
+    oxford)
+        B=$S/insait/campaigns/lingbot_map/dense_s1
+        SCENES=(oxford_spires/bodleian-library-02 oxford_spires/christ-church-02 oxford_spires/christ-church-03
+                oxford_spires/christ-church-05 oxford_spires/keble-college-02 oxford_spires/keble-college-03
+                oxford_spires/keble-college-04 oxford_spires/keble-college-05 oxford_spires/observatory-quarter-01
+                oxford_spires/observatory-quarter-02) ;;
+esac
 OUT=$1; shift
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 SC=${SCENES[$SLURM_ARRAY_TASK_ID]}
