@@ -81,6 +81,8 @@ def main():
     ap.add_argument("--spec23", action="store_true", help="store only the tap-23 specials")
     ap.add_argument("--batch-frames", type=int, default=0, help="cap on the summed clip frames of a batch (0 = none)")
     ap.add_argument("--cache-name", default="lingbot-cache1048", help="staging dir name prefix on sof1")
+    ap.add_argument("--claim", action="store_true",
+                    help="take clips through <clip>.claim files in --out, so jobs on any GPU type share one queue (all shards)")
     ap.add_argument("--skip-list", type=Path, help="file of clip npz names already built elsewhere (msp3 shards: sof1 staging)")
     ap.add_argument("--compile", action="store_true", help="CUDA-graph the per-frame blocks (lingbot's compile_model)")
     ap.add_argument("--flashinfer", action="store_true",
@@ -125,7 +127,7 @@ def main():
     def kfi(c):
         n = len(c["frames"])
         return 1 if args.keyframes == "1" or n <= 320 else -(-n // 320)
-    todo.sort(key=lambda c: (kfi(c), -len(c["frames"])))
+    todo.sort(key=lambda c: (-kfi(c), -len(c["frames"])))
     batches = []
     for c in todo:   # same keyframe interval within a batch; at most --batch clips / --batch-frames frames
         b = batches[-1] if batches else None
@@ -218,12 +220,48 @@ def main():
     def fail(c, e):  # one broken sequence (e.g. a ScanNet++ scene without depth.bin) must not end the shard
         (args.out / f"{clip_name(c)}.failed").write_text(f"{type(e).__name__}: {e}\n")
         print(f"[cache] {clip_name(c)}: FAILED {type(e).__name__}: {e}", flush=True)
+        release(c)
 
-    nxt = pool.submit(load, batches[0]) if batches else None
+    def claim(c):
+        n = clip_name(c)
+        if (args.out / f"{n}.npz").exists() or (args.out / f"{n}.failed").exists():
+            return False
+        p = args.out / f"{n}.claim"
+        try:   # a claim left by a killed job: the longest clip takes ~1.5 h on an A6000
+            if time.time() - p.stat().st_mtime > 4 * 3600:
+                p.unlink()
+        except FileNotFoundError:
+            pass
+        try:
+            fd = os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            return False
+        os.write(fd, f"{os.environ.get('SLURM_JOB_ID', '')} {os.uname().nodename}\n".encode())
+        os.close(fd)
+        return True
+
+    def release(c):
+        if args.claim:
+            (args.out / f"{clip_name(c)}.claim").unlink(missing_ok=True)
+
+    def next_batch(i):
+        while i < len(batches):
+            b = [c for c in batches[i] if claim(c)] if args.claim else batches[i]
+            i += 1
+            if b:
+                return i, b, pool.submit(load, b)
+        return i, None, None
+
+    def batch_iter():   # the next batch is claimed and its images decoded while this one streams
+        i, b, f = next_batch(0)
+        while b:
+            ni, nb, nf = next_batch(i)
+            yield i, b, f
+            i, b, f = ni, nb, nf
+
     done_n = 0
-    for bi, batch in enumerate(batches):
+    for bi, batch, fut in batch_iter():
         t0 = time.time()
-        fut, nxt = nxt, (pool.submit(load, batches[bi + 1]) if bi + 1 < len(batches) else None)
         try:
             loaded = fut.result()
         except Exception:   # find the broken clip(s) one by one
@@ -256,11 +294,12 @@ def main():
         for (c, (im, K)), x, cap in zip(ok, xs, caps):
             try:
                 msg = finish(c, im, K, x, cap)
+                release(c)
                 done_n += 1
                 print(f"[cache] {done_n}/{len(todo)} {msg}", flush=True)
             except Exception as e:
                 fail(c, e)
-        print(f"[cache] batch {bi + 1}/{len(batches)}: {len(ok)} clips, {nfr} frames, {nfr / (time.time() - t0):.1f} clip-frames/s "
+        print(f"[cache] batch {bi}/{len(batches)}: {len(ok)} clips, {nfr} frames, {nfr / (time.time() - t0):.1f} clip-frames/s "
               f"(wait-for-images {t_load:.0f} s, lingbot {t_inf:.0f} s, rest {time.time() - t0 - t_load - t_inf:.0f} s)", flush=True)
 
 
