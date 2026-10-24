@@ -242,10 +242,11 @@ def rel_loss(preds, G, fov, hw, args, lingbot_steps=None, gamma=0.6):
 
 # -- evaluation ----------------------------------------------------------------
 @torch.no_grad()
-def predict_c2w(model, c, t=None, chunk=2048):
+def predict_c2w(model, c, t=None, chunk=2048, with_enc=False):
     """Final-iteration poses of the first t frames as camera-to-world in frame 0's camera (float64).
     The windowed head runs in chunks with (window-1) x iterations frames of context: every output
-    then sees exactly what one pass over the whole stream gives it (RoPE is relative)."""
+    then sees exactly what one pass over the whole stream gives it (RoPE is relative).
+    with_enc: also return the head's per-frame encodings [t, 9] (field of view at 7:9)."""
     cam = c.tok[:t]
     T = len(cam)
     if model.mode == "abs" or T <= chunk:
@@ -260,11 +261,14 @@ def predict_c2w(model, c, t=None, chunk=2048):
         with torch.autocast("cuda", dtype=torch.bfloat16):
             p = model(cam[None, a:e], f0=a)[-1][0].float()
         enc.append(p[s - a:])
+    enc = torch.cat(enc)
     if model.mode == "abs":
-        return tp.pose_enc_to_c2w(torch.cat(enc), c.hw).double()
-    M = step_matrices(torch.cat(enc), c.hw, to_steps(tp.pose_enc_to_c2w(c.lingbot[:T].float(), c.hw), model.K)
-                      if model.residual else None).double()
-    return chain(M[None], model.K)[0].cpu()
+        P = tp.pose_enc_to_c2w(enc, c.hw).double()
+    else:
+        M = step_matrices(enc, c.hw, to_steps(tp.pose_enc_to_c2w(c.lingbot[:T].float(), c.hw), model.K)
+                          if model.residual else None).double()
+        P = chain(M[None], model.K)[0].cpu()
+    return (P, enc) if with_enc else P
 
 
 def evaluate(model, sets, base):

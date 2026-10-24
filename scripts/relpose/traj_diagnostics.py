@@ -39,6 +39,8 @@ def load(spec, bench, scene):
         return load_bss(Path(rest) / bench / scene / "lingbot_map/traj.txt")
     d, _, key = rest.partition(":")
     f = Path(d) / f"{bench}_{scene}.npz"
+    if not f.exists():
+        f = Path(d) / "cache" / bench / f"{scene}.npz"        # eval_lingbot_rel's refiner-cache layout
     return np.load(f)[key or "c2w"].astype(np.float64) if f.exists() else None
 
 

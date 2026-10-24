@@ -7,7 +7,10 @@ The fine-tuned backbone streams every frame in chunks with its training context 
 (rel: every `ref_every`-th frame a reference) and scored against the scene's GT in metres: Sim3 ATE,
 consecutive-frame RPE, AUC. Images are loaded and resized as the benchmark loads them for lingbot
 (BSSLoader, the method yaml's area budget and alignment). Writes <out>/<bench>_<scene>.json with the
-metrics and .npz with the predicted camera-to-world poses and the layer-23 camera tokens (refiner input).
+metrics, and by default the refiner's benchmark cache of the same pass (the format eval_refiner_bench.py
+`cache` writes: <out>/cache/<bench>/<scene>.npz with spec23 = the 6 layer-23 special tokens per frame, the
+predicted poses as lingbot pose encodings, hw, bench, scene, gt_dir; plus c2w), so a refiner on this backbone
+needs no second inference. MegaLoc depends on the images only: eval_refiner_bench.py's desc task adds it.
 --lingbot scores the untouched lingbot checkpoint the same way (abs context, its own camera head): the
 reference for both arms.
 Usage: eval_lingbot_rel.py --run DIR --scenes <BSS scene dir>... [--ckpt last.pt] [--out DIR]
@@ -28,6 +31,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import train_lingbot_rel as tl  # noqa: E402
+from lingbot_map.utils.rotation import mat_to_quat  # noqa: E402
 
 sys.path.insert(0, str(tl.REPO / "benchmark"))
 from benchmark.core.loader import BSSLoader  # noqa: E402
@@ -67,12 +71,14 @@ def load_run(run: Path, ckpt: str, dev, max_frames: int):
 
 @torch.no_grad()
 def stream_cams(model, mode, images, chunk, window, dev, anchors=False):
-    """[T,3,H,W] uint8 on the CPU -> [T, C] layer-23 camera tokens, as train_lingbot_rel streams."""
+    """[T,3,H,W] uint8 on the CPU -> [T, C] layer-23 camera tokens (fp32, on dev) and [T, 6, C] layer-23
+    special tokens (fp16, CPU), as train_lingbot_rel streams."""
     T = len(images)
     starts = tl.chunk_starts(T, chunk)
     model.clean_kv_cache()
     kv = model.aggregator.kv_cache
-    out = []
+    psi = model.aggregator.patch_start_idx
+    out, spec = [], []
     with torch.autocast("cuda", dtype=torch.bfloat16):
         for i, f0 in enumerate(starts):
             f1 = starts[i + 1] if i + 1 < len(starts) else T
@@ -83,12 +89,14 @@ def stream_cams(model, mode, images, chunk, window, dev, anchors=False):
                 tl.chunk_context(model, mode, anchors, f0, f1 - f0, kv["k_0"].shape[3], window, x.shape[-2:], dev)
             agg, _ = model._aggregate_features(x, num_frame_for_scale=tl.A, num_frame_per_block=f1 - f0)
             tl.clear_chunk_context(model)
-            out.append(agg[-1][0, :, 0].float().clone())   # .float() of the fp32 residual stream is a view: it would pin the chunk
+            s = agg[-1][0, :, :psi]
+            out.append(s[:, 0].float().clone())   # .float() of the fp32 residual stream is a view: it would pin the chunk
+            spec.append(s.half().cpu())
             if f1 // 2048 > f0 // 2048:
                 nk = sum(t.shape[2] * t.shape[3] for t in (kv["k_0"], kv.get("k_0_special")) if t is not None)
                 print(f"  [stream] {f1}/{T} frames, {nk} keys/layer, {torch.cuda.memory_allocated() / 2**30:.1f} GiB "
                       f"allocated, {torch.cuda.memory_reserved() / 2**30:.1f} reserved", flush=True)
-    return torch.cat(out)
+    return torch.cat(out), torch.cat(spec)
 
 
 def summary(d: Path):
@@ -133,16 +141,23 @@ def main():
         hw = tuple(images.shape[-2:])
         G = load_bss_traj(scene / "gt/traj.txt")
         assert len(G) == len(images), (len(G), len(images))
-        cam = stream_cams(model, a.mode, images, args.chunk, a.window, dev, a.anchors)
+        cam, spec = stream_cams(model, a.mode, images, args.chunk, a.window, dev, a.anchors)
         clip = rh.EvalClip(name, cam.cpu().numpy(), G.astype(np.float32), np.zeros((len(G), 3, 3), np.float32), hw, 1.0,
                            np.zeros((len(G), 9), np.float32), dev)
-        P = rh.predict_c2w(head, clip).cpu()
+        P, enc = rh.predict_c2w(head, clip, with_enc=True)
+        P = P.cpu()
         m = tp.traj_metrics(P, clip.gt_c2w, 1.0)
         rec = {"bench": bench, "scene": name, "frames": len(G), "hw": hw, "run": str(args.run) if args.run else "lingbot", "ckpt": args.ckpt,
                "step": step, "mode": a.mode, "chunk": args.chunk, "metrics": {k: float(v) for k, v in m.items()}}
-        tmp = out / f".{bench}_{name}.{os.getpid()}"
-        np.savez(f"{tmp}.npz", c2w=P.float().numpy(), cam_tokens=cam.half().cpu().numpy(), hw=np.int32(hw))
-        os.replace(f"{tmp}.npz", out / f"{bench}_{name}.npz")
+        pf = P.float()
+        pose_enc = torch.cat([pf[:, :3, 3], mat_to_quat(pf[:, :3, :3]), enc[:, 7:9].float().cpu()], -1)
+        cdir = out / "cache" / bench
+        cdir.mkdir(parents=True, exist_ok=True)
+        tmp = cdir / f".{name}.{os.getpid()}.npz"
+        np.savez(tmp, backend="sdpa", spec23=spec.numpy(), pose_enc=pose_enc.numpy(), c2w=pf.numpy(),
+                 hw=np.int32(hw), bench=bench, scene=name, gt_dir=str(scene / "gt"), keyframe_interval=np.int32(1),
+                 run=str(args.run) if args.run else "lingbot", ckpt=args.ckpt, step=np.int32(step))
+        os.replace(tmp, cdir / f"{name}.npz")
         (out / f"{bench}_{name}.json").write_text(json.dumps(rec, indent=1))
         print(f"[eval] {bench}/{name} {len(G)} frames {hw}: ATE {m['ate']:.3f} m rpe_t {m['rpe_t']:.4f} "
               f"rpe_r {m['rpe_r']:.3f} auc30 {m['auc30']:.3f}", flush=True)
