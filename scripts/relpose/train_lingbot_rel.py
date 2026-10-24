@@ -405,6 +405,11 @@ def main():
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--head-lr", type=float, default=1e-5)
     ap.add_argument("--warmup", type=int, default=300)
+    ap.add_argument("--decay-start", type=int, help="hold the lr after warmup and decay it (cosine) only from this "
+                    "step to --steps; default: cosine over the whole run")
+    ap.add_argument("--rewarm", type=int, default=0, help="after a resume, ramp the lr up again over this many steps "
+                    "(a schedule change would otherwise jump it)")
+    ap.add_argument("--keep-every", type=int, default=1000, help="keep the checkpoint of every such step besides last.pt")
     ap.add_argument("--steps", type=int, default=6000)
     ap.add_argument("--batch", type=int, default=1, help="clips per GPU")
     ap.add_argument("--workers", type=int, default=4)
@@ -517,6 +522,10 @@ def main():
                     "forecast": fcst.state_dict() if fcst is not None else None,
                     "args": vars(args), "step": step, "hist": hist}, tmp)
         tmp.replace(args.out / "last.pt")
+        if step and args.keep_every and step % args.keep_every == 0:
+            keep = args.out / f"step{step:06d}.pt"
+            keep.unlink(missing_ok=True)
+            os.link(args.out / "last.pt", keep)          # the next save replaces last.pt, so this inode stays
         (args.out / "history.json").write_text(json.dumps(hist, indent=1))
 
     if not hist:                                         # a resumed run already has its step-0 row
@@ -524,13 +533,24 @@ def main():
     step, epoch, t0 = step0, step0 // len(sampler), time.time()
     params = bb + hp
     acc = None
+
+    def lr_factor(step):
+        f = min(1.0, step / args.warmup)
+        if args.decay_start is None:
+            f *= 0.5 * (1 + math.cos(math.pi * step / args.steps))
+        elif step > args.decay_start:
+            f *= 0.5 * (1 + math.cos(math.pi * (step - args.decay_start) / max(1, args.steps - args.decay_start)))
+        if args.rewarm:
+            f *= min(1.0, (step - step0) / args.rewarm)
+        return f
+
     while step < args.steps:
         sampler.set_epoch(epoch)
         if hasattr(train_ds, "set_epoch"):
             train_ds.set_epoch(epoch)
         for views in loader:
             step += 1
-            f = min(1.0, step / args.warmup) * 0.5 * (1 + math.cos(math.pi * step / args.steps))
+            f = lr_factor(step)
             opt.param_groups[0]["lr"], opt.param_groups[1]["lr"] = args.lr * f, args.head_lr * f
             opt.zero_grad(set_to_none=True)
             loss, parts = train_step(model, head, args, to_lingbot(views, dev), dev, rng, fcst)
@@ -551,7 +571,7 @@ def main():
                 acc.zero_()
                 if main_proc:
                     msg = " ".join(f"{k} {v:.4f}" for k, v in m.items() if k not in ("pose", "grad_norm"))
-                    print(f"[{step:6d}] pose {m['pose']:.4f} {msg} |g| {m['grad_norm']:.2f} "
+                    print(f"[{step:6d}] pose {m['pose']:.4f} {msg} lr {opt.param_groups[0]['lr']:.2e} |g| {m['grad_norm']:.2f} "
                           f"{(time.time() - t0) / (step - step0):.1f}s/it {torch.cuda.max_memory_allocated() / 2**30:.1f}GiB",
                           flush=True)
                     if run is not None:

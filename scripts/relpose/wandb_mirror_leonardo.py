@@ -21,7 +21,7 @@ import wandb
 
 REMOTE = "/leonardo_scratch/large/userexternal/bbakay00"
 LOCAL = Path(f"/scratch/{getpass.getuser()}/wandb_mirror_leonardo")
-LOG = re.compile(r"lingbotrel_B_train_(.+)_a100x\d+_leonardo_(\d+)\.out$")
+LOG = re.compile(r"lingbotrel_B_train_(.+?)_a100x\d+_leonardo(?:_[a-z0-9]+)*_(\d+)\.out$")   # + _cont1 etc.
 TRAIN = re.compile(r"^\[\s*(\d+)\] pose (\S+) (.*?)\s*\|g\| (\S+) ")
 SSH = ["-e", "ssh -o BatchMode=yes -o ConnectTimeout=30"]
 
